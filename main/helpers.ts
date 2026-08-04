@@ -99,7 +99,7 @@ export function isGitHubApiError(
   if (typeof code === 'number' && (code === 403 || code === 404)) {
     return true;
   }
-  const msg = error?.message ?? '';
+  const msg = (error as { message?: string }).message ?? '';
   return /^(403|404)/.test(msg);
 }
 
