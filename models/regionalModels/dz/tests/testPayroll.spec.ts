@@ -1,5 +1,9 @@
 import test from 'tape';
-import { calculateDZPayroll, CNAS_EMPLOYEE_TOTAL } from '../payroll';
+import {
+  calculateDZPayroll,
+  CNAS_EMPLOYEE_TOTAL,
+  getPayrollSettingsData,
+} from '../payroll';
 
 test('calculateDZPayroll reproduces the 80,000 DZD worked example', (t) => {
   const r = calculateDZPayroll(80_000);
@@ -35,5 +39,23 @@ test('gross below SNMG warns but still computes', (t) => {
 
 test('negative gross throws', (t) => {
   t.throws(() => calculateDZPayroll(-1), RangeError);
+  t.end();
+});
+
+test('live SNMG override is read at runtime, not a stale constant', (t) => {
+  // default SNMG is 24_000 — 25_000 should NOT be flagged
+  const defaultResult = calculateDZPayroll(25_000);
+  t.equal(defaultResult.belowSNMG, false, 'default SNMG 24000: 25000 not below');
+
+  // override SNMG to 30_000 — same 25_000 gross should NOW be flagged
+  const liveSettings = getPayrollSettingsData({ snmg: 30_000 });
+  t.equal(liveSettings.snmg, 30_000, 'getPayrollSettingsData merged snmg to 30000');
+
+  const overriddenResult = calculateDZPayroll(25_000, liveSettings);
+  t.equal(
+    overriddenResult.belowSNMG,
+    true,
+    'override SNMG 30000: 25000 IS below'
+  );
   t.end();
 });
