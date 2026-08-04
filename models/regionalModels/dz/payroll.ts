@@ -20,6 +20,11 @@ export const SNMG_2026 = 24_000;
 // ---------------------------------------------------------------------------
 // CNAS — general social security contributions, expressed as % of gross salary.
 // Employer side — declared total 26%.
+// SUB-RATE DISCREPANCY: the individual components (12.5 + 10.5 + 1.25 + 1.5)
+// sum to 25.75%, not 26%. The sub-rates are approximate secondary-source
+// figures pending confirmation against the actual text of Décret exécutif
+// 94-187 (as amended by 15-236) and Ordonnance 95-01. Only the 26% TOTAL
+// should be relied on for calculations, not the sub-rate split.
 export const CNAS_EMPLOYER_SICKNESS_MATERNITY = 12.5;
 export const CNAS_EMPLOYER_RETIREMENT = 10.5;
 export const CNAS_EMPLOYER_WORK_ACCIDENTS = 1.25;
@@ -27,14 +32,10 @@ export const CNAS_EMPLOYER_UNEMPLOYMENT = 1.5;
 export const CNAS_EMPLOYER_TOTAL = 26;
 
 // Employee side — declared total 9%.
-// NOTE: the listed components (1.5 + 6.75 + 0.5) sum to 8.75%, not 9%. The 0.25%
-// gap is undocumented here; to match the official worked example we use the
-// declared total of 9% as the effective employee rate. Reconcile components vs.
-// total in a future review. See the "flagged contradictions" section at the
-// bottom of this file.
-export const CNAS_EMPLOYEE_SICKNESS_MATERNITY = 1.5;
-export const CNAS_EMPLOYEE_RETIREMENT = 6.75;
-export const CNAS_EMPLOYEE_UNEMPLOYMENT = 0.5;
+// CORRECTED per new research: 5.5% (social insurance:
+// sickness/maternity/disability/death) + 3.5% (retirement) = 9%.
+export const CNAS_EMPLOYEE_SICKNESS_MATERNITY = 5.5;
+export const CNAS_EMPLOYEE_RETIREMENT = 3.5;
 export const CNAS_EMPLOYEE_TOTAL = 9;
 
 // ---------------------------------------------------------------------------

@@ -126,18 +126,18 @@ export class G50 extends Report {
   private _monthOptions(): { value: string; label: string }[] {
     const labels = [
       '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      t`Jan`,
+      t`Feb`,
+      t`Mar`,
+      t`Apr`,
+      t`May`,
+      t`Jun`,
+      t`Jul`,
+      t`Aug`,
+      t`Sep`,
+      t`Oct`,
+      t`Nov`,
+      t`Dec`,
     ];
 
     const options: { value: string; label: string }[] = [];

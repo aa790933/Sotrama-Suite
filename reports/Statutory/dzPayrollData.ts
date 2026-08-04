@@ -128,11 +128,11 @@ export function g50Deadline(year: number, month: number): string {
   const due = DateTime.fromObject({ year, month })
     .plus({ months: 1 })
     .set({ day: 20 });
-  return `20th of the following month: ${due.toFormat('dd LLL yyyy')}`;
+  return t`20th of the following month: ${due.toFormat('dd LLL yyyy')}`;
 }
 
 export function dasDeadline(year: number): string {
-  return `Before 31 March ${year + 1}`;
+  return t`Before 31 March ${year + 1}`;
 }
 
 export interface G50Accumulator {
