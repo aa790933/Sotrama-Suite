@@ -104,7 +104,13 @@ import CommonFormSection from '../CommonForm/CommonFormSection.vue';
 const COMPONENT_NAME = 'Settings';
 
 export default defineComponent({
-  components: { FormContainer, Button, FormHeader, CommonFormSection, LanguageSelector },
+  components: {
+    FormContainer,
+    Button,
+    FormHeader,
+    CommonFormSection,
+    LanguageSelector,
+  },
   provide() {
     return { doc: computed(() => this.doc) };
   },
@@ -161,7 +167,7 @@ export default defineComponent({
       const enableInventory =
         !!this.fyo.singles.AccountingSettings?.enableInventory;
       const enablePOS = !!this.fyo.singles.InventorySettings?.enablePointOfSale;
-       const enableERPNextSync =
+      const enableERPNextSync =
         !!this.fyo.singles.AccountingSettings?.enableERPNextSync;
       const isDz = this.fyo.singles.SystemSettings?.countryCode === 'dz';
 
