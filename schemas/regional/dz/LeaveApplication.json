@@ -1,0 +1,74 @@
+{
+  "name": "LeaveApplication",
+  "label": "Leave Application",
+  "naming": "autoincrement",
+  "isSubmittable": true,
+  "fields": [
+    {
+      "fieldname": "name",
+      "label": "ID",
+      "fieldtype": "Data",
+      "required": true,
+      "readOnly": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "employee",
+      "label": "Employee",
+      "fieldtype": "Link",
+      "target": "Employee",
+      "required": true,
+      "create": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "startDate",
+      "label": "Start Date",
+      "fieldtype": "Date",
+      "required": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "endDate",
+      "label": "End Date",
+      "fieldtype": "Date",
+      "required": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "type",
+      "label": "Type",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "Annual", "label": "Annual Leave" },
+        { "value": "Casual", "label": "Casual Leave" },
+        { "value": "Sick", "label": "Sick Leave" },
+        { "value": "Emergency", "label": "Emergency Leave" },
+        { "value": "Maternity", "label": "Maternity" },
+        { "value": "Paternity", "label": "Paternity" }
+      ],
+      "section": "Default"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "Draft", "label": "Draft" },
+        { "value": "Pending", "label": "Pending" },
+        { "value": "Approved", "label": "Approved" },
+        { "value": "Rejected", "label": "Rejected" }
+      ],
+      "default": "Draft",
+      "section": "Default"
+    },
+    {
+      "fieldname": "remark",
+      "label": "Remark",
+      "fieldtype": "Text",
+      "rows": 3,
+      "section": "Default"
+    }
+  ],
+  "keywordFields": ["employee", "status"]
+}

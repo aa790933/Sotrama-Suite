@@ -1,0 +1,46 @@
+{
+  "name": "EarningItem",
+  "label": "Salary Earning",
+  "isChild": true,
+  "fields": [
+    {
+      "fieldname": "type",
+      "label": "Type",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "housing", "label": "Housing" },
+        { "value": "transport", "label": "Transport" },
+        { "value": "bonus", "label": "Bonus" },
+        { "value": "overtime", "label": "Overtime" },
+        { "value": "other", "label": "Other" }
+      ],
+      "required": true
+    },
+    {
+      "fieldname": "description",
+      "label": "Description",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "amount",
+      "label": "Amount",
+      "fieldtype": "Currency"
+    },
+    {
+      "fieldname": "hours",
+      "label": "Hours",
+      "fieldtype": "Int"
+    },
+    {
+      "fieldname": "overtimeRate",
+      "label": "Overtime Rate",
+      "fieldtype": "Currency"
+    },
+    {
+      "fieldname": "restDayOrHoliday",
+      "label": "Rest Day / Holiday",
+      "fieldtype": "Check"
+    }
+  ],
+  "tableFields": ["type", "description", "hours", "amount", "restDayOrHoliday"]
+}

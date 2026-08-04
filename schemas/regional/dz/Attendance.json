@@ -1,0 +1,60 @@
+{
+  "name": "Attendance",
+  "label": "Attendance",
+  "naming": "autoincrement",
+  "isSubmittable": true,
+  "fields": [
+    {
+      "fieldname": "name",
+      "label": "ID",
+      "fieldtype": "Data",
+      "required": true,
+      "readOnly": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "employee",
+      "label": "Employee",
+      "fieldtype": "Link",
+      "target": "Employee",
+      "required": true,
+      "create": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "date",
+      "label": "Date",
+      "fieldtype": "Date",
+      "required": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "Present", "label": "Present" },
+        { "value": "Absent", "label": "Absent" },
+        { "value": "Late", "label": "Late" },
+        { "value": "Half-day", "label": "Half-day" },
+        { "value": "Holiday", "label": "Holiday" }
+      ],
+      "required": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "hoursWorked",
+      "label": "Hours Worked",
+      "fieldtype": "Float",
+      "section": "Default"
+    },
+    {
+      "fieldname": "remark",
+      "label": "Remark",
+      "fieldtype": "Text",
+      "rows": 2,
+      "section": "Default"
+    }
+  ],
+  "keywordFields": ["employee", "date"]
+}

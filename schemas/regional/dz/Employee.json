@@ -1,0 +1,120 @@
+{
+  "name": "Employee",
+  "label": "Employee",
+  "naming": "autoincrement",
+  "isSubmittable": true,
+  "fields": [
+    {
+      "fieldname": "name",
+      "label": "ID",
+      "fieldtype": "Data",
+      "required": true,
+      "readOnly": true,
+      "section": "Personal"
+    },
+    {
+      "fieldname": "firstName",
+      "label": "First Name",
+      "fieldtype": "Data",
+      "required": true,
+      "section": "Personal"
+    },
+    {
+      "fieldname": "lastName",
+      "label": "Last Name",
+      "fieldtype": "Data",
+      "required": true,
+      "section": "Personal"
+    },
+    {
+      "fieldname": "personalID",
+      "label": "CIN",
+      "fieldtype": "Data",
+      "section": "Personal"
+    },
+    {
+      "fieldname": "nin",
+      "label": "NIN",
+      "fieldtype": "Data",
+      "description": "Numéro d'Identification Nationale — legally mandatory per the 2026 Finance Law (required on the DAS declaration).",
+      "section": "Personal"
+    },
+    {
+      "fieldname": "dateOfBirth",
+      "label": "Date of Birth",
+      "fieldtype": "Date",
+      "section": "Personal"
+    },
+    {
+      "fieldname": "email",
+      "label": "Email",
+      "fieldtype": "Data",
+      "section": "Personal"
+    },
+    {
+      "fieldname": "phone",
+      "label": "Phone",
+      "fieldtype": "Data",
+      "section": "Personal"
+    },
+    {
+      "fieldname": "hireDate",
+      "label": "Hire Date",
+      "fieldtype": "Date",
+      "required": true,
+      "section": "Employment"
+    },
+    {
+      "fieldname": "department",
+      "label": "Department",
+      "fieldtype": "Link",
+      "target": "Department",
+      "section": "Employment"
+    },
+    {
+      "fieldname": "designation",
+      "label": "Designation",
+      "fieldtype": "Link",
+      "target": "Designation",
+      "section": "Employment"
+    },
+    {
+      "fieldname": "employmentType",
+      "label": "Employment Type",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "Full-time", "label": "Full-time" },
+        { "value": "Part-time", "label": "Part-time" },
+        { "value": "Casual", "label": "Casual" }
+      ],
+      "section": "Employment"
+    },
+    {
+      "fieldname": "baseSalary",
+      "label": "Base Salary",
+      "fieldtype": "Currency",
+      "required": true,
+      "section": "Payroll"
+    },
+    {
+      "fieldname": "overtimeRate",
+      "label": "Overtime Rate",
+      "fieldtype": "Currency",
+      "section": "Payroll"
+    },
+    {
+      "fieldname": "cnasNumber",
+      "label": "CNAS Number",
+      "fieldtype": "Data",
+      "section": "Payroll"
+    },
+    {
+      "fieldname": "bankDetails",
+      "label": "Bank Details",
+      "fieldtype": "Text",
+      "rows": 2,
+      "section": "Bank"
+    }
+  ],
+  "keywordFields": ["firstName", "lastName", "cnasNumber", "nin"]
+}

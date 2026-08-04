@@ -1,0 +1,24 @@
+{
+  "name": "Designation",
+  "label": "Designation",
+  "naming": "autoincrement",
+  "isSubmittable": true,
+  "fields": [
+    {
+      "fieldname": "name",
+      "label": "ID",
+      "fieldtype": "Data",
+      "required": true,
+      "readOnly": true,
+      "section": "Default"
+    },
+    {
+      "fieldname": "description",
+      "label": "Description",
+      "fieldtype": "Text",
+      "rows": 3,
+      "section": "Default"
+    }
+  ],
+  "keywordFields": ["name"]
+}

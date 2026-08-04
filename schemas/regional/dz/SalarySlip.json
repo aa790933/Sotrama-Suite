@@ -1,0 +1,166 @@
+{
+  "name": "SalarySlip",
+  "label": "Salary Slip",
+  "naming": "autoincrement",
+  "isSubmittable": true,
+  "fields": [
+    {
+      "fieldname": "name",
+      "label": "ID",
+      "fieldtype": "Data",
+      "required": true,
+      "readOnly": true,
+      "section": "Employee"
+    },
+    {
+      "fieldname": "employee",
+      "label": "Employee",
+      "fieldtype": "Link",
+      "target": "Employee",
+      "required": true,
+      "create": true,
+      "section": "Employee"
+    },
+    {
+      "fieldname": "employeeName",
+      "label": "Employee Name",
+      "fieldtype": "Data",
+      "readOnly": true,
+      "section": "Employee"
+    },
+    {
+      "fieldname": "period",
+      "label": "Pay Period",
+      "fieldtype": "Data",
+      "placeholder": "YYYY-MM",
+      "section": "Employee"
+    },
+    {
+      "fieldname": "month",
+      "label": "Month",
+      "fieldtype": "Int",
+      "section": "Employee"
+    },
+
+    {
+      "fieldname": "earnings",
+      "label": "Earnings",
+      "fieldtype": "Table",
+      "target": "EarningItem",
+      "section": "Earnings"
+    },
+    {
+      "fieldname": "allowances",
+      "label": "Allowances Total",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Earnings"
+    },
+    {
+      "fieldname": "overtimeTotal",
+      "label": "Overtime Total",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Earnings"
+    },
+
+    {
+      "fieldname": "baseSalary",
+      "label": "Base Salary",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "gross",
+      "label": "Gross Salary",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "employeeCNAS",
+      "label": "Employee CNAS (9%)",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "employerCNAS",
+      "label": "Employer CNAS (26%)",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "netSocial",
+      "label": "Net Social",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "abatement",
+      "label": "Professional Abatement",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "taxableBase",
+      "label": "Taxable Base",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "irg",
+      "label": "IRG (Income Tax)",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "netPay",
+      "label": "Net Pay",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+    {
+      "fieldname": "totalEmployerCost",
+      "label": "Total Employer Cost",
+      "fieldtype": "Currency",
+      "readOnly": true,
+      "section": "Payroll Breakdown"
+    },
+
+    {
+      "fieldname": "paymentAccount",
+      "label": "Payment Account",
+      "fieldtype": "Link",
+      "target": "Account",
+      "default": "Cash in Hand",
+      "section": "Payment"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "Draft", "label": "Draft" },
+        { "value": "Processed", "label": "Processed" }
+      ],
+      "default": "Draft",
+      "section": "Payment"
+    },
+    {
+      "fieldname": "remark",
+      "label": "Remark",
+      "fieldtype": "Text",
+      "rows": 2,
+      "section": "References"
+    }
+  ],
+  "keywordFields": ["employee", "period", "status"]
+}

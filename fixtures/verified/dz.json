@@ -1,0 +1,38 @@
+{
+  "countryCode": "dz",
+  "name": "Algeria - Chart of Accounts",
+  "tree": {
+    "Assets": {
+      "Current Assets": {
+        "Bank Accounts": {
+          "Bank": { "accountType": "Bank" }
+        },
+        "Cash in Hand": { "accountType": "Cash" }
+      },
+      "rootType": "Asset"
+    },
+    "Equity": {
+      "Opening Balance Equity": {},
+      "Retained Earnings": {},
+      "rootType": "Equity"
+    },
+    "Expenses": {
+      "Salaries Expense": { "accountType": "Chargeable" },
+      "rootType": "Expense"
+    },
+    "Income": {
+      "Sales": {},
+      "rootType": "Income"
+    },
+    "Liabilities": {
+      "Current Liabilities": {
+        "Accounts Payable": {
+          "Creditors": { "accountType": "Payable" }
+        },
+        "CNAS Payable": { "accountType": "Payable" },
+        "IRG Payable": { "accountType": "Tax" }
+      },
+      "rootType": "Liability"
+    }
+  }
+}
