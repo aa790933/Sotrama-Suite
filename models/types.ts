@@ -89,6 +89,7 @@ export enum ModelNameEnum {
   ERPNextSyncSettings = 'ERPNextSyncSettings',
   ERPNextSyncQueue = 'ERPNextSyncQueue',
   FetchFromERPNextQueue = 'FetchFromERPNextQueue',
+  PayrollSettings = 'PayrollSettings',
 }
 
 export type ModelName = keyof typeof ModelNameEnum;

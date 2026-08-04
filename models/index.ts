@@ -143,6 +143,9 @@ export async function getRegionalModels(
     const { LeaveApplication } = await import(
       './regionalModels/dz/LeaveApplication'
     );
+    const { PayrollSettings } = await import(
+      './regionalModels/dz/PayrollSettings'
+    );
     const { SalarySlip } = await import('./regionalModels/dz/SalarySlip');
     return {
       Department,
@@ -151,6 +154,7 @@ export async function getRegionalModels(
       EarningItem,
       Attendance,
       LeaveApplication,
+      PayrollSettings,
       SalarySlip,
     };
   }

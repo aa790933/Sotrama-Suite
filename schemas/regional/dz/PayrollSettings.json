@@ -1,0 +1,113 @@
+{
+  "name": "PayrollSettings",
+  "label": "Payroll Settings",
+  "isSingle": true,
+  "isChild": false,
+  "fields": [
+    {
+      "fieldname": "snmg",
+      "label": "SNMG (Minimum Wage Floor)",
+      "fieldtype": "Float",
+      "default": 24000,
+      "required": true,
+      "description": "Salaire National Minimum Général — minimum monthly wage floor in DZD. Gross salaries below this produce a non-blocking warning.",
+      "section": "SNMG"
+    },
+    {
+      "fieldname": "cnasEmployeeRate",
+      "label": "CNAS Employee Rate",
+      "fieldtype": "Float",
+      "default": 9,
+      "description": "Employee CNAS contribution rate as a percentage of gross salary. Default 9%.",
+      "section": "CNAS"
+    },
+    {
+      "fieldname": "cnasEmployerRate",
+      "label": "CNAS Employer Rate",
+      "fieldtype": "Float",
+      "default": 26,
+      "description": "Employer CNAS contribution rate as a percentage of gross salary. Default 26%.",
+      "section": "CNAS"
+    },
+    {
+      "fieldname": "irgBracket1Limit",
+      "label": "IRG Bracket 1 Limit",
+      "fieldtype": "Float",
+      "default": 30000,
+      "description": "Upper bound of the 0% IRG band (DZD).",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "irgBracket1Rate",
+      "label": "IRG Bracket 1 Rate",
+      "fieldtype": "Float",
+      "default": 0,
+      "description": "Income tax rate (%) for the 0% band — 0 to 30,000 DZD.",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "irgBracket2Limit",
+      "label": "IRG Bracket 2 Limit",
+      "fieldtype": "Float",
+      "default": 120000,
+      "description": "Upper bound of the 23% IRG band (DZD).",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "irgBracket2Rate",
+      "label": "IRG Bracket 2 Rate",
+      "fieldtype": "Float",
+      "default": 23,
+      "description": "Income tax rate (%) for the 23% band — 30,001 to 120,000 DZD.",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "irgBracket3Limit",
+      "label": "IRG Bracket 3 Limit",
+      "fieldtype": "Float",
+      "default": 360000,
+      "description": "Upper bound of the 27% IRG band (DZD).",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "irgBracket3Rate",
+      "label": "IRG Bracket 3 Rate",
+      "fieldtype": "Float",
+      "default": 27,
+      "description": "Income tax rate (%) for the 27% band — 120,001 to 360,000 DZD.",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "irgBracket4Rate",
+      "label": "IRG Bracket 4 Rate",
+      "fieldtype": "Float",
+      "default": 30,
+      "description": "Income tax rate (%) for the top bracket — above 360,000 DZD.",
+      "section": "IRG Brackets"
+    },
+    {
+      "fieldname": "professionalExpenseRate",
+      "label": "Professional Expense Abatement Rate",
+      "fieldtype": "Float",
+      "default": 40,
+      "description": "Professional expense abatement as a percentage of net social. Default 40%.",
+      "section": "Professional Abatement"
+    },
+    {
+      "fieldname": "abatementMin",
+      "label": "Abatement Minimum",
+      "fieldtype": "Float",
+      "default": 1000,
+      "description": "Floor for the professional expense abatement (DZD). Narrow-band smoothing only — see code comment in payroll.ts. Not applied to match the official worked example.",
+      "section": "Professional Abatement"
+    },
+    {
+      "fieldname": "abatementMax",
+      "label": "Abatement Maximum",
+      "fieldtype": "Float",
+      "default": 1500,
+      "description": "Ceiling for the professional expense abatement (DZD). Narrow-band smoothing only — see code comment in payroll.ts. Not applied to match the official worked example.",
+      "section": "Professional Abatement"
+    }
+  ]
+}

@@ -88,3 +88,21 @@ export function isNetworkError(error: Error) {
       return false;
   }
 }
+
+export function isGitHubApiError(
+  error: Error | Record<string, unknown>
+): boolean {
+  const code =
+    (error as Record<string, unknown>)?.statusCode ??
+    (error as Record<string, unknown>)?.status ??
+    (error as Record<string, unknown>)?.code;
+  if (typeof code === 'number' && (code === 403 || code === 404)) {
+    return true;
+  }
+  const msg = error?.message ?? '';
+  return /^(403|404)/.test(msg);
+}
+
+export function isExpectedUpdateError(error: Error): boolean {
+  return isNetworkError(error) || isGitHubApiError(error);
+}

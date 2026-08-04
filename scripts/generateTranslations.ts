@@ -282,7 +282,7 @@ function pushTStringsFromSchema(
 
 async function getSchemaTStrings() {
   const root = path.resolve(__dirname, '../schemas');
-  const fileList = await getFileList(root, ['tests', 'regional'], /\.json$/);
+  const fileList = await getFileList(root, ['tests'], /\.json$/);
   return await getTStringsFromJsonFileList(fileList);
 }
 

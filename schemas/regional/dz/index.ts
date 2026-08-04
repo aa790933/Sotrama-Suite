@@ -5,6 +5,7 @@ import Designation from './Designation.json';
 import EarningItem from './EarningItem.json';
 import Employee from './Employee.json';
 import LeaveApplication from './LeaveApplication.json';
+import PayrollSettings from './PayrollSettings.json';
 import SalarySlip from './SalarySlip.json';
 
 /**
@@ -20,5 +21,6 @@ export default [
   EarningItem,
   Attendance,
   LeaveApplication,
+  PayrollSettings,
   SalarySlip,
 ] as SchemaStub[];

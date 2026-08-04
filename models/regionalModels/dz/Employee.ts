@@ -2,7 +2,7 @@ import { Doc } from 'fyo/model/doc';
 import { ListViewSettings } from 'fyo/model/types';
 import { Money } from 'pesa';
 import { DateTime } from 'luxon';
-import { SNMG_2026 } from './payroll';
+import { getPayrollSettingsData } from './payroll';
 
 export class Employee extends Doc {
   firstName?: string;
@@ -32,12 +32,14 @@ export class Employee extends Doc {
     await super.validate();
 
     const base = this.baseSalary?.float ?? 0;
-    if (base > 0 && base < SNMG_2026) {
+    const ps = this.fyo.singles.PayrollSettings;
+    const snmg = getPayrollSettingsData(ps).snmg;
+    if (base > 0 && base < snmg) {
       // eslint-disable-next-line no-console
       console.warn(
         `[compliance] Employee ${
           this.name || ''
-        }: base salary ${base} DZD is below the 2026 SNMG floor of ${SNMG_2026} DZD/month.`
+        }: base salary ${base} DZD is below the SNMG floor of ${snmg} DZD/month.`
       );
     }
 

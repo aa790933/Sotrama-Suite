@@ -2,7 +2,7 @@ import { app, dialog } from 'electron';
 import { autoUpdater, UpdateInfo } from 'electron-updater';
 import { emitMainProcessError } from '../backend/helpers';
 import { Main } from '../main';
-import { isNetworkError } from './helpers';
+import { isExpectedUpdateError } from './helpers';
 
 export default function registerAutoUpdaterListeners(main: Main) {
   autoUpdater.autoDownload = false;
@@ -14,7 +14,7 @@ export default function registerAutoUpdaterListeners(main: Main) {
       main.checkedForUpdate = true;
     }
 
-    if (isNetworkError(error)) {
+    if (isExpectedUpdateError(error)) {
       return;
     }
 

@@ -23,7 +23,7 @@ import { printHtmlDocument } from './printHtmlDocument';
 import {
   getConfigFilesWithModified,
   getErrorHandledReponse,
-  isNetworkError,
+  isExpectedUpdateError,
   setAndGetCleanedConfigFiles,
 } from './helpers';
 import { saveHtmlAsPdf } from './saveHtmlAsPdf';
@@ -159,7 +159,7 @@ export default function registerIpcMainActionListeners(main: Main) {
     try {
       await autoUpdater.checkForUpdates();
     } catch (error) {
-      if (isNetworkError(error as Error)) {
+      if (isExpectedUpdateError(error as Error)) {
         return;
       }
 

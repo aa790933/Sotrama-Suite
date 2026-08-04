@@ -35,7 +35,8 @@ export type SettingsTab =
   | ModelNameEnum.AccountingSettings
   | ModelNameEnum.Defaults
   | ModelNameEnum.PrintSettings
-  | ModelNameEnum.SystemSettings;
+  | ModelNameEnum.SystemSettings
+  | ModelNameEnum.PayrollSettings;
 
 export interface QuickEditOptions {
   doc: Doc;

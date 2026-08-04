@@ -4,6 +4,7 @@
       <Button v-if="canSave" type="primary" @click="sync">
         {{ t`Save` }}
       </Button>
+      <LanguageSelector class="ms-4 text-sm w-40" />
     </template>
     <template #body>
       <FormHeader
@@ -88,6 +89,7 @@ import { Field, Schema } from 'schemas/types';
 import Button from 'src/components/Button.vue';
 import FormContainer from 'src/components/FormContainer.vue';
 import FormHeader from 'src/components/FormHeader.vue';
+import LanguageSelector from 'src/components/Controls/LanguageSelector.vue';
 import { handleErrorWithDialog } from 'src/errorHandling';
 import { getErrorMessage } from 'src/utils';
 import { evaluateHidden } from 'src/utils/doc';
@@ -102,7 +104,7 @@ import CommonFormSection from '../CommonForm/CommonFormSection.vue';
 const COMPONENT_NAME = 'Settings';
 
 export default defineComponent({
-  components: { FormContainer, Button, FormHeader, CommonFormSection },
+  components: { FormContainer, Button, FormHeader, CommonFormSection, LanguageSelector },
   provide() {
     return { doc: computed(() => this.doc) };
   },
@@ -132,6 +134,7 @@ export default defineComponent({
         ModelNameEnum.ERPNextSyncSettings,
         ModelNameEnum.PrintSettings,
         ModelNameEnum.SystemSettings,
+        ModelNameEnum.PayrollSettings,
       ].some((s) => this.fyo.singles[s]?.canSave);
     },
     doc(): Doc | null {
@@ -151,14 +154,16 @@ export default defineComponent({
         [ModelNameEnum.POSSettings]: this.t`POS Settings`,
         [ModelNameEnum.ERPNextSyncSettings]: this.t`ERPNext Sync`,
         [ModelNameEnum.SystemSettings]: this.t`System`,
+        [ModelNameEnum.PayrollSettings]: this.t`Payroll Settings`,
       };
     },
     schemas(): Schema[] {
       const enableInventory =
         !!this.fyo.singles.AccountingSettings?.enableInventory;
       const enablePOS = !!this.fyo.singles.InventorySettings?.enablePointOfSale;
-      const enableERPNextSync =
+       const enableERPNextSync =
         !!this.fyo.singles.AccountingSettings?.enableERPNextSync;
+      const isDz = this.fyo.singles.SystemSettings?.countryCode === 'dz';
 
       return [
         ModelNameEnum.AccountingSettings,
@@ -168,6 +173,7 @@ export default defineComponent({
         ModelNameEnum.ERPNextSyncSettings,
         ModelNameEnum.PrintSettings,
         ModelNameEnum.SystemSettings,
+        ModelNameEnum.PayrollSettings,
       ]
         .filter((s) => {
           if (s === ModelNameEnum.InventorySettings && !enableInventory) {
@@ -179,6 +185,10 @@ export default defineComponent({
           }
 
           if (s === ModelNameEnum.ERPNextSyncSettings && !enableERPNextSync) {
+            return false;
+          }
+
+          if (s === ModelNameEnum.PayrollSettings && !isDz) {
             return false;
           }
 

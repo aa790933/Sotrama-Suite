@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Fyo } from 'fyo';
+import { Fyo, t } from 'fyo';
 import { ModelNameEnum } from 'models/types';
 import { ReportCell, ReportData } from 'reports/types';
 import { Field, FieldType } from 'schemas/types';
@@ -271,7 +271,7 @@ export function buildDtsRows(
       { rawValue: displayName, value: displayName, align: 'left', width: 1.5 },
       {
         rawValue: emp.nin,
-        value: emp.nin || 'MISSING_NIN',
+        value: emp.nin || t`MISSING_NIN`,
         align: 'left',
         color: emp.nin ? undefined : 'red',
         bold: !emp.nin,
@@ -314,7 +314,7 @@ export function buildDtsRows(
   const totalCells: ReportCell[] = [
     {
       rawValue: 'Total',
-      value: 'Total',
+      value: t`Total`,
       align: 'left',
       width: 1.5,
       bold: true,
@@ -407,7 +407,7 @@ export function buildDasRows(
       { rawValue: displayName, value: displayName, align: 'left', width: 1.5 },
       {
         rawValue: emp.nin,
-        value: emp.nin || 'MISSING_NIN',
+        value: emp.nin || t`MISSING_NIN`,
         align: 'left',
         color: emp.nin ? undefined : 'red',
         bold: !emp.nin,
@@ -463,7 +463,7 @@ export function buildDasRows(
   const totalCells: ReportCell[] = [
     {
       rawValue: 'Total',
-      value: 'Total',
+      value: t`Total`,
       align: 'left',
       width: 1.5,
       bold: true,

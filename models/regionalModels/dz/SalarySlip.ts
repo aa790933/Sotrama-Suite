@@ -1,9 +1,14 @@
 import { ListViewSettings } from 'fyo/model/types';
 import { ValidationError } from 'fyo/utils/errors';
+import { t } from 'fyo';
 import { LedgerPosting } from 'models/Transactional/LedgerPosting';
 import { Transactional } from 'models/Transactional/Transactional';
 import { Money } from 'pesa';
-import { calculateDZPayroll, DZPayrollResult } from './payroll';
+import {
+  calculateDZPayroll,
+  DZPayrollResult,
+  getPayrollSettingsData,
+} from './payroll';
 import {
   EarningRow,
   buildSalarySlipPostingLines,
@@ -37,13 +42,13 @@ export class SalarySlip extends Transactional {
   private async runPayroll(): Promise<DZPayrollResult> {
     if (!this.employee) {
       throw new ValidationError(
-        'Employee is required to compute the salary slip payroll'
+        t`Employee is required to compute the salary slip payroll`
       );
     }
 
     const emp = (await this.loadAndGetLink('employee')) as Employee | null;
     if (!emp) {
-      throw new ValidationError(`Employee "${this.employee}" was not found`);
+      throw new ValidationError(t`Employee "${this.employee}" was not found`);
     }
 
     const baseSalary = emp.baseSalary?.float ?? 0;
@@ -59,7 +64,8 @@ export class SalarySlip extends Transactional {
     }));
 
     const gross = getGrossNumber(baseSalary, earnings, overtimeRate);
-    const payroll = calculateDZPayroll(gross);
+    const settings = getPayrollSettingsData(this.fyo.singles.PayrollSettings);
+    const payroll = calculateDZPayroll(gross, settings);
 
     this.baseSalary = this.fyo.pesa(baseSalary);
     this.employeeName = emp.fullName || emp.name;
