@@ -17,7 +17,28 @@ export class PrintSettings extends Doc {
   termsAndConditions?: string;
   posPrintWidth?: number;
   amountInWords?: boolean;
+  headerMode?: string;
+  headerContent?: string;
+  headerHeight?: number;
+  footerMode?: string;
+  footerContent?: string;
+  footerHeight?: number;
+  showNifOnDocuments?: boolean;
+  showNisOnDocuments?: boolean;
+  showRcOnDocuments?: boolean;
+  showCapitalSocialOnDocuments?: boolean;
+  showCnasingEmployerOnDocuments?: boolean;
   override hidden: HiddenMap = {
     termsAndConditions: () => !this.displaytermsandconditions,
+    showNifOnDocuments: () =>
+      this.fyo.singles.SystemSettings?.countryCode !== 'dz',
+    showNisOnDocuments: () =>
+      this.fyo.singles.SystemSettings?.countryCode !== 'dz',
+    showRcOnDocuments: () =>
+      this.fyo.singles.SystemSettings?.countryCode !== 'dz',
+    showCapitalSocialOnDocuments: () =>
+      this.fyo.singles.SystemSettings?.countryCode !== 'dz',
+    showCnasingEmployerOnDocuments: () =>
+      this.fyo.singles.SystemSettings?.countryCode !== 'dz',
   };
 }

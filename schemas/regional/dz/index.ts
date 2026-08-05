@@ -1,11 +1,13 @@
 import { SchemaStub } from '../../types';
 import Attendance from './Attendance.json';
 import Department from './Department.json';
+import AccountingSettings from './AccountingSettings.json';
 import Designation from './Designation.json';
 import EarningItem from './EarningItem.json';
 import Employee from './Employee.json';
 import LeaveApplication from './LeaveApplication.json';
 import PayrollSettings from './PayrollSettings.json';
+import PrintSettings from './PrintSettings.json';
 import SalarySlip from './SalarySlip.json';
 
 /**
@@ -15,6 +17,7 @@ import SalarySlip from './SalarySlip.json';
  * (see schemas/index.ts), so they are only loaded for Algerian instances.
  */
 export default [
+  AccountingSettings,
   Department,
   Designation,
   Employee,
@@ -22,5 +25,6 @@ export default [
   Attendance,
   LeaveApplication,
   PayrollSettings,
+  PrintSettings,
   SalarySlip,
 ] as SchemaStub[];

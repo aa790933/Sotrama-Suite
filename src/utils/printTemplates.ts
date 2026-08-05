@@ -40,8 +40,27 @@ const printSettingsFields = [
   'amountInWords',
   'displaytermsandconditions',
   'termsAndConditions',
+  'headerMode',
+  'headerContent',
+  'headerHeight',
+  'footerMode',
+  'footerContent',
+  'footerHeight',
+  'showNifOnDocuments',
+  'showNisOnDocuments',
+  'showRcOnDocuments',
+  'showCapitalSocialOnDocuments',
+  'showCnasingEmployerOnDocuments',
 ];
-const accountingSettingsFields = ['gstin', 'taxId'];
+const accountingSettingsFields = [
+  'gstin',
+  'taxId',
+  'nif',
+  'nis',
+  'rc',
+  'capitalSocial',
+  'cnasEmployerArticleNumber',
+];
 
 export async function getPrintTemplatePropValues(
   doc: Doc
@@ -445,12 +464,22 @@ async function getPrintTemplateDocValues(doc: Doc, fieldnames?: string[]) {
   return values;
 }
 
+export type HeaderFooterSettings = {
+  headerMode?: string;
+  headerContent?: string;
+  headerHeight?: number;
+  footerMode?: string;
+  footerContent?: string;
+  footerHeight?: number;
+};
+
 export async function getPathAndMakePDF(
   name: string,
   innerHTML: string,
   width: number,
   height: number,
-  shouldPrint?: boolean
+  shouldPrint?: boolean,
+  hfSettings?: HeaderFooterSettings
 ) {
   if (!shouldPrint) {
     const { filePath: savePath } = await getSavePath(name, 'pdf');
@@ -458,7 +487,7 @@ export async function getPathAndMakePDF(
       return;
     }
 
-    const html = constructPrintDocument(innerHTML);
+    const html = constructPrintDocument(innerHTML, hfSettings);
     const success = await ipc.makePDF(html, savePath, width, height);
     if (success) {
       showExportInFolder(t`Save as PDF Successful`, savePath);
@@ -466,7 +495,7 @@ export async function getPathAndMakePDF(
       showToast({ message: t`Export Failed`, type: 'error' });
     }
   } else {
-    const html = constructPrintDocument(innerHTML);
+    const html = constructPrintDocument(innerHTML, hfSettings);
     const success = await ipc.printDocument(html, width, height);
     if (success) {
       showToast({ message: t`Print Successful`, type: 'success' });
@@ -476,11 +505,17 @@ export async function getPathAndMakePDF(
   }
 }
 
-function constructPrintDocument(innerHTML: string) {
+function constructPrintDocument(
+  innerHTML: string,
+  hfSettings?: HeaderFooterSettings
+) {
   const html = document.createElement('html');
   const head = document.createElement('head');
   const body = document.createElement('body');
   const style = getAllCSSAsStyleElem();
+
+  const headerHeight = hfSettings?.headerHeight ?? 0;
+  const footerHeight = hfSettings?.footerHeight ?? 0;
 
   const printCSS = document.createElement('style');
   printCSS.innerHTML = `
@@ -492,7 +527,7 @@ function constructPrintDocument(innerHTML: string) {
       }
 
       @page {
-        margin: 0;
+        margin: ${headerHeight}cm 0 ${footerHeight}cm 0;
       }
 
       * {
@@ -510,9 +545,56 @@ function constructPrintDocument(innerHTML: string) {
 
   head.append(style, printCSS);
 
-  body.innerHTML = innerHTML;
+  body.innerHTML = buildHeaderFooterHTML(innerHTML, hfSettings);
   html.append(head, body);
   return html.outerHTML;
+}
+
+function buildHeaderFooterHTML(
+  innerHTML: string,
+  hfSettings?: HeaderFooterSettings
+): string {
+  if (!hfSettings || (!hfSettings.headerMode || hfSettings.headerMode === 'None')) {
+    const footer = buildHeaderFooterElement(hfSettings?.footerMode, hfSettings?.footerContent, true);
+    if (!footer) return innerHTML;
+    return innerHTML + footer;
+  }
+
+  const header = buildHeaderFooterElement(hfSettings.headerMode, hfSettings.headerContent, false);
+  const footer = buildHeaderFooterElement(hfSettings.footerMode, hfSettings.footerContent, true);
+
+  let result = '';
+  if (header) result += header;
+  result += innerHTML;
+  if (footer) result += footer;
+  return result;
+}
+
+function buildHeaderFooterElement(
+  mode: string | undefined,
+  content: string | undefined,
+  isFooter: boolean
+): string {
+  if (!mode || mode === 'None' || !content) return '';
+
+  const position = isFooter ? 'bottom' : 'top';
+  const className = isFooter ? 'print-footer-fixed' : 'print-header-fixed';
+
+  let innerHTML = '';
+  if (mode === 'Image') {
+    innerHTML = `<img src="${content}" class="w-full h-full object-contain" />`;
+  } else if (mode === 'Text') {
+    const escaped = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    innerHTML = `<div class="header-footer-text">${escaped}</div>`;
+  } else if (mode === 'HTML') {
+    innerHTML = content;
+  }
+
+  return `<div class="${className}" style="position: fixed; ${position}: 0; left: 0; width: 100%; z-index: 999;">${innerHTML}</div>`;
 }
 
 function getAllCSSAsStyleElem() {

@@ -1,0 +1,44 @@
+{
+  "name": "AccountingSettings",
+  "fields": [
+    {
+      "fieldname": "nif",
+      "label": "NIF",
+      "fieldtype": "Data",
+      "placeholder": "15-digit Tax ID",
+      "description": "Numéro d'Identification Fiscale — 15-digit tax identification number assigned by the Algerian tax authority. Legally required on all invoices per Article 11 of the Commercial Code.",
+      "section": "Company"
+    },
+    {
+      "fieldname": "nis",
+      "label": "NIS",
+      "fieldtype": "Data",
+      "placeholder": "01-NNNN-NNNN",
+      "description": "Numéro d'Identification Statistique — statistical identification number assigned by the National Office of Statistics (ONS). Required on official documents.",
+      "section": "Company"
+    },
+    {
+      "fieldname": "rc",
+      "label": "RC",
+      "fieldtype": "Data",
+      "placeholder": "RC number",
+      "description": "Registre de Commerce — commercial register number. Required for businesses with commercial activity.",
+      "section": "Company"
+    },
+    {
+      "fieldname": "capitalSocial",
+      "label": "Capital Social",
+      "fieldtype": "Currency",
+      "description": "Share capital (Capital Social) — the company's subscribed share capital in DZD. Relevant for SARL, EURL, and SPA company types; optional for sole proprietors.",
+      "section": "Company"
+    },
+    {
+      "fieldname": "cnasEmployerArticleNumber",
+      "label": "CNAS Employer Article Number",
+      "fieldtype": "Data",
+      "placeholder": "CNAS employer article number",
+      "description": "CNAS employer affiliation article number — the company's own CNAS registration reference (not the individual employee numbers). Legally required on all invoices per Article 11 of the Commercial Code.",
+      "section": "Company"
+    }
+  ]
+}

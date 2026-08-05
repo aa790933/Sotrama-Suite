@@ -248,6 +248,13 @@
     >
       <SetType :doc="doc" @done="showTypeModal = !showTypeModal" />
     </Modal>
+    <Modal
+      v-if="doc"
+      :open-modal="showHeaderFooterModal"
+      @closemodal="showHeaderFooterModal = !showHeaderFooterModal"
+    >
+      <SetHeaderFooter :doc="doc" @done="showHeaderFooterModal = !showHeaderFooterModal" />
+    </Modal>
   </div>
 </template>
 <script lang="ts">
@@ -292,6 +299,7 @@ import { computed, defineComponent, inject, ref } from 'vue';
 import PrintContainer from './PrintContainer.vue';
 import SetPrintSize from './SetPrintSize.vue';
 import SetType from './SetType.vue';
+import SetHeaderFooter from './SetHeaderFooter.vue';
 import TemplateBuilderHint from './TemplateBuilderHint.vue';
 import TemplateEditor from './TemplateEditor.vue';
 
@@ -310,6 +318,7 @@ export default defineComponent({
     Modal,
     SetPrintSize,
     SetType,
+    SetHeaderFooter,
   },
   provide() {
     return { doc: computed(() => this.doc) };
@@ -342,6 +351,7 @@ export default defineComponent({
       templateChanged: false,
       showTypeModal: false,
       showSizeModal: false,
+      showHeaderFooterModal: false,
       preEditMode: {
         scale: 0.6,
         showSidebar: true,
@@ -421,6 +431,12 @@ export default defineComponent({
           action: () => (this.showSizeModal = true),
         });
       }
+
+      actions.push({
+        label: this.t`Configure Header Footer`,
+        group: this.t`View`,
+        action: () => (this.showHeaderFooterModal = true),
+      });
 
       if (this.doc.isCustom) {
         actions.push({

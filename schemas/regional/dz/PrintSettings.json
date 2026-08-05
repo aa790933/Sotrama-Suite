@@ -1,0 +1,45 @@
+{
+  "name": "PrintSettings",
+  "fields": [
+    {
+      "fieldname": "showNifOnDocuments",
+      "label": "Show NIF on Documents",
+      "fieldtype": "Check",
+      "default": true,
+      "description": "Display the company NIF (Tax ID) on printed documents. Legally required on Algerian invoices per Article 11 of the Commercial Code.",
+      "section": "Customizations"
+    },
+    {
+      "fieldname": "showNisOnDocuments",
+      "label": "Show NIS on Documents",
+      "fieldtype": "Check",
+      "default": true,
+      "description": "Display the company NIS (Statistical ID) on printed documents.",
+      "section": "Customizations"
+    },
+    {
+      "fieldname": "showRcOnDocuments",
+      "label": "Show RC on Documents",
+      "fieldtype": "Check",
+      "default": true,
+      "description": "Display the company RC (Registre de Commerce) number on printed documents.",
+      "section": "Customizations"
+    },
+    {
+      "fieldname": "showCapitalSocialOnDocuments",
+      "label": "Show Capital Social on Documents",
+      "fieldtype": "Check",
+      "default": true,
+      "description": "Display the company Capital Social (share capital) on printed documents.",
+      "section": "Customizations"
+    },
+    {
+      "fieldname": "showCnasingEmployerOnDocuments",
+      "label": "Show CNAS Employer Article Number on Documents",
+      "fieldtype": "Check",
+      "default": true,
+      "description": "Display the company CNAS employer article number on printed documents. Legally required on Algerian invoices per Article 11 of the Commercial Code.",
+      "section": "Customizations"
+    }
+  ]
+}

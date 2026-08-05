@@ -66,7 +66,7 @@ import {
 } from '@vue/compiler-dom';
 import { Verb } from 'fyo/telemetry/types';
 import ErrorBoundary from 'src/components/ErrorBoundary.vue';
-import { getPathAndMakePDF } from 'src/utils/printTemplates';
+import { getPathAndMakePDF, HeaderFooterSettings } from 'src/utils/printTemplates';
 import { PrintValues } from 'src/utils/types';
 import { defineComponent, PropType } from 'vue';
 import ScaledContainer from './ScaledContainer.vue';
@@ -190,12 +190,22 @@ export default defineComponent({
         return;
       }
 
+      const hfSettings: HeaderFooterSettings = {
+        headerMode: this.values?.print?.headerMode as string | undefined,
+        headerContent: this.values?.print?.headerContent as string | undefined,
+        headerHeight: this.values?.print?.headerHeight as number | undefined,
+        footerMode: this.values?.print?.footerMode as string | undefined,
+        footerContent: this.values?.print?.footerContent as string | undefined,
+        footerHeight: this.values?.print?.footerHeight as number | undefined,
+      };
+
       await getPathAndMakePDF(
         name ?? this.t`Entry`,
         innerHTML,
         this.width,
         this.height,
-        shouldPrint
+        shouldPrint,
+        hfSettings
       );
 
       this.fyo.telemetry.log(Verb.Printed, this.printSchemaName);

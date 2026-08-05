@@ -151,6 +151,64 @@
       "label": "Terms and Conditions",
       "fieldtype": "Text",
       "section": "Customizations"
+    },
+    {
+      "fieldname": "headerMode",
+      "label": "Header Mode",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "None", "label": "None" },
+        { "value": "Image", "label": "Image" },
+        { "value": "Text", "label": "Text" },
+        { "value": "HTML", "label": "HTML" }
+      ],
+      "default": "None",
+      "section": "Header Footer"
+    },
+    {
+      "fieldname": "headerContent",
+      "label": "Header Content",
+      "fieldtype": "Text",
+      "description": "Header content: text for Text mode, image file path for Image mode, or raw HTML for HTML mode. Supports {{ print.field }} interpolation.",
+      "rows": 4,
+      "section": "Header Footer"
+    },
+    {
+      "fieldname": "headerHeight",
+      "label": "Header Height (cm)",
+      "fieldtype": "Float",
+      "default": 0,
+      "description": "Vertical space reserved at the top of each printed page for the header.",
+      "section": "Header Footer"
+    },
+    {
+      "fieldname": "footerMode",
+      "label": "Footer Mode",
+      "fieldtype": "Select",
+      "options": [
+        { "value": "None", "label": "None" },
+        { "value": "Image", "label": "Image" },
+        { "value": "Text", "label": "Text" },
+        { "value": "HTML", "label": "HTML" }
+      ],
+      "default": "None",
+      "section": "Header Footer"
+    },
+    {
+      "fieldname": "footerContent",
+      "label": "Footer Content",
+      "fieldtype": "Text",
+      "description": "Footer content: text for Text mode, image file path for Image mode, or raw HTML for HTML mode. Supports {{ print.field }} interpolation.",
+      "rows": 4,
+      "section": "Header Footer"
+    },
+    {
+      "fieldname": "footerHeight",
+      "label": "Footer Height (cm)",
+      "fieldtype": "Float",
+      "default": 0,
+      "description": "Vertical space reserved at the bottom of each printed page for the footer.",
+      "section": "Header Footer"
     }
   ]
 }
