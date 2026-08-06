@@ -554,14 +554,30 @@ function buildHeaderFooterHTML(
   innerHTML: string,
   hfSettings?: HeaderFooterSettings
 ): string {
-  if (!hfSettings || (!hfSettings.headerMode || hfSettings.headerMode === 'None')) {
-    const footer = buildHeaderFooterElement(hfSettings?.footerMode, hfSettings?.footerContent, true);
+  if (
+    !hfSettings ||
+    !hfSettings.headerMode ||
+    hfSettings.headerMode === 'None'
+  ) {
+    const footer = buildHeaderFooterElement(
+      hfSettings?.footerMode,
+      hfSettings?.footerContent,
+      true
+    );
     if (!footer) return innerHTML;
     return innerHTML + footer;
   }
 
-  const header = buildHeaderFooterElement(hfSettings.headerMode, hfSettings.headerContent, false);
-  const footer = buildHeaderFooterElement(hfSettings.footerMode, hfSettings.footerContent, true);
+  const header = buildHeaderFooterElement(
+    hfSettings.headerMode,
+    hfSettings.headerContent,
+    false
+  );
+  const footer = buildHeaderFooterElement(
+    hfSettings.footerMode,
+    hfSettings.footerContent,
+    true
+  );
 
   let result = '';
   if (header) result += header;

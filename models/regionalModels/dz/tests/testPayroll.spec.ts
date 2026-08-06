@@ -45,11 +45,19 @@ test('negative gross throws', (t) => {
 test('live SNMG override is read at runtime, not a stale constant', (t) => {
   // default SNMG is 24_000 — 25_000 should NOT be flagged
   const defaultResult = calculateDZPayroll(25_000);
-  t.equal(defaultResult.belowSNMG, false, 'default SNMG 24000: 25000 not below');
+  t.equal(
+    defaultResult.belowSNMG,
+    false,
+    'default SNMG 24000: 25000 not below'
+  );
 
   // override SNMG to 30_000 — same 25_000 gross should NOW be flagged
   const liveSettings = getPayrollSettingsData({ snmg: 30_000 });
-  t.equal(liveSettings.snmg, 30_000, 'getPayrollSettingsData merged snmg to 30000');
+  t.equal(
+    liveSettings.snmg,
+    30_000,
+    'getPayrollSettingsData merged snmg to 30000'
+  );
 
   const overriddenResult = calculateDZPayroll(25_000, liveSettings);
   t.equal(

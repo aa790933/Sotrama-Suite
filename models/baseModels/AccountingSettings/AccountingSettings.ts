@@ -85,8 +85,7 @@ export class AccountingSettings extends Doc {
     nif: () => this.fyo.singles.SystemSettings?.countryCode !== 'dz',
     nis: () => this.fyo.singles.SystemSettings?.countryCode !== 'dz',
     rc: () => this.fyo.singles.SystemSettings?.countryCode !== 'dz',
-    capitalSocial: () =>
-      this.fyo.singles.SystemSettings?.countryCode !== 'dz',
+    capitalSocial: () => this.fyo.singles.SystemSettings?.countryCode !== 'dz',
     cnasEmployerArticleNumber: () =>
       this.fyo.singles.SystemSettings?.countryCode !== 'dz',
     enablePricingRule: () =>

@@ -253,7 +253,10 @@
       :open-modal="showHeaderFooterModal"
       @closemodal="showHeaderFooterModal = !showHeaderFooterModal"
     >
-      <SetHeaderFooter :doc="doc" @done="showHeaderFooterModal = !showHeaderFooterModal" />
+      <SetHeaderFooter
+        :doc="doc"
+        @done="showHeaderFooterModal = !showHeaderFooterModal"
+      />
     </Modal>
   </div>
 </template>

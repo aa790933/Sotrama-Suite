@@ -1,5 +1,5 @@
 <template>
-  <div class="w-form" v-if="settingsLoaded">
+  <div v-if="settingsLoaded" class="w-form">
     <FormHeader :form-title="t`Configure Header Footer`" />
     <hr class="dark:border-gray-800" />
     <div class="p-4 w-full flex flex-col gap-4">
