@@ -1,3 +1,4 @@
+<!-- Company info fields are duplicated across all built-in templates. If adding a new company-info field, update all 6 templates + baseTemplate. -->
 <main class="h-full" :style="{ 'font-family': print.font }">
   <!-- Invoice Header -->
   <header class="flex items-center justify-between w-full border-b px-12 py-10">
@@ -80,6 +81,36 @@
         class="mt-2 ml-8 text-black leading-relaxed text-lg"
       >
         GSTIN: {{ print.gstin }}
+      </p>
+      <p
+        v-if="print.showNifOnDocuments"
+        class="mt-2 ml-8 text-black leading-relaxed text-lg"
+      >
+        NIF: {{ print.nif }}
+      </p>
+      <p
+        v-if="print.showNisOnDocuments"
+        class="mt-2 ml-8 text-black leading-relaxed text-lg"
+      >
+        NIS: {{ print.nis }}
+      </p>
+      <p
+        v-if="print.showRcOnDocuments"
+        class="mt-2 ml-8 text-black leading-relaxed text-lg"
+      >
+        RC: {{ print.rc }}
+      </p>
+      <p
+        v-if="print.showCapitalSocialOnDocuments"
+        class="mt-2 ml-8 text-black leading-relaxed text-lg"
+      >
+        Capital Social: {{ print.capitalSocial }}
+      </p>
+      <p
+        v-if="print.showCnasingEmployerOnDocuments"
+        class="mt-2 ml-8 text-black leading-relaxed text-lg"
+      >
+        CNAS Employer Article: {{ print.cnasEmployerArticleNumber }}
       </p>
     </section>
   </section>

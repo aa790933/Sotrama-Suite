@@ -1,3 +1,4 @@
+<!-- Company info fields are duplicated across all built-in templates. If adding a new company-info field, update all 6 templates + baseTemplate. -->
 <main class="h-auto w-auto m-1 p-0.5 pb-5 bg-white">
   <!-- Invoice Header -->
   <header class="pt-4 flex flex-col items-center">
@@ -18,6 +19,21 @@
     <!-- Company Contacts -->
     <p class="mt-1 text-base">{{ print.phone }}</p>
     <p class="text-base">{{ print.email }}</p>
+    <p v-if="print.showNifOnDocuments" class="mt-1 text-sm">
+      NIF: {{ print.nif }}
+    </p>
+    <p v-if="print.showNisOnDocuments" class="mt-1 text-sm">
+      NIS: {{ print.nis }}
+    </p>
+    <p v-if="print.showRcOnDocuments" class="mt-1 text-sm">
+      RC: {{ print.rc }}
+    </p>
+    <p v-if="print.showCapitalSocialOnDocuments" class="mt-1 text-sm">
+      Capital Social: {{ print.capitalSocial }}
+    </p>
+    <p v-if="print.showCnasingEmployerOnDocuments" class="mt-1 text-sm">
+      CNAS Employer Article: {{ print.cnasEmployerArticleNumber }}
+    </p>
   </header>
   <!-- Invoice Details -->
 

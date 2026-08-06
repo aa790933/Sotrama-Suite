@@ -738,7 +738,8 @@ function getNameAndTypeFromTemplateFile(
   });
 }
 
-export const baseTemplate = `<main class="h-full w-full bg-white" :style="{ 'font-family': print.font }">
+export const baseTemplate = `<!-- Company info fields are duplicated across all built-in templates. -->
+<main class="h-full w-full bg-white" :style="{ 'font-family': print.font }">
 
   <!-- Edit This Code -->
   <header class="p-4 flex justify-between border-b">
@@ -760,6 +761,19 @@ export const baseTemplate = `<main class="h-full w-full bg-white" :style="{ 'fon
       {{ doc.name }}
     </h2>
   </header>
+
+  <!-- DZ company identity fields (gated by Show toggles in Print Settings) -->
+  <section class="px-4 mt-4">
+    <p v-if="print.showNifOnDocuments">NIF: {{ print.nif }}</p>
+    <p v-if="print.showNisOnDocuments">NIS: {{ print.nis }}</p>
+    <p v-if="print.showRcOnDocuments">RC: {{ print.rc }}</p>
+    <p v-if="print.showCapitalSocialOnDocuments">
+      Capital Social: {{ print.capitalSocial }}
+    </p>
+    <p v-if="print.showCnasingEmployerOnDocuments">
+      CNAS Employer Article: {{ print.cnasEmployerArticleNumber }}
+    </p>
+  </section>
 
   <div class="p-4 text-gray-600">
     Edit the code in the Template Editor on the right
