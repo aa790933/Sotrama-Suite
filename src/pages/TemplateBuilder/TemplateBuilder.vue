@@ -253,10 +253,7 @@
       :open-modal="showHeaderFooterModal"
       @closemodal="showHeaderFooterModal = !showHeaderFooterModal"
     >
-      <SetHeaderFooter
-        :doc="doc"
-        @done="showHeaderFooterModal = !showHeaderFooterModal"
-      />
+      <SetHeaderFooter :doc="doc" @done="onHeaderFooterDone" />
     </Modal>
   </div>
 </template>
@@ -668,6 +665,12 @@ export default defineComponent({
       }
 
       printContainer.savePDF(this.doc?.name, shouldPrint);
+    },
+    async onHeaderFooterDone() {
+      this.showHeaderFooterModal = false;
+      if (this.displayDoc) {
+        this.values = await getPrintTemplatePropValues(this.displayDoc);
+      }
     },
     async setDisplayInitialDoc() {
       const schemaName = this.doc?.type;

@@ -340,7 +340,21 @@ export default defineComponent({
           continue;
         }
 
-        tabbed.get(section)!.push(field);
+        let effectiveField = field;
+        if (
+          schemaName === 'PrintSettings' &&
+          (field.fieldname === 'headerContent' ||
+            field.fieldname === 'footerContent')
+        ) {
+          const modeField =
+            field.fieldname === 'headerContent' ? 'headerMode' : 'footerMode';
+          const mode = doc?.get(modeField);
+          if (mode === 'Image') {
+            effectiveField = { ...field, fieldtype: 'AttachImage' };
+          }
+        }
+
+        tabbed.get(section)!.push(effectiveField);
       }
 
       this.groupedFields = grouped;
