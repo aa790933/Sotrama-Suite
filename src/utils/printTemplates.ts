@@ -586,7 +586,7 @@ function buildHeaderFooterHTML(
   return result;
 }
 
-function buildHeaderFooterElement(
+export function buildHeaderFooterElement(
   mode: string | undefined,
   content: string | undefined,
   isFooter: boolean
@@ -738,16 +738,24 @@ function getNameAndTypeFromTemplateFile(
   });
 }
 
-export const baseTemplate = `<main class="h-full w-full bg-white">
+export const baseTemplate = `<main class="h-full w-full bg-white" :style="{ 'font-family': print.font }">
 
   <!-- Edit This Code -->
   <header class="p-4 flex justify-between border-b">
-    <h2 
-      class="font-semibold text-2xl" 
-      :style="{ color: print.color }"
-    >
-      {{ print.companyName }}
-    </h2>
+    <section class="flex items-center gap-4">
+      <img
+        v-if="print.displayLogo"
+        class="h-12 max-w-32 object-contain"
+        :src="print.logo"
+      />
+      <h2
+        v-else
+        class="font-semibold text-2xl"
+        :style="{ color: print.color }"
+      >
+        {{ print.companyName }}
+      </h2>
+    </section>
     <h2 class="font-semibold text-2xl" >
       {{ doc.name }}
     </h2>

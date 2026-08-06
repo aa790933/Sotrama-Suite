@@ -12,13 +12,23 @@
       :propagate="false"
       @error-captured="handleErrorCaptured"
     >
-      <!-- Template -->
-      <component
-        :is="templateComponent"
-        class="flex-1 bg-white"
-        :doc="values.doc"
-        :print="values.print"
-      />
+      <div
+        class="relative w-full h-full bg-white"
+        :style="previewContainerStyle"
+      >
+        <div v-if="headerHFHTML" v-html="headerHFHTML" />
+
+        <div ref="contentEl" class="w-full h-full">
+          <component
+            :is="templateComponent"
+            class="flex-1 bg-white"
+            :doc="values.doc"
+            :print="values.print"
+          />
+        </div>
+
+        <div v-if="footerHFHTML" v-html="footerHFHTML" />
+      </div>
     </ErrorBoundary>
 
     <!-- Compilation Error -->
@@ -69,6 +79,7 @@ import ErrorBoundary from 'src/components/ErrorBoundary.vue';
 import {
   getPathAndMakePDF,
   HeaderFooterSettings,
+  buildHeaderFooterElement,
 } from 'src/utils/printTemplates';
 import { PrintValues } from 'src/utils/types';
 import { defineComponent, PropType } from 'vue';
@@ -119,6 +130,33 @@ export default defineComponent({
         },
         // eslint-disable-next-line @typescript-eslint/ban-types
       } as {};
+    },
+    hfSettings(): HeaderFooterSettings {
+      return {
+        headerMode: this.values?.print?.headerMode as string | undefined,
+        headerContent: this.values?.print?.headerContent as string | undefined,
+        headerHeight: this.values?.print?.headerHeight as number | undefined,
+        footerMode: this.values?.print?.footerMode as string | undefined,
+        footerContent: this.values?.print?.footerContent as string | undefined,
+        footerHeight: this.values?.print?.footerHeight as number | undefined,
+      };
+    },
+    headerHFHTML(): string {
+      const s = this.hfSettings;
+      return buildHeaderFooterElement(s.headerMode, s.headerContent, false);
+    },
+    footerHFHTML(): string {
+      const s = this.hfSettings;
+      return buildHeaderFooterElement(s.footerMode, s.footerContent, true);
+    },
+    previewContainerStyle(): Record<string, string> {
+      const headerHeight = this.hfSettings.headerHeight ?? 0;
+      const footerHeight = this.hfSettings.footerHeight ?? 0;
+
+      const style: Record<string, string> = {};
+      style['padding-top'] = `${headerHeight}cm`;
+      style['padding-bottom'] = `${footerHeight}cm`;
+      return style;
     },
   },
   watch: {
@@ -188,19 +226,10 @@ export default defineComponent({
        */
 
       // @ts-ignore
-      const innerHTML = this.$refs.scaledContainer.$el.children[0].innerHTML;
+      const innerHTML = this.$refs.contentEl.innerHTML;
       if (typeof innerHTML !== 'string') {
         return;
       }
-
-      const hfSettings: HeaderFooterSettings = {
-        headerMode: this.values?.print?.headerMode as string | undefined,
-        headerContent: this.values?.print?.headerContent as string | undefined,
-        headerHeight: this.values?.print?.headerHeight as number | undefined,
-        footerMode: this.values?.print?.footerMode as string | undefined,
-        footerContent: this.values?.print?.footerContent as string | undefined,
-        footerHeight: this.values?.print?.footerHeight as number | undefined,
-      };
 
       await getPathAndMakePDF(
         name ?? this.t`Entry`,
@@ -208,7 +237,7 @@ export default defineComponent({
         this.width,
         this.height,
         shouldPrint,
-        hfSettings
+        this.hfSettings
       );
 
       this.fyo.telemetry.log(Verb.Printed, this.printSchemaName);
