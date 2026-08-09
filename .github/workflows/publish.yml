@@ -229,14 +229,8 @@ jobs:
       - name: Tar files
         run: tar -cvf dist-windows.tar dist_electron
 
-      - name: Upload Artifacts (retry on Windows publish timeout)
-        uses: nick-fields/retry@v2
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          max_attempts: 3
-          retry_wait_seconds: 60
-          timeout_seconds: 300
-          retry_on: any
-          shell: bash
-          command: |
-            node -e "const a=require('@actions/artifact');const c=a.create();c.uploadArtifact('dist-windows','dist-windows.tar',process.cwd(),{}));console.log('uploaded')" \
-              || { echo 'artifact upload failed'; exit 1; }
+          name: dist-windows
+          path: dist-windows.tar
