@@ -79,7 +79,17 @@
       </div>
 
       <!-- Credits -->
-      <div class="mt-4 pb-4 px-4 text-xs text-gray-500 dark:text-gray-500 flex flex-col gap-1">
+      <div
+        class="
+          mt-4
+          pb-4
+          px-4
+          text-xs text-gray-500
+          dark:text-gray-500
+          flex flex-col
+          gap-1
+        "
+      >
         <div>
           Sotrama Suite — based on
           <a

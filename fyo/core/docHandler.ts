@@ -1,3 +1,4 @@
+import { reactive } from 'vue';
 import { Doc } from 'fyo/model/doc';
 import { DocMap, ModelMap, SinglesMap } from 'fyo/model/types';
 import { coreModels } from 'fyo/models';
@@ -11,19 +12,25 @@ import { DocValueMap, RawValueMap } from './types';
 export class DocHandler {
   fyo: Fyo;
   models: ModelMap = {};
-  singles: SinglesMap = {};
+  singles: SinglesMap;
   docs: Observable<DocMap | undefined> = new Observable();
   observer: Observable<never> = new Observable();
   #temporaryNameCounters: Record<string, number>;
 
   constructor(fyo: Fyo) {
     this.fyo = fyo;
+    this.singles = reactive({} as SinglesMap) as SinglesMap;
     this.#temporaryNameCounters = {};
   }
 
   init() {
     this.models = {};
-    this.singles = {};
+    // Clear singles in-place instead of reassigning, so that the Vue
+    // reactive proxy is preserved and components watching fyo.singles
+    // get notified of the change.
+    for (const key of Object.keys(this.singles)) {
+      delete this.singles[key];
+    }
     this.docs = new Observable();
     this.observer = new Observable();
   }

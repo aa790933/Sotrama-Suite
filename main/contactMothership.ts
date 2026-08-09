@@ -40,8 +40,8 @@ export function getUrlAndTokenString(): Creds {
   }
 
   if (!telemetryUrl || !apiKey || !apiSecret) {
-    // eslint-disable-next-line no-console
     !inProduction &&
+      // eslint-disable-next-line no-console
       console.log('incomplete telemetry creds, skipping logging');
     return empty;
   }

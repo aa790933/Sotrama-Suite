@@ -16,6 +16,7 @@
         class="relative w-full h-full bg-white"
         :style="previewContainerStyle"
       >
+        <!-- eslint-disable-next-line vue/no-v-html -- header/footer HTML is user-authored in local PrintSettings, not untrusted external input -->
         <div v-if="headerHFHTML" v-html="headerHFHTML" />
 
         <div ref="contentEl" class="w-full h-full">
@@ -27,6 +28,7 @@
           />
         </div>
 
+        <!-- eslint-disable-next-line vue/no-v-html -- header/footer HTML is user-authored in local PrintSettings, not untrusted external input -->
         <div v-if="footerHFHTML" v-html="footerHFHTML" />
       </div>
     </ErrorBoundary>
