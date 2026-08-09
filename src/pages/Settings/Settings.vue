@@ -77,6 +77,29 @@
           {{ tabLabels[key] }}
         </div>
       </div>
+
+      <!-- Credits -->
+      <div class="mt-4 pb-4 px-4 text-xs text-gray-500 dark:text-gray-500 flex flex-col gap-1">
+        <div>
+          Sotrama Suite — based on
+          <a
+            href="https://github.com/frappe/books"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline hover:text-gray-700 dark:hover:text-gray-300"
+            >Frappe Books</a
+          >
+          by
+          <a
+            href="https://frappe.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline hover:text-gray-700 dark:hover:text-gray-300"
+            >Frappe Technologies Pvt. Ltd.</a
+          >
+          , licensed under AGPL-3.0-only.
+        </div>
+      </div>
     </template>
   </FormContainer>
 </template>
@@ -271,7 +294,7 @@ export default defineComponent({
 
       this.update();
       await showDialog({
-        title: this.t`Reload Frappe Books?`,
+        title: this.t`Reload Sotrama Suite?`,
         detail: this.t`Changes made to settings will be visible on reload.`,
         type: 'info',
         buttons: [

@@ -14,9 +14,11 @@ const root = dirname; // redundant, but is meant to keep with the previous line
 const buildDirPath = path.join(root, 'dist_electron', 'build');
 const packageDirPath = path.join(root, 'dist_electron', 'bundled');
 
-const frappeBooksConfig = {
-  productName: 'Frappe Books',
-  appId: 'io.frappe.books',
+const sotramaSuiteConfig = {
+  productName: 'Sotrama Suite',
+  // If real user data exists under the old io.frappe.books path before a public/production release,
+  // add a migration step here first — see git history for a prior draft migration approach.
+  appId: 'io.sotrama.suite',
   artifactName: '${productName}-v${version}-${os}-${arch}.${ext}',
   asarUnpack: '**/*.node',
   extraResources: [
@@ -92,4 +94,4 @@ const frappeBooksConfig = {
   },
 };
 
-export default frappeBooksConfig;
+export default sotramaSuiteConfig;

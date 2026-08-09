@@ -1,4 +1,5 @@
 import { SingleValue } from 'backend/database/types';
+import { cloneDeep } from 'lodash';
 import { Fyo } from 'fyo';
 import { DatabaseDemux } from 'fyo/demux/db';
 import { ValueError } from 'fyo/utils/errors';
@@ -87,7 +88,9 @@ export class DatabaseHandler extends DatabaseBase {
 
   async translateSchemaMap(languageMap?: LanguageMap) {
     if (languageMap) {
+      this.#schemaMap = cloneDeep(this.#schemaMap);
       translateSchema(this.#schemaMap, languageMap, schemaTranslateables);
+      this.#setFieldMap();
     } else {
       this.#schemaMap = await this.#demux.getSchemaMap();
       this.#setFieldMap();

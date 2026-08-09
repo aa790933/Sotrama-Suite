@@ -1,16 +1,18 @@
-# Contributing to Frappe Books
+# Contributing to Sotrama Suite
 
-If you are a Frappe Books user and want to contribute to improving it _without
+> Sotrama Suite is a fork of [Frappe Books](https://github.com/frappe/books) by [Frappe Technologies Pvt. Ltd.](https://frappe.io), licensed under AGPL-3.0-only.
+
+If you are a Sotrama Suite user and want to contribute to improving it _without
 writing code_, there are several things you can do:
 
-- **Inform us of issues** you face while using Frappe Books by [raising issues](https://github.com/frappe/books/issues/new).
-- **Add a language** you would like to use Frappe Books in by [contributing translation](https://github.com/frappe/books/wiki/Contributing-Translations).
-- **Share your thoughts** on Frappe Books by joining our [Telegram group](https://t.me/frappebooks).
-- **Use Frappe Books** for your accounting requirements and tell people about it.
+- **Inform us of issues** you face while using Sotrama Suite by [raising issues](https://github.com/frappe/books/issues/new).
+- **Add a language** you would like to use Sotrama Suite in by [contributing translation](https://github.com/frappe/books/wiki/Contributing-Translations).
+- **Share your thoughts** on Sotrama Suite by joining our [Telegram group](https://t.me/frappebooks).
+- **Use Sotrama Suite** for your accounting requirements and tell people about it.
 
 ---
 
-If you want to contribute code to Frappe Books, please go through the following sections for tips and guidelines:
+If you want to contribute code to Sotrama Suite, please go through the following sections for tips and guidelines:
 
 - [Code Quality](#code-quality)
 - [Contributing Features](#contributing-features)
@@ -22,21 +24,21 @@ If you want to contribute code to Frappe Books, please go through the following 
 
 ## Code Quality
 
-A few rules of thumb to ensure that you're contributing maintainable code to Frappe Books:
+A few rules of thumb to ensure that you're contributing maintainable code to Sotrama Suite:
 
 - **Readability over succinctness**: If your succinct code takes longer to parse (as
-  in read and understand) then it is bad code because we aren’t playing code
+  in read and understand) then it is bad code because we aren't playing code
   golf.
   - **Write short functions** such that the name of the function accurately describes
     what the function does.
   - **Use early exits** ([reference](https://softwareengineering.stackexchange.com/questions/18454/should-i-return-from-a-function-early-or-use-an-if-statement)).
-  - **Don’t nest conditionals and loops**. If you find the need for
+  - **Don't nest conditionals and loops**. If you find the need for
     nested loops or conditionals, wrap the inner loop or conditional in a function
     and call it in the outer code block.
   - In general, understand why chunking and naming information is helpful when it
     comes to comprehension.
 - **Succinctness over readability only if it is significantly more performant**:
-  For example, if your code goes from `O(n)` to `O(log(n))` then it’s okay to
+  For example, if your code goes from `O(n)` to `O(log(n))` then it's okay to
   sacrifice readability. In such a case, add comments that mention what is going
   on.
 - **Don't Write comments**: Variable names, function names and easy to read code
@@ -45,7 +47,7 @@ A few rules of thumb to ensure that you're contributing maintainable code to Fra
   if the code is esoteric for the sake of performance.
 - **Rebase don't merge**: Merge commits are ugly and should be used only to
   merge a large PR.
-- **Format your code**: Frappe Books uses `prettier` and `eslint` rules for code
+- **Format your code**: Sotrama Suite uses `prettier` and `eslint` rules for code
   styling and linting, please make sure you have run them and fixed your code
   accordingly before pushing.
 - **Use TypeScript**: Even the `*.vue` files should use TypeScript ([reference](https://vuejs.org/guide/typescript/overview.html#usage-in-single-file-components)).
@@ -56,7 +58,7 @@ When contributing features, these points should be ensured:
 
 ### Invisible until Required
 
-We strive to make Frappe Books as easy and simple to use as possible, and
+We strive to make Sotrama Suite as easy and simple to use as possible, and
 Progressive Disclosure is one of the design patterns that enables us to do this.
 
 - **Big Features**: ensure that the feature should be hidden using feature
@@ -115,15 +117,15 @@ Here are a few rules of thumb to ensure that the tests you're writing are meanin
 
 - **Test values that should have changed against expected change.** If values
   after an operation are not as expected, the tests should fail.
-- **Test values that shouldn’t have changed.** If values which shouldn’t have
+- **Test values that shouldn't have changed.** If values which shouldn't have
   changed also change, the test should fail.
-- **Don’t alter previously written tests,** unless they’re failing due to changes
+- **Don't alter previously written tests,** unless they're failing due to changes
   in implementation.
-- **Don’t write tests for code that has already been tested,** unless you have
+- **Don't write tests for code that has already been tested,** unless you have
   reason to believe that they could have changed.
 - **Manually test your changes using the UI atleast once**.
-- Don’t write tests for the sake of writing tests.
-- Don’t write tests just cause you aren’t sure how something executes.
+- Don't write tests for the sake of writing tests.
+- Don't write tests just cause you aren't sure how something executes.
 - Write tests cause you want to ensure that something continues to execute in
   the way you intend for it to be executed.
 - Write tests cause manually clicking through the UI to check your changes is

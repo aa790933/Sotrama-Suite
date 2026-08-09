@@ -55,7 +55,7 @@ export default function registerIpcMainActionListeners(main: Main) {
         root = 'dbs';
       }
 
-      const dbsPath = path.join(root, 'Frappe Books');
+      const dbsPath = path.join(root, 'Sotrama Suite');
       const backupPath = path.join(dbsPath, 'backups');
       await fs.ensureDir(backupPath);
 

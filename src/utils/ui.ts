@@ -342,8 +342,8 @@ export function getFieldsGroupedByTabAndSection(
 ): UIGroupedFields {
   const grouped: UIGroupedFields = new Map();
   for (const field of schema?.fields ?? []) {
-    const tab = field.tab ?? 'Main';
-    const section = field.section ?? 'Default';
+    const tab = field.tab ?? t`Main`;
+    const section = field.section ?? t`Default`;
     if (!grouped.has(tab)) {
       grouped.set(tab, new Map());
     }
@@ -1045,7 +1045,7 @@ export async function deleteDb(filePath: string) {
   } else if (error?.code === 'EPERM') {
     await showDialog({
       title: t`Cannot Delete`,
-      detail: t`Close Frappe Books and try manually.`,
+      detail: t`Close Sotrama Suite and try manually.`,
       type: 'error',
     });
   } else if (error) {

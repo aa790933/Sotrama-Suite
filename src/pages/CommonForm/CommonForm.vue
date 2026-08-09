@@ -248,7 +248,7 @@ export default defineComponent({
   data() {
     return {
       errors: {},
-      activeTab: this.t`Default`,
+      activeTab: this.t`Main`,
       groupedFields: null,
       isPrintable: false,
       showLinks: false,

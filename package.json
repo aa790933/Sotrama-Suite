@@ -1,7 +1,7 @@
 {
-  "name": "frappe-books",
+  "name": "sotrama-suite",
   "version": "0.37.0",
-  "description": "Simple book-keeping app for everyone",
+  "description": "Modern accounting made simple — Sotrama Suite",
   "author": {
     "name": "Frappe Technologies Pvt. Ltd.",
     "email": "hello@frappe.io"
