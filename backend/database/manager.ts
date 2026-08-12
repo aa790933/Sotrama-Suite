@@ -1,4 +1,3 @@
-import BetterSQLite3 from 'better-sqlite3';
 import fs from 'fs-extra';
 import { DatabaseError } from 'fyo/utils/errors';
 import path from 'path';
@@ -6,19 +5,21 @@ import { DatabaseDemuxBase, DatabaseMethod } from 'utils/db/types';
 import { getMapFromList } from 'utils/index';
 import { Version } from 'utils/version';
 import { getSchemas } from '../../schemas';
-import { databaseMethodSet, unlinkIfExists } from '../helpers';
+import { databaseMethodSet } from '../helpers';
 import patches from '../patches';
 import { BespokeQueries } from './bespoke';
 import DatabaseCore from './core';
 import { runPatches } from './runPatch';
 import { BespokeFunction, Patch, RawCustomField } from './types';
+import type { MariaDBConfig } from './core';
 
 export class DatabaseManager extends DatabaseDemuxBase {
   db?: DatabaseCore;
   rawCustomFields: RawCustomField[] = [];
+  dbConfig?: MariaDBConfig;
 
   get #isInitialized(): boolean {
-    return this.db !== undefined && this.db.knex !== undefined;
+    return this.db !== undefined && this.db.pool !== null;
   }
 
   getSchemaMap() {
@@ -29,20 +30,20 @@ export class DatabaseManager extends DatabaseDemuxBase {
     return getSchemas('-', this.rawCustomFields);
   }
 
-  async createNewDatabase(dbPath: string, countryCode: string) {
-    await unlinkIfExists(dbPath);
-    return await this.connectToDatabase(dbPath, countryCode);
+  async createNewDatabase(_dbPath: string, countryCode: string) {
+    // For MariaDB, createNewDatabase is effectively the same as connect
+    return await this.connectToDatabase(_dbPath, countryCode);
   }
 
-  async connectToDatabase(dbPath: string, countryCode?: string) {
-    countryCode = await this._connect(dbPath, countryCode);
+  async connectToDatabase(_dbPath: string, countryCode?: string) {
+    countryCode = await this._connect(_dbPath, countryCode);
     await this.#migrate();
     return countryCode;
   }
 
-  async _connect(dbPath: string, countryCode?: string) {
-    countryCode ??= await DatabaseCore.getCountryCode(dbPath);
-    this.db = new DatabaseCore(dbPath);
+  async _connect(_dbPath: string, countryCode?: string) {
+    countryCode ??= await DatabaseCore.getCountryCode(this.dbConfig!);
+    this.db = new DatabaseCore(undefined, this.dbConfig);
     await this.db.connect();
     await this.setRawCustomFields();
     const schemaMap = getSchemas(countryCode, this.rawCustomFields);
@@ -52,8 +53,8 @@ export class DatabaseManager extends DatabaseDemuxBase {
 
   async setRawCustomFields() {
     try {
-      this.rawCustomFields = (await this.db?.knex?.(
-        'CustomField'
+      this.rawCustomFields = (await this.db?.query(
+        'SELECT * FROM customfield'
       )) as RawCustomField[];
     } catch {}
   }
@@ -100,19 +101,15 @@ export class DatabaseManager extends DatabaseDemuxBase {
       return { pre: [], post: [] };
     }
 
-    const query = (await this.db.knex!('PatchRun').select()) as {
+    const query = (await this.db.query(
+      'SELECT name, version, failed FROM patchrun'
+    )) as {
       name: string;
       version?: string;
       failed?: boolean;
     }[];
 
     const runPatchesMap = getMapFromList(query, 'name');
-    /**
-     * A patch is run only if:
-     * - it hasn't run and was added in a future version
-     *    i.e. app version is before patch added version
-     * - it ran but failed in some other version (i.e fixed)
-     */
     const filtered = patches
       .filter((p) => {
         const exec = runPatchesMap[p.name];
@@ -167,21 +164,19 @@ export class DatabaseManager extends DatabaseDemuxBase {
   }
 
   async #getIsFirstRun(): Promise<boolean> {
-    const knex = this.db?.knex;
-    if (!knex) {
+    const db = this.db;
+    if (!db || !db.pool) {
       return true;
     }
 
-    const query = await knex('sqlite_master').where({
-      type: 'table',
-      name: 'PatchRun',
-    });
-    return !query.length;
+    const query = await db.query(
+      `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patchrun' LIMIT 1`
+    ) as unknown[];
+    return query.length === 0;
   }
 
   async #createBackup() {
-    const { dbPath } = this.db ?? {};
-    if (!dbPath || process.env.IS_TEST) {
+    if (process.env.IS_TEST) {
       return;
     }
 
@@ -191,48 +186,66 @@ export class DatabaseManager extends DatabaseDemuxBase {
     }
 
     const db = this.getDriver();
-    await db?.backup(backupPath).then(() => db.close());
+    if (!db) return;
+
+    const mysqldumpPath = await this.#getMysqldumpPath();
+    if (mysqldumpPath) {
+      const { execSync } = await import('child_process');
+      const cmd = `${mysqldumpPath} -h ${this.dbConfig!.host} -P ${this.dbConfig!.port} -u ${this.dbConfig!.user} -p${this.dbConfig!.password} ${this.dbConfig!.database} > ${backupPath}`;
+      execSync(cmd, { timeout: 60000 });
+      await fs.ensureDir(path.dirname(backupPath));
+    } else {
+      // Fallback: use mariadb SELECT INTO OUTFILE
+      await this.db!.query(`SELECT * FROM singlevalue INTO OUTFILE ?`, [backupPath]);
+    }
+  }
+
+  async #getMysqldumpPath(): Promise<string | null> {
+    const { execSync } = await import('child_process');
+    try {
+      const result = execSync('which mysqldump 2>/dev/null || where mysqldump 2>nul', {
+        encoding: 'utf8',
+        timeout: 5000,
+      });
+      return result.trim();
+    } catch {
+      return null;
+    }
   }
 
   async #getBackupFilePath() {
-    const { dbPath } = this.db ?? {};
-    if (dbPath === ':memory:' || !dbPath) {
-      return null;
-    }
+    if (!this.dbConfig) return null;
 
-    let fileName = path.parse(dbPath).name;
-    if (fileName.endsWith('.books')) {
-      fileName = fileName.slice(0, -6);
-    }
-
-    const backupFolder = path.join(path.dirname(dbPath), 'backups');
+    const fileName = this.dbConfig.database;
+    const backupFolder = path.join(process.cwd(), 'backups');
     const date = new Date().toISOString().split('T')[0];
     const version = await this.#getAppVersion();
-    const backupFile = `${fileName}_${version}_${date}.books.db`;
+    const backupFile = `${fileName}_${version}_${date}.sql`;
     fs.ensureDirSync(backupFolder);
     return path.join(backupFolder, backupFile);
   }
 
   async #getAppVersion(): Promise<string> {
-    const knex = this.db?.knex;
-    if (!knex) {
+    if (!this.db || !this.db.pool) {
       return '0.0.0';
     }
 
-    const query = await knex('SingleValue')
-      .select('value')
-      .where({ fieldname: 'version', parent: 'SystemSettings' });
-    const value = (query[0] as undefined | { value: string })?.value;
+    const query = await this.db.query(
+      `SELECT value FROM singlevalue WHERE fieldname = 'version' AND parent = 'systemsettings' LIMIT 1`
+    ) as { value: string }[];
+    const value = query[0]?.value;
     return value || '0.0.0';
   }
 
   getDriver() {
-    const { dbPath } = this.db ?? {};
-    if (!dbPath) {
-      return null;
-    }
+    // For MariaDB, backup is handled differently (mysqldump)
+    // This method is retained for compatibility but returns null
+    // since we no longer use BetterSQLite3
+    return null;
+  }
 
-    return BetterSQLite3(dbPath, { readonly: true });
+  setDbConfig(config: MariaDBConfig) {
+    this.dbConfig = config;
   }
 }
 

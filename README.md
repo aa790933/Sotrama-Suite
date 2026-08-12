@@ -11,7 +11,7 @@
 
 > Sotrama Suite is a fork of [Frappe Books](https://github.com/frappe/books) by [Frappe Technologies Pvt. Ltd.](https://frappe.io), licensed under AGPL-3.0-only.
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/frappe/books)](https://github.com/frappe/books/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/frappe/books)](https://github.com/aa790933/Sotrama-Suite/releases)
 ![Platforms](https://img.shields.io/badge/platform-mac%2C%20windows%2C%20linux-yellowgreen)
 [![Publish](https://github.com/frappe/books/actions/workflows/publish.yml/badge.svg)](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml)
 

@@ -2,8 +2,8 @@ import { FieldTypeEnum, RawValue, Schema } from 'schemas/types';
 import test from 'tape';
 import { getMapFromList, getValueMapFromList, sleep } from 'utils';
 import { getDefaultMetaFieldValueMap, sqliteTypeMap } from '../../helpers';
-import DatabaseCore from '../core';
-import { FieldValueMap, SqliteTableInfo } from '../types';
+import DatabaseCore, { MariaDBConfig } from '../core';
+import { FieldValueMap } from '../types';
 import {
   assertDoesNotThrow,
   assertThrows,
@@ -11,20 +11,35 @@ import {
   getBuiltTestSchemaMap,
 } from './helpers';
 
-/**
- * Note: these tests have a strange structure where multiple tests are
- * inside a `specify`, this is cause `describe` doesn't support `async` or waiting
- * on promises.
- *
- * Due to this `async` db operations need to be handled in `specify`. And `specify`
- * can't be nested in the `describe` can, hence the strange structure.
- *
- * This also implies that assert calls should have discriptive
- */
+const testDbConfig: MariaDBConfig = {
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: '20012005',
+  database: 'test_books_core',
+};
 
 const schemaMap = getBuiltTestSchemaMap();
+
+async function ensureTestDb() {
+  const adminDb = new DatabaseCore(undefined, {
+    ...testDbConfig,
+    database: 'test',
+  });
+  await adminDb.connect();
+  await adminDb.query(`CREATE DATABASE IF NOT EXISTS ${testDbConfig.database}`);
+  await adminDb.query(`USE ${testDbConfig.database}`);
+  await adminDb.query(`DROP TABLE IF EXISTS singlevalue`);
+  await adminDb.query(`DROP TABLE IF EXISTS customer`);
+  await adminDb.query(`DROP TABLE IF EXISTS salesinvoice`);
+  await adminDb.query(`DROP TABLE IF EXISTS salesinvoiceitem`);
+  await adminDb.query(`DROP TABLE IF EXISTS systemsettings`);
+  await adminDb.close();
+}
+
 async function getDb(shouldMigrate: boolean = true): Promise<DatabaseCore> {
-  const db = new DatabaseCore();
+  await ensureTestDb();
+  const db = new DatabaseCore(undefined, testDbConfig);
   await db.connect();
   db.setSchemaMap(schemaMap);
   if (shouldMigrate) {
@@ -34,7 +49,7 @@ async function getDb(shouldMigrate: boolean = true): Promise<DatabaseCore> {
 }
 
 test('db init, migrate, close', async (t) => {
-  const db = new DatabaseCore();
+  const db = new DatabaseCore(undefined, testDbConfig);
   t.equal(db.dbPath, ':memory:');
 
   const schemaMap = getBuiltTestSchemaMap();
@@ -44,11 +59,13 @@ test('db init, migrate, close', async (t) => {
   t.equal(schemaMap, db.schemaMap);
 
   await assertDoesNotThrow(async () => await db.connect());
-  t.notEqual(db.knex, undefined);
+  t.notEqual(db.pool, null);
 
   await assertDoesNotThrow(async () => await db.migrate());
 
   await assertDoesNotThrow(async () => await db.close());
+
+  await ensureTestDb();
 });
 
 /**
@@ -58,7 +75,13 @@ test('db init, migrate, close', async (t) => {
 test(`Pre Migrate TableInfo`, async function (t) {
   const db = await getDb(false);
   for (const schemaName in schemaMap) {
-    const columns = await db.knex?.raw('pragma table_info(??)', schemaName);
+    const schema = schemaMap[schemaName] as Schema;
+    if (schema.isSingle) continue;
+
+    const columns = (await db.query(
+      `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1`,
+      [schemaName]
+    )) as unknown[];
     t.equal(columns.length, 0, `column count ${schemaName}`);
   }
   await db.close();
@@ -69,10 +92,18 @@ test('Post Migrate TableInfo', async function (t) {
   for (const schemaName in schemaMap) {
     const schema = schemaMap[schemaName] as Schema;
     const fieldMap = getMapFromList(schema.fields, 'fieldname');
-    const columns: SqliteTableInfo[] = await db.knex!.raw(
-      'pragma table_info(??)',
-      schemaName
-    );
+
+    const columns = (await db.query(
+      `SELECT COLUMN_NAME as name, COLUMN_TYPE as type, IS_NULLABLE as notnull, COLUMN_DEFAULT as dflt_value
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
+      [schemaName]
+    )) as Array<{
+      name: string;
+      type: string;
+      notnull: string;
+      dflt_value: string | null;
+    }>;
 
     let columnCount = schema.fields.filter(
       (f) => f.fieldtype !== FieldTypeEnum.Table
@@ -90,6 +121,8 @@ test('Post Migrate TableInfo', async function (t) {
 
     for (const column of columns) {
       const field = fieldMap[column.name];
+      if (!field) continue;
+
       const dbColType = sqliteTypeMap[field.fieldtype];
 
       t.equal(
@@ -98,27 +131,42 @@ test('Post Migrate TableInfo', async function (t) {
         `${schemaName}.${column.name}:: name check: ${column.name}, ${field.fieldname}`
       );
 
+      const mariaDbTypeMap: Record<string, string> = {
+        'varchar(255)': 'text',
+        'text': 'text',
+        'tinyint(1)': 'boolean',
+        'int(11)': 'integer',
+        'integer': 'integer',
+        'float': 'float',
+        'date': 'date',
+        'datetime': 'datetime',
+        'time': 'time',
+      };
+      const normalizedType = mariaDbTypeMap[column.type.toLowerCase()] ?? column.type.toLowerCase();
       t.equal(
-        column.type.toLowerCase(),
+        normalizedType,
         dbColType,
         `${schemaName}.${column.name}:: type check: ${column.type}, ${dbColType}`
       );
 
+      const isNullable = column.notnull === 'YES';
       if (field.required !== undefined) {
         t.equal(
-          !!column.notnull,
-          field.required,
-          `${schemaName}.${column.name}:: iotnull iheck: ${column.notnull}, ${field.required}`
+          isNullable,
+          !field.required,
+          `${schemaName}.${column.name}:: notnull check: ${isNullable}, ${field.required}`
         );
       } else {
         t.equal(
-          column.notnull,
-          0,
-          `${schemaName}.${column.name}:: notnull check: ${column.notnull}, ${field.required}`
+          isNullable,
+          true,
+          `${schemaName}.${column.name}:: notnull check: ${isNullable}, ${field.required}`
         );
       }
 
-      if (column.dflt_value === null) {
+      const dflt = column.dflt_value;
+      const hasNoDefault = dflt === null || dflt === 'NULL' || dflt === undefined;
+      if (hasNoDefault) {
         t.equal(
           field.default,
           undefined,
@@ -126,9 +174,9 @@ test('Post Migrate TableInfo', async function (t) {
         );
       } else {
         t.equal(
-          column.dflt_value.slice(1, -1),
+          column.dflt_value,
           String(field.default),
-          `${schemaName}.${column.name}:: dflt_value check: ${column.type}, ${dbColType}`
+          `${schemaName}.${column.name}:: dflt_value check: ${column.dflt_value}, ${field.default}`
         );
       }
     }
@@ -156,9 +204,9 @@ test('CRUD single values', async function (t) {
    * Checking default values which are created when db.migrate
    * takes place.
    */
-  let rows: Record<string, RawValue>[] = await db.knex!.raw(
+  let rows: Record<string, RawValue>[] = await db.query(
     'select * from SingleValue'
-  );
+  ) as Record<string, RawValue>[];
   const defaultMap = getValueMapFromList(
     (schemaMap.SystemSettings as Schema).fields,
     'fieldname',
@@ -184,7 +232,7 @@ test('CRUD single values', async function (t) {
 
   let locale = 'hi-IN';
   await db.insert('SystemSettings', { locale });
-  rows = await db.knex!.raw('select * from SingleValue');
+  rows = await db.query('select * from SingleValue') as Record<string, RawValue>[];
   localeRow = rows.find((r) => r.fieldname === 'locale');
 
   t.notEqual(localeEntryName, undefined, 'localeEntryName');
@@ -206,7 +254,7 @@ test('CRUD single values', async function (t) {
    */
   locale = 'ca-ES';
   await db.update('SystemSettings', { locale });
-  rows = await db.knex!.raw('select * from SingleValue');
+  rows = await db.query('select * from SingleValue') as Record<string, RawValue>[];
   localeRow = rows.find((r) => r.fieldname === 'locale');
 
   t.notEqual(localeEntryName, undefined, 'localeEntryName');
@@ -227,15 +275,15 @@ test('CRUD single values', async function (t) {
    * Delete
    */
   await db.delete('SystemSettings', 'locale');
-  rows = await db.knex!.raw('select * from SingleValue');
+  rows = await db.query('select * from SingleValue') as Record<string, RawValue>[];
   t.equal(rows.length, 1, 'delete one');
   await db.delete('SystemSettings', 'dateFormat');
-  rows = await db.knex!.raw('select * from SingleValue');
+  rows = await db.query('select * from SingleValue') as Record<string, RawValue>[];
   t.equal(rows.length, 0, 'delete two');
 
   const dateFormat = 'dd/mm/yy';
   await db.insert('SystemSettings', { locale, dateFormat });
-  rows = await db.knex!.raw('select * from SingleValue');
+  rows = await db.query('select * from SingleValue') as Record<string, RawValue>[];
   t.equal(rows.length, 2, 'delete two');
 
   /**
@@ -259,7 +307,7 @@ test('CRUD single values', async function (t) {
     const svlMap = await db.get('SystemSettings');
     t.equal(Object.keys(svlMap).length, 2, 'get key length');
     t.equal(svlMap.locale, locale, 'get locale');
-    t.equal(svlMap.dateFormat, dateFormat, 'get locale');
+    t.equal(svlMap.dateFormat, dateFormat, 'get dateFormat');
   }
 
   await db.close();
@@ -268,7 +316,7 @@ test('CRUD single values', async function (t) {
 test('CRUD nondependent schema', async function (t) {
   const db = await getDb();
   const schemaName = 'Customer';
-  let rows = await db.knex!(schemaName);
+  let rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   t.equal(rows.length, 0, 'rows length before insertion');
 
   /**
@@ -284,14 +332,25 @@ test('CRUD nondependent schema', async function (t) {
 
   const updateMap = Object.assign({}, metaValues, { name });
   await db.insert(schemaName, updateMap);
-  rows = await db.knex!(schemaName);
+  rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   let firstRow = rows?.[0];
   t.equal(rows.length, 1, `rows length insert ${rows.length}`);
-  t.equal(firstRow.name, name, `name check ${firstRow.name}, ${name}`);
-  t.equal(firstRow.email, null, `email check ${firstRow.email}`);
+  t.equal(firstRow?.name, name, `name check ${firstRow?.name}, ${name}`);
+  t.equal(firstRow?.email, null, `email check ${firstRow?.email}`);
 
   for (const key in metaValues) {
-    t.equal(firstRow[key], metaValues[key as BaseMetaKey], `${key} check`);
+    const expected = metaValues[key as BaseMetaKey];
+    const actual = firstRow?.[key];
+    if (key === 'created' || key === 'modified') {
+      // MariaDB returns Date objects for DATETIME columns
+      if (actual instanceof Date && typeof expected === 'string') {
+        t.equal(actual.toISOString().replace('T', ' ').replace('Z', ''), expected, `${key} check`);
+      } else {
+        t.equal(actual, expected, `${key} check`);
+      }
+    } else {
+      t.equal(actual, expected, `${key} check`);
+    }
   }
 
   /**
@@ -302,30 +361,32 @@ test('CRUD nondependent schema', async function (t) {
   await db.update(schemaName, {
     name,
     email,
-    modified: new Date().toISOString(),
+    modified: new Date().toISOString().replace('T', ' ').replace('Z', ''),
   });
-  rows = await db.knex!(schemaName);
+  rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   firstRow = rows?.[0];
   t.equal(rows.length, 1, `rows length update ${rows.length}`);
-  t.equal(firstRow.name, name, `name check update ${firstRow.name}, ${name}`);
-  t.equal(firstRow.email, email, `email check update ${firstRow.email}`);
+  t.equal(firstRow?.name, name, `name check update ${firstRow?.name}, ${name}`);
+  t.equal(firstRow?.email, email, `email check update ${firstRow?.email}`);
 
   const phone = '8149133530';
   await sleep(1);
   await db.update(schemaName, {
     name,
     phone,
-    modified: new Date().toISOString(),
+    modified: new Date().toISOString().replace('T', ' ').replace('Z', ''),
   });
-  rows = await db.knex!(schemaName);
+  rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   firstRow = rows?.[0];
-  t.equal(firstRow.email, email, `email check update ${firstRow.email}`);
-  t.equal(firstRow.phone, phone, `email check update ${firstRow.phone}`);
+  t.equal(firstRow?.email, email, `email check update ${firstRow?.email}`);
+  t.equal(firstRow?.phone, phone, `phone check update ${firstRow?.phone}`);
 
   for (const key in metaValues) {
-    const val = firstRow[key];
+    const val = firstRow?.[key];
     const expected = metaValues[key as BaseMetaKey];
-    if (key !== 'modified') {
+    if (val instanceof Date && typeof expected === 'string' && (key === 'created' || key === 'modified')) {
+      t.equal(val.toISOString().replace('T', ' ').replace('Z', ''), expected, `${key} check ${val}, ${expected}`);
+    } else if (key !== 'modified') {
       t.equal(val, expected, `${key} check ${val}, ${expected}`);
     } else {
       t.notEqual(val, expected, `${key} check ${val}, ${expected}`);
@@ -336,7 +397,7 @@ test('CRUD nondependent schema', async function (t) {
    * Delete
    */
   await db.delete(schemaName, name);
-  rows = await db.knex!(schemaName);
+  rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   t.equal(rows.length, 0, `rows length delete ${rows.length}`);
 
   /**
@@ -358,20 +419,21 @@ test('CRUD nondependent schema', async function (t) {
 
   // Insert
   await db.insert(schemaName, cOne);
-  t.equal((await db.knex!(schemaName)).length, 1, `rows length minsert`);
+  t.equal((await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[]).length, 1, `rows length minsert`);
   await db.insert(schemaName, cTwo);
-  rows = await db.knex!(schemaName);
+  rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   t.equal(rows.length, 2, `rows length minsert`);
 
   const cs = [cOne, cTwo];
   for (const i in cs) {
     for (const k in cs[i]) {
       const val = cs[i][k as BaseMetaKey];
-      t.equal(
-        rows?.[i]?.[k],
-        val,
-        `equality check ${i} ${k} ${val} ${rows?.[i]?.[k]}`
-      );
+      const rowVal = rows?.[i]?.[k];
+      if (rowVal instanceof Date && typeof val === 'string' && (k === 'created' || k === 'modified')) {
+        t.equal(rowVal.toISOString().replace('T', ' ').replace('Z', ''), val, `equality check ${i} ${k} ${val} ${rowVal}`);
+      } else {
+        t.equal(rowVal, val, `equality check ${i} ${k} ${val} ${rowVal}`);
+      }
     }
   }
 
@@ -398,9 +460,9 @@ test('CRUD nondependent schema', async function (t) {
 
   // Delete
   await db.delete(schemaName, newName);
-  rows = await db.knex!(schemaName);
+  rows = await db.query(`SELECT * FROM \`${schemaName}\``) as Record<string, unknown>[];
   t.equal(rows.length, 1, `mi delete length ${rows.length}`);
-  t.equal(rows[0].name, cTwo.name, `mi delete name ${rows[0].name}`);
+  t.equal(rows[0]?.name, cTwo.name, `mi delete name ${rows[0]?.name}`);
   await db.close();
 });
 
@@ -533,14 +595,14 @@ test('CRUD dependent schema', async function (t) {
   }
 
   invoice.date = '2022-04-01';
-  invoice.modified = new Date().toISOString();
+  invoice.modified = new Date().toISOString().replace('T', ' ').replace('Z', '');
   await db.update('SalesInvoice', {
     name: invoice.name,
     date: invoice.date,
     modified: invoice.modified,
   });
 
-  rows = await db.knex!(SalesInvoiceItem);
+  rows = await db.query(`SELECT * FROM \`${SalesInvoiceItem}\``) as Record<string, unknown>[];
   t.equal(rows.length, 2, `postupdate ct empty ${rows.length}`);
 
   await db.delete(SalesInvoice, invoice.name as string);

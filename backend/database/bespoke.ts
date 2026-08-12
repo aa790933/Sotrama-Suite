@@ -18,12 +18,11 @@ export class BespokeQueries {
     db: DatabaseCore,
     schemaName: string
   ): Promise<number> {
-    const lastInserted = (await db.knex!.raw(
-      'select cast(name as int) as num from ?? order by num desc limit 1',
-      [schemaName]
+    const rows = (await db.query(
+       `SELECT CAST(name AS UNSIGNED) as num FROM \`${schemaName.toLowerCase()}\` ORDER BY num DESC LIMIT 1`
     )) as { num: number }[];
 
-    const num = lastInserted?.[0]?.num;
+    const num = rows?.[0]?.num;
     if (num === undefined) {
       return 0;
     }
@@ -35,24 +34,20 @@ export class BespokeQueries {
     fromDate: string,
     toDate: string
   ) {
-    const expenseAccounts = db
-      .knex!.select('name')
-      .from('Account')
-      .where('rootType', 'Expense');
+    const query = await db.query(
+      `SELECT account, SUM(CAST(debit AS DECIMAL(18,6)) - CAST(credit AS DECIMAL(18,6))) as total
+        FROM \`accountingledgerentry\`
+       WHERE reverted = ? AND account IN (
+          SELECT name FROM \`account\` WHERE rootType = 'Expense'
+       )
+       AND date BETWEEN ? AND ?
+       GROUP BY account
+       ORDER BY total DESC
+       LIMIT 5`,
+      [0, fromDate, toDate]
+    ) as { account: string; total: number }[];
 
-    const topExpenses = await db
-      .knex!.select({
-        total: db.knex!.raw('sum(cast(debit as real) - cast(credit as real))'),
-      })
-      .select('account')
-      .from('AccountingLedgerEntry')
-      .where('reverted', false)
-      .where('account', 'in', expenseAccounts)
-      .whereBetween('date', [fromDate, toDate])
-      .groupBy('account')
-      .orderBy('total', 'desc')
-      .limit(5);
-    return topExpenses as TopExpenses;
+    return query as TopExpenses;
   }
 
   static async getTotalOutstanding(
@@ -61,33 +56,33 @@ export class BespokeQueries {
     fromDate: string,
     toDate: string
   ) {
-    return (await db.knex!(schemaName)
-      .sum({ total: 'baseGrandTotal' })
-      .sum({ outstanding: 'outstandingAmount' })
-      .where('submitted', true)
-      .where('cancelled', false)
-      .whereBetween('date', [fromDate, toDate])
-      .first()) as TotalOutstanding;
+    return (await db.query(
+      `SELECT SUM(CAST(baseGrandTotal AS DECIMAL(18,6))) as total,
+              SUM(CAST(outstandingAmount AS DECIMAL(18,6))) as outstanding
+       FROM \`${schemaName}\`
+       WHERE submitted = ? AND cancelled = ?
+       AND date BETWEEN ? AND ?`,
+      [1, 0, fromDate, toDate]
+    ) as TotalOutstanding[])[0];
   }
 
   static async getCashflow(db: DatabaseCore, fromDate: string, toDate: string) {
-    const cashAndBankAccounts = db.knex!('Account')
-      .select('name')
-      .where('accountType', 'in', ['Cash', 'Bank'])
-      .andWhere('isGroup', false);
-    const dateAsMonthYear = db.knex!.raw(`strftime('%Y-%m', ??)`, 'date');
-    return (await db.knex!('AccountingLedgerEntry')
-      .where('reverted', false)
-      .sum({
-        inflow: 'debit',
-        outflow: 'credit',
-      })
-      .select({
-        yearmonth: dateAsMonthYear,
-      })
-      .where('account', 'in', cashAndBankAccounts)
-      .whereBetween('date', [fromDate, toDate])
-      .groupBy(dateAsMonthYear)) as Cashflow;
+    const query = await db.query(
+      `SELECT
+         SUM(CAST(debit AS DECIMAL(18,6))) as inflow,
+         SUM(CAST(credit AS DECIMAL(18,6))) as outflow,
+         DATE_FORMAT(date, '%Y-%m') as yearmonth
+        FROM \`accountingledgerentry\`
+       WHERE reverted = ?
+       AND account IN (
+          SELECT name FROM \`account\`
+         WHERE accountType IN ('Cash', 'Bank') AND isGroup = ?
+       )
+       AND date BETWEEN ? AND ?
+       GROUP BY yearmonth`,
+      [0, 0, fromDate, toDate]
+    ) as Cashflow;
+    return query;
   }
 
   static async getIncomeAndExpenses(
@@ -95,50 +90,44 @@ export class BespokeQueries {
     fromDate: string,
     toDate: string
   ) {
-    const income = (await db.knex!.raw(
-      `
-      select sum(cast(credit as real) - cast(debit as real)) as balance, strftime('%Y-%m', date) as yearmonth
-      from AccountingLedgerEntry
-      where
-        reverted = false and
-        date between date(?) and date(?) and
-        account in (
-          select name
-          from Account
-          where rootType = 'Income'
-        )
-      group by yearmonth`,
-      [fromDate, toDate]
+    const income = (await db.query(
+      `SELECT SUM(CAST(credit AS DECIMAL(18,6)) - CAST(debit AS DECIMAL(18,6))) as balance,
+              DATE_FORMAT(date, '%Y-%m') as yearmonth
+        FROM \`accountingledgerentry\`
+       WHERE reverted = ?
+       AND date BETWEEN ? AND ?
+       AND account IN (
+          SELECT name FROM \`account\` WHERE rootType = 'Income'
+       )
+       GROUP BY yearmonth`,
+      [0, fromDate, toDate]
     )) as IncomeExpense['income'];
 
-    const expense = (await db.knex!.raw(
-      `
-      select sum(cast(debit as real) - cast(credit as real)) as balance, strftime('%Y-%m', date) as yearmonth
-      from AccountingLedgerEntry
-      where
-        reverted = false and
-        date between date(?) and date(?) and
-        account in (
-          select name
-          from Account
-          where rootType = 'Expense'
-        )
-      group by yearmonth`,
-      [fromDate, toDate]
+    const expense = (await db.query(
+      `SELECT SUM(CAST(debit AS DECIMAL(18,6)) - CAST(credit AS DECIMAL(18,6))) as balance,
+              DATE_FORMAT(date, '%Y-%m') as yearmonth
+        FROM \`accountingledgerentry\`
+       WHERE reverted = ?
+       AND date BETWEEN ? AND ?
+       AND account IN (
+          SELECT name FROM \`account\` WHERE rootType = 'Expense'
+       )
+       GROUP BY yearmonth`,
+      [0, fromDate, toDate]
     )) as IncomeExpense['expense'];
 
     return { income, expense };
   }
 
   static async getTotalCreditAndDebit(db: DatabaseCore) {
-    return (await db.knex!.raw(`
-    select 
-	    account, 
-      sum(cast(credit as real)) as totalCredit, 
-      sum(cast(debit as real)) as totalDebit
-    from AccountingLedgerEntry
-    group by account
-    `)) as unknown as TotalCreditAndDebit;
+    return (await db.query(
+      `SELECT
+         account,
+         SUM(CAST(credit AS DECIMAL(18,6))) as totalCredit,
+         SUM(CAST(debit AS DECIMAL(18,6))) as totalDebit
+        FROM \`accountingledgerentry\`
+       GROUP BY account`
+    )) as TotalCreditAndDebit;
   }
 
   static async getStockQuantity(
@@ -150,32 +139,36 @@ export class BespokeQueries {
     batch?: string,
     serialNumbers?: string[]
   ): Promise<number | null> {
-    /* eslint-disable @typescript-eslint/no-floating-promises */
-    const query = db.knex!(ModelNameEnum.StockLedgerEntry)
-      .sum('quantity')
-      .where('item', item);
+    let sql = `SELECT SUM(CAST(quantity AS DECIMAL(18,6))) as total FROM \`${ModelNameEnum.StockLedgerEntry.toLowerCase()}\` WHERE item = ?`;
+    const params: unknown[] = [item];
 
     if (location) {
-      query.andWhere('location', location);
+      sql += ` AND location = ?`;
+      params.push(location);
     }
 
     if (batch) {
-      query.andWhere('batch', batch);
+      sql += ` AND batch = ?`;
+      params.push(batch);
     }
 
     if (serialNumbers?.length) {
-      query.andWhere('serialNumber', 'in', serialNumbers);
+      const placeholders = serialNumbers.map(() => '?').join(', ');
+      sql += ` AND serialNumber IN (${placeholders})`;
+      params.push(...serialNumbers);
     }
 
     if (fromDate) {
-      query.andWhereRaw('datetime(date) > datetime(?)', [fromDate]);
+      sql += ` AND date > ?`;
+      params.push(fromDate);
     }
 
     if (toDate) {
-      query.andWhereRaw('datetime(date) < datetime(?)', [toDate]);
+      sql += ` AND date < ?`;
+      params.push(toDate);
     }
 
-    const value = (await query) as Record<string, number | null>[];
+    const value = (await db.query(sql, params)) as Record<string, number | null>[];
     if (!value.length) {
       return null;
     }
@@ -188,33 +181,28 @@ export class BespokeQueries {
     schemaName: ModelNameEnum,
     docName: string
   ): Promise<Record<string, ReturnDocItem> | undefined> {
-    const returnDocNames = (
-      await db.knex!(schemaName)
-        .select('name')
-        .where('returnAgainst', docName)
-        .andWhere('submitted', true)
-        .andWhere('cancelled', false)
-    ).map((i: { name: string }) => i.name);
+    const returnDocRows = await db.query(
+             `SELECT name, returnAgainst FROM \`${schemaName.toLowerCase()}\` WHERE returnAgainst = ? AND submitted = ? AND cancelled = ?`,
+      [docName, 1, 0]
+    ) as { name: string }[];
+    const returnDocNames = returnDocRows.map((r) => r.name);
 
     if (!returnDocNames.length) {
       return;
     }
 
-    const returnedItemsQuery = db.knex!(`${schemaName}Item`)
-      .sum({ quantity: 'quantity' })
-      .whereIn('parent', returnDocNames);
+    const placeholders = returnDocNames.map(() => '?').join(', ');
 
-    const docItemsQuery = db.knex!(`${schemaName}Item`)
-      .where('parent', docName)
-      .sum({ quantity: 'quantity' });
+    let itemSelect = '';
+    let groupByClause = '';
 
     if (
       [ModelNameEnum.SalesInvoice, ModelNameEnum.PurchaseInvoice].includes(
         schemaName
       )
     ) {
-      returnedItemsQuery.select('item', 'batch').groupBy('item', 'batch');
-      docItemsQuery.select('name', 'item', 'batch').groupBy('item', 'batch');
+      itemSelect = ', item, batch';
+      groupByClause = ' GROUP BY item, batch';
     }
 
     if (
@@ -222,19 +210,27 @@ export class BespokeQueries {
         schemaName
       )
     ) {
-      returnedItemsQuery
-        .select('item', 'batch', 'serialNumber')
-        .groupBy('item', 'batch', 'serialNumber');
-      docItemsQuery
-        .select('name', 'item', 'batch', 'serialNumber')
-        .groupBy('item', 'batch', 'serialNumber');
+      itemSelect = ', item, batch, serialNumber';
+      groupByClause = ' GROUP BY item, batch, serialNumber';
     }
 
-    const returnedItems = (await returnedItemsQuery) as DocItem[];
+    const returnedItems = (await db.query(
+      `SELECT item${itemSelect}, SUM(CAST(quantity AS DECIMAL(18,6))) as quantity
+       FROM \`${schemaName.toLowerCase()}item\`
+       WHERE parent IN (${placeholders})${groupByClause}`,
+      [...returnDocNames]
+    )) as DocItem[];
+
     if (!returnedItems.length) {
       return;
     }
-    const docItems = (await docItemsQuery) as DocItem[];
+
+    const docItems = (await db.query(
+      `SELECT name${itemSelect}, SUM(CAST(quantity AS DECIMAL(18,6))) as quantity
+       FROM \`${schemaName.toLowerCase()}item\`
+       WHERE parent = ?${groupByClause}`,
+      [docName]
+    )) as DocItem[];
 
     const docItemsMap = BespokeQueries.#getDocItemMap(docItems);
     const returnedItemsMap = BespokeQueries.#getDocItemMap(returnedItems);
@@ -415,20 +411,15 @@ export class BespokeQueries {
     toDate: Date,
     lastShiftClosingDate?: Date
   ): Promise<Record<string, number> | undefined> {
-    const invoicesQuery = db.knex!(ModelNameEnum.SalesInvoice)
-      .select('name', 'returnAgainst')
-      .where('isPOS', true)
-      .andWhereBetween('date', [fromDate.toISOString(), toDate.toISOString()]);
+    let sql = `SELECT name, returnAgainst FROM \`${ModelNameEnum.SalesInvoice.toLowerCase()}\` WHERE isPOS = ? AND date BETWEEN ? AND ?`;
+    const params: unknown[] = [1, fromDate.toISOString(), toDate.toISOString()];
 
     if (lastShiftClosingDate) {
-      invoicesQuery.andWhere(
-        'created',
-        '>',
-        lastShiftClosingDate.toISOString()
-      );
+      sql += ` AND created > ?`;
+      params.push(lastShiftClosingDate.toISOString());
     }
 
-    const invoices = (await invoicesQuery) as {
+    const invoices = (await db.query(sql, params)) as {
       name: string;
       returnAgainst: string | null;
     }[];
@@ -446,21 +437,24 @@ export class BespokeQueries {
       {}
     );
 
-    const paymentEntryNames: string[] = (
-      await db.knex!(ModelNameEnum.PaymentFor)
-        .select('parent', 'referenceName')
-        .whereIn('referenceName', sinvNames)
-    ).map((doc: { parent: string }) => doc.parent);
+    const paymentEntryRows = await db.query(
+      `SELECT parent, referenceName FROM \`${ModelNameEnum.PaymentFor.toLowerCase()}\` WHERE referenceName IN (${sinvNames.map(() => '?').join(', ')})`,
+      [...sinvNames]
+    ) as { parent: string; referenceName: string }[];
+
+    const paymentEntryNames = paymentEntryRows.map((doc) => doc.parent);
 
     if (!paymentEntryNames.length) {
       return;
     }
 
-    const groupedAmounts = (await db.knex!(ModelNameEnum.Payment)
-      .select('paymentMethod', 'name')
-      .whereIn('name', paymentEntryNames)
-      .groupBy('paymentMethod', 'name')
-      .sum({ amount: 'amount' })) as {
+    const groupedAmounts = (await db.query(
+      `SELECT paymentMethod, name, SUM(CAST(amount AS DECIMAL(18,6))) as amount
+       FROM \`${ModelNameEnum.Payment.toLowerCase()}\`
+       WHERE name IN (${paymentEntryNames.map(() => '?').join(', ')})
+       GROUP BY paymentMethod, name`,
+      [...paymentEntryNames]
+    )) as {
       paymentMethod: string;
       name: string;
       amount: number;
@@ -469,9 +463,10 @@ export class BespokeQueries {
     const transactedAmounts: Record<string, number> = {};
 
     for (const row of groupedAmounts) {
-      const paymentRefs = (await db.knex!(ModelNameEnum.PaymentFor)
-        .select('referenceName')
-        .where('parent', row.name)) as { referenceName: string }[];
+      const paymentRefs = await db.query(
+        `SELECT referenceName FROM \`${ModelNameEnum.PaymentFor.toLowerCase()}\` WHERE parent = ?`,
+        [row.name]
+      ) as { referenceName: string }[];
 
       for (const ref of paymentRefs) {
         const sign = invoiceSignMap[ref.referenceName] ?? 1;

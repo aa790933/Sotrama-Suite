@@ -30,12 +30,13 @@ export const sqliteTypeMap: Record<string, KnexColumnType> = {
 export const SYSTEM = '__SYSTEM__';
 export const validTypes = Object.keys(sqliteTypeMap);
 export function getDefaultMetaFieldValueMap() {
-  const now = new Date().toISOString();
+  const now = new Date();
+  const iso = now.toISOString().replace('T', ' ').replace('Z', '');
   return {
     createdBy: SYSTEM,
     modifiedBy: SYSTEM,
-    created: now,
-    modified: now,
+    created: iso,
+    modified: iso,
   };
 }
 

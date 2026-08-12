@@ -12,6 +12,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { SelectFileOptions, SelectFileReturn } from 'utils/types';
 import databaseManager from '../backend/database/manager';
+import type { MariaDBConfig } from '../backend/database/core';
 import { emitMainProcessError } from '../backend/helpers';
 import { Main } from '../main';
 import { DatabaseMethod } from '../utils/db/types';
@@ -31,62 +32,36 @@ import { sendAPIRequest } from './api';
 import { initScheduler } from './initSheduler';
 
 export default function registerIpcMainActionListeners(main: Main) {
-  ipcMain.handle(IPC_ACTIONS.CHECK_DB_ACCESS, async (_, filePath: string) => {
+  ipcMain.handle(IPC_ACTIONS.CHECK_DB_ACCESS, async (_, dbPath: string) => {
     try {
-      await fs.access(filePath, constants.W_OK | constants.R_OK);
+      const config = JSON.parse(dbPath) as MariaDBConfig;
+      const { createPool } = await import('mariadb');
+      const pool = createPool({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+        connectionLimit: 1,
+      });
+      const conn = await pool.getConnection();
+      await conn.release();
+      await pool.end();
+      return true;
     } catch (err) {
       return false;
     }
-
-    return true;
   });
 
-  ipcMain.handle(
-    IPC_ACTIONS.GET_DB_DEFAULT_PATH,
-    async (_, companyName: string) => {
-      let root: string;
-      try {
-        root = app.getPath('documents');
-      } catch {
-        root = app.getPath('userData');
-      }
-
-      if (main.isDevelopment) {
-        root = 'dbs';
-      }
-
-      const dbsPath = path.join(root, 'Sotrama Suite');
-      const backupPath = path.join(dbsPath, 'backups');
-      await fs.ensureDir(backupPath);
-
-      let dbFilePath = path.join(dbsPath, `${companyName}.books.db`);
-
-      if (await fs.pathExists(dbFilePath)) {
-        const option = await dialog.showMessageBox({
-          type: 'question',
-          title: 'File Exists',
-          message: `Filename already exists. Do you want to overwrite the existing file or create a new one?`,
-          buttons: ['Overwrite', 'New'],
-        });
-
-        if (option.response === 1) {
-          const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '');
-
-          dbFilePath = path.join(
-            dbsPath,
-            `${companyName}_${timestamp}.books.db`
-          );
-
-          await dialog.showMessageBox({
-            type: 'info',
-            message: `New file: ${path.basename(dbFilePath)}`,
-          });
-        }
-      }
-
-      return dbFilePath;
-    }
-  );
+  ipcMain.handle(IPC_ACTIONS.GET_DB_DEFAULT_PATH, async (_, companyName: string) => {
+    return JSON.stringify({
+      host: 'localhost',
+      port: 3306,
+      user: 'root',
+      password: '20012005',
+      database: companyName.toLowerCase().replace(/\s+/g, '_'),
+    });
+  });
 
   ipcMain.handle(
     IPC_ACTIONS.GET_OPEN_FILEPATH,
@@ -266,6 +241,8 @@ export default function registerIpcMainActionListeners(main: Main) {
     IPC_ACTIONS.DB_CREATE,
     async (_, dbPath: string, countryCode: string) => {
       return await getErrorHandledReponse(async () => {
+        const config = JSON.parse(dbPath) as MariaDBConfig;
+        databaseManager.setDbConfig(config);
         return await databaseManager.createNewDatabase(dbPath, countryCode);
       });
     }
@@ -275,6 +252,8 @@ export default function registerIpcMainActionListeners(main: Main) {
     IPC_ACTIONS.DB_CONNECT,
     async (_, dbPath: string, countryCode?: string) => {
       return await getErrorHandledReponse(async () => {
+        const config = JSON.parse(dbPath) as MariaDBConfig;
+        databaseManager.setDbConfig(config);
         return await databaseManager.connectToDatabase(dbPath, countryCode);
       });
     }
