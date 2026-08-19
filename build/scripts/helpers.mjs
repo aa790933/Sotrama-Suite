@@ -19,7 +19,7 @@ export function getMainProcessCommonConfig(root) {
     sourcesContent: false,
     platform: 'node',
     target: 'node20',
-    external: ['electron', 'electron-store'],
+    external: ['electron', 'electron-store', 'node-fetch'],
     plugins: [excludeVendorFromSourceMap],
     write: true,
   };

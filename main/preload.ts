@@ -198,6 +198,7 @@ const ipc = {
     database: string;
     port: number;
     platform?: Platform;
+    hostMode?: boolean;
   }) {
     return (await ipcRenderer.invoke(
       IPC_ACTIONS.INSTALL_MARIA_DB,

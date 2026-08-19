@@ -1,6 +1,6 @@
 import DatabaseCore from '../core';
 import { getDefaultMetaFieldValueMap } from '../../helpers';
-import { Schema, SchemaMap, SchemaStub, SchemaStubMap } from 'schemas/types';
+import { SchemaMap, SchemaStub } from 'schemas/types';
 import { getTestDbConfig } from './dbTestConfig';
 
 const testDbConfig = getTestDbConfig('test_books_core');
@@ -10,8 +10,18 @@ const Customer = {
   label: 'Customer',
   fields: [
     { fieldname: 'name', label: 'Name', fieldtype: 'Data', required: true },
-    { fieldname: 'email', label: 'Email', fieldtype: 'Data', placeholder: 'john@thoe.com' },
-    { fieldname: 'phone', label: 'Phone', fieldtype: 'Data', placeholder: '9999999999' },
+    {
+      fieldname: 'email',
+      label: 'Email',
+      fieldtype: 'Data',
+      placeholder: 'john@thoe.com',
+    },
+    {
+      fieldname: 'phone',
+      label: 'Phone',
+      fieldtype: 'Data',
+      placeholder: '9999999999',
+    },
   ],
   quickEditFields: ['email'],
   keywordFields: ['name'],
@@ -23,9 +33,20 @@ const SalesInvoiceItem = {
   isChild: true,
   fields: [
     { fieldname: 'item', label: 'Item', fieldtype: 'Data', required: true },
-    { fieldname: 'quantity', label: 'Quantity', fieldtype: 'Float', required: true, default: 1 },
+    {
+      fieldname: 'quantity',
+      label: 'Quantity',
+      fieldtype: 'Float',
+      required: true,
+      default: 1,
+    },
     { fieldname: 'rate', label: 'Rate', fieldtype: 'Float', required: true },
-    { fieldname: 'amount', label: 'Amount', fieldtype: 'Float', readOnly: true },
+    {
+      fieldname: 'amount',
+      label: 'Amount',
+      fieldtype: 'Float',
+      readOnly: true,
+    },
   ],
   tableFields: ['item', 'quantity', 'rate', 'amount'],
 };
@@ -38,12 +59,40 @@ const SalesInvoice = {
   isSubmittable: true,
   keywordFields: ['name', 'customer'],
   fields: [
-    { label: 'Invoice No', fieldname: 'name', fieldtype: 'Data', required: true, readOnly: true },
+    {
+      label: 'Invoice No',
+      fieldname: 'name',
+      fieldtype: 'Data',
+      required: true,
+      readOnly: true,
+    },
     { fieldname: 'date', label: 'Date', fieldtype: 'Date' },
-    { fieldname: 'customer', label: 'Customer', fieldtype: 'Link', target: 'Customer', required: true },
-    { fieldname: 'account', label: 'Account', fieldtype: 'Data', required: true },
-    { fieldname: 'items', label: 'Items', fieldtype: 'Table', target: 'SalesInvoiceItem', required: true },
-    { fieldname: 'grandTotal', label: 'Grand Total', fieldtype: 'Currency', readOnly: true },
+    {
+      fieldname: 'customer',
+      label: 'Customer',
+      fieldtype: 'Link',
+      target: 'Customer',
+      required: true,
+    },
+    {
+      fieldname: 'account',
+      label: 'Account',
+      fieldtype: 'Data',
+      required: true,
+    },
+    {
+      fieldname: 'items',
+      label: 'Items',
+      fieldtype: 'Table',
+      target: 'SalesInvoiceItem',
+      required: true,
+    },
+    {
+      fieldname: 'grandTotal',
+      label: 'Grand Total',
+      fieldtype: 'Currency',
+      readOnly: true,
+    },
   ],
 };
 
@@ -68,17 +117,35 @@ const schemaMap = {
   SystemSettings: {
     name: 'SystemSettings',
     fields: [
-      { fieldname: 'countryCode', label: 'Country Code', fieldtype: 'Data', default: 'in' },
-      { fieldname: 'dateFormat', label: 'Date Format', fieldtype: 'Data', default: 'dd/mm/yyyy' },
-      { fieldname: 'locale', label: 'Locale', fieldtype: 'Data', default: 'en' },
+      {
+        fieldname: 'countryCode',
+        label: 'Country Code',
+        fieldtype: 'Data',
+        default: 'in',
+      },
+      {
+        fieldname: 'dateFormat',
+        label: 'Date Format',
+        fieldtype: 'Data',
+        default: 'dd/mm/yyyy',
+      },
+      {
+        fieldname: 'locale',
+        label: 'Locale',
+        fieldtype: 'Data',
+        default: 'en',
+      },
     ],
     isSingle: true,
   },
-   } as unknown as SchemaMap;
+} as unknown as SchemaMap;
 
 async function main() {
   // Clean database
-  const adminDb = new DatabaseCore(undefined, { ...testDbConfig, database: 'test' });
+  const adminDb = new DatabaseCore(undefined, {
+    ...testDbConfig,
+    database: 'test',
+  });
   await adminDb.connect();
   await adminDb.query(`DROP TABLE IF EXISTS test_books_core.singlevalue`);
   await adminDb.query(`DROP TABLE IF EXISTS test_books_core.customer`);
@@ -103,7 +170,9 @@ async function main() {
   console.log('FK constraints:', JSON.stringify(fks, null, 2));
 
   // Test 1: Insert SalesInvoice with non-existent Customer - should fail
-  console.log('\n--- Test 1: Insert SalesInvoice referencing non-existent Customer ---');
+  console.log(
+    '\n--- Test 1: Insert SalesInvoice referencing non-existent Customer ---'
+  );
   try {
     await db.insert('SalesInvoice', {
       name: 'SINV-1001',
@@ -114,11 +183,19 @@ async function main() {
       ...getDefaultMetaFieldValueMap(),
     });
     console.log('FAIL: Insert should have thrown FK constraint error');
-  } catch (err: any) {
-    if (err.message?.includes('foreign key constraint') || err.message?.includes('errno: 1452') || err.message?.includes('1452')) {
-      console.log('PASS: FK violation correctly rejected:', err.message.split('\\n')[0]?.trim());
+  } catch (err) {
+    const msg = (err as Error).message;
+    if (
+      msg?.includes('foreign key constraint') ||
+      msg?.includes('errno: 1452') ||
+      msg?.includes('1452')
+    ) {
+      console.log(
+        'PASS: FK violation correctly rejected:',
+        msg.split('\\n')[0]?.trim()
+      );
     } else {
-      console.log('UNEXPECTED ERROR:', err.message?.split('\\n')[0]?.trim());
+      console.log('UNEXPECTED ERROR:', msg?.split('\\n')[0]?.trim());
     }
   }
 
@@ -139,20 +216,34 @@ async function main() {
       ...getDefaultMetaFieldValueMap(),
     });
     console.log('PASS: Insert succeeded with valid Customer reference');
-  } catch (err: any) {
-    console.log('FAIL: Insert should not have thrown:', err.message.split('\\n')[0]?.trim());
+  } catch (err) {
+    console.log(
+      'FAIL: Insert should not have thrown:',
+      (err as Error).message.split('\\n')[0]?.trim()
+    );
   }
 
   // Test 3: Delete Customer with existing SalesInvoice - should fail
-  console.log('\\n--- Test 3: Delete Customer with existing SalesInvoice reference ---');
+  console.log(
+    '\\n--- Test 3: Delete Customer with existing SalesInvoice reference ---'
+  );
   try {
     await db.delete('Customer', 'John Whoe');
     console.log('FAIL: Delete should have thrown FK constraint error');
-  } catch (err: any) {
-    if (err.message?.includes('foreign key constraint') || err.message?.includes('errno: 1452') || err.message?.includes('1452') || err.message?.includes('cannot delete or update')) {
-      console.log('PASS: FK constraint correctly prevented delete:', err.message.split('\\n')[0]?.trim());
+  } catch (err) {
+    const msg = (err as Error).message;
+    if (
+      msg?.includes('foreign key constraint') ||
+      msg?.includes('errno: 1452') ||
+      msg?.includes('1452') ||
+      msg?.includes('cannot delete or update')
+    ) {
+      console.log(
+        'PASS: FK constraint correctly prevented delete:',
+        msg.split('\\n')[0]?.trim()
+      );
     } else {
-      console.log('UNEXPECTED ERROR:', err.message?.split('\\n')[0]?.trim());
+      console.log('UNEXPECTED ERROR:', msg?.split('\\n')[0]?.trim());
     }
   }
 
@@ -162,8 +253,11 @@ async function main() {
   try {
     await db.delete('Customer', 'John Whoe');
     console.log('PASS: Delete succeeded after removing dependent record');
-  } catch (err: any) {
-    console.log('FAIL: Delete should not have thrown:', err.message.split('\\n')[0]?.trim());
+  } catch (err) {
+    console.log(
+      'FAIL: Delete should not have thrown:',
+      (err as Error).message.split('\\n')[0]?.trim()
+    );
   }
 
   await db.close();

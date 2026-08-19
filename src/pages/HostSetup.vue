@@ -1,6 +1,14 @@
 <template>
   <div
-    class="flex-1 flex justify-center items-center bg-gray-50 dark:bg-gray-900 min-h-screen p-4"
+    class="
+      flex-1 flex
+      justify-center
+      items-center
+      bg-gray-50
+      dark:bg-gray-900
+      min-h-screen
+      p-4
+    "
   >
     <div
       class="
@@ -8,8 +16,7 @@
         max-w-lg
         shadow-xl
         rounded-xl
-        border
-        border-gray-200
+        border border-gray-200
         dark:border-gray-800
         bg-white
         dark:bg-gray-800
@@ -30,13 +37,31 @@
         <!-- Error Banner -->
         <div
           v-if="errorMsg"
-          class="mt-4 p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-200 rounded-lg border border-red-200 dark:border-red-800"
+          class="
+            mt-4
+            p-3
+            text-sm text-red-700
+            bg-red-100
+            dark:bg-red-900/40 dark:text-red-200
+            rounded-lg
+            border border-red-200
+            dark:border-red-800
+          "
         >
           {{ errorMsg }}
         </div>
 
         <!-- Mode Selection Tabs -->
-        <div class="mt-5 flex gap-6 border-b border-gray-200 dark:border-gray-700 pb-3">
+        <div
+          class="
+            mt-5
+            flex
+            gap-6
+            border-b border-gray-200
+            dark:border-gray-700
+            pb-3
+          "
+        >
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               v-model="mode"
@@ -45,9 +70,10 @@
               :disabled="installing"
               class="text-blue-600 focus:ring-blue-500"
             />
-            <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
-              t`Express setup (install locally)`
-            }}</span>
+            <span
+              class="text-sm font-medium text-gray-800 dark:text-gray-200"
+              >{{ t`Express setup (install locally)` }}</span
+            >
           </label>
           <label class="flex items-center gap-2 cursor-pointer">
             <input
@@ -57,9 +83,10 @@
               :disabled="installing"
               class="text-blue-600 focus:ring-blue-500"
             />
-            <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
-              t`Advanced (existing server)`
-            }}</span>
+            <span
+              class="text-sm font-medium text-gray-800 dark:text-gray-200"
+              >{{ t`Advanced (existing server)` }}</span
+            >
           </label>
         </div>
 
@@ -73,9 +100,16 @@
             </p>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`Port`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`Port` }}</label
+              >
               <input
                 v-model.number="port"
                 type="number"
@@ -86,21 +120,30 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
               />
-              <p v-if="portMessage" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+              <p
+                v-if="portMessage"
+                class="text-xs text-amber-600 dark:text-amber-400 mt-1"
+              >
                 {{ portMessage }}
               </p>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`Database name`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`Database name` }}</label
+              >
               <input
                 v-model="database"
                 placeholder="sotrama"
@@ -111,8 +154,7 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
@@ -145,8 +187,27 @@
               {{ installLabel }}
             </button>
 
-            <div v-if="installStage" class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <span class="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <div
+              v-if="installStage"
+              class="
+                mt-2
+                text-xs text-gray-500
+                dark:text-gray-400
+                flex
+                items-center
+                gap-2
+              "
+            >
+              <span
+                class="
+                  inline-block
+                  w-2
+                  h-2
+                  rounded-full
+                  bg-blue-500
+                  animate-pulse
+                "
+              ></span>
               <span>{{ installStage }}</span>
             </div>
           </div>
@@ -156,9 +217,16 @@
         <template v-else-if="mode === 'advanced' && !done">
           <div class="mt-4 space-y-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`Host`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`Host` }}</label
+              >
               <input
                 v-model="host"
                 placeholder="127.0.0.1"
@@ -168,17 +236,23 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`Port`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`Port` }}</label
+              >
               <input
                 v-model.number="port"
                 type="number"
@@ -188,17 +262,23 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`Database name`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`Database name` }}</label
+              >
               <input
                 v-model="database"
                 placeholder="sotrama"
@@ -208,17 +288,23 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`User`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`User` }}</label
+              >
               <input
                 v-model="user"
                 class="
@@ -227,17 +313,23 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                t`Password`
-              }}</label>
+              <label
+                class="
+                  block
+                  text-sm
+                  font-medium
+                  text-gray-700
+                  dark:text-gray-300
+                "
+                >{{ t`Password` }}</label
+              >
               <input
                 v-model="password"
                 type="password"
@@ -247,8 +339,7 @@
                   px-3
                   py-2
                   rounded-lg
-                  border
-                  border-gray-300
+                  border border-gray-300
                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
                   focus:ring-2 focus:ring-blue-500 focus:outline-none
                 "
@@ -276,10 +367,16 @@
               {{ testing ? t`Testing…` : t`Test connection` }}
             </button>
 
-            <p v-if="testOk" class="text-sm font-medium text-green-600 dark:text-green-400">
+            <p
+              v-if="testOk"
+              class="text-sm font-medium text-green-600 dark:text-green-400"
+            >
               {{ t`Connection successful — press Continue below.` }}
             </p>
-            <p v-else-if="testDone && !testOk" class="text-sm text-red-600 dark:text-red-400">
+            <p
+              v-else-if="testDone && !testOk"
+              class="text-sm text-red-600 dark:text-red-400"
+            >
               {{ testError }}
             </p>
           </div>
@@ -292,8 +389,7 @@
             mt-4
             p-5
             rounded-xl
-            border
-            border-gray-200
+            border border-gray-200
             dark:border-gray-700
             bg-gray-50
             dark:bg-gray-900/60
@@ -301,37 +397,78 @@
         >
           <div class="flex items-center gap-2 mb-3">
             <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-            <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+            <h2
+              class="text-base font-semibold text-gray-900 dark:text-gray-100"
+            >
               {{ t`Setup complete` }}
             </h2>
           </div>
 
-          <dl class="space-y-2 text-sm divide-y divide-gray-200 dark:divide-gray-800">
+          <dl
+            class="
+              space-y-2
+              text-sm
+              divide-y divide-gray-200
+              dark:divide-gray-800
+            "
+          >
             <div class="flex justify-between pt-2">
               <dt class="text-gray-500 dark:text-gray-400">{{ t`Host` }}</dt>
-              <dd class="font-medium text-gray-900 dark:text-gray-200">127.0.0.1</dd>
+              <dd class="font-medium text-gray-900 dark:text-gray-200">
+                127.0.0.1
+              </dd>
             </div>
             <div class="flex justify-between pt-2">
-              <dt class="text-gray-500 dark:text-gray-400">{{ t`Allocated port` }}</dt>
-              <dd class="font-medium text-gray-900 dark:text-gray-200">{{ summary?.port }}</dd>
+              <dt class="text-gray-500 dark:text-gray-400">
+                {{ t`Allocated port` }}
+              </dt>
+              <dd class="font-medium text-gray-900 dark:text-gray-200">
+                {{ summary?.port }}
+              </dd>
             </div>
             <div class="flex justify-between pt-2">
-              <dt class="text-gray-500 dark:text-gray-400">{{ t`Database` }}</dt>
-              <dd class="font-medium text-gray-900 dark:text-gray-200">{{ summary?.database }}</dd>
+              <dt class="text-gray-500 dark:text-gray-400">
+                {{ t`Database` }}
+              </dt>
+              <dd class="font-medium text-gray-900 dark:text-gray-200">
+                {{ summary?.database }}
+              </dd>
             </div>
             <div class="flex justify-between pt-2">
-              <dt class="text-gray-500 dark:text-gray-400">{{ t`App user` }}</dt>
-              <dd class="font-medium text-gray-900 dark:text-gray-200">sotrama_app</dd>
+              <dt class="text-gray-500 dark:text-gray-400">
+                {{ t`App user` }}
+              </dt>
+              <dd class="font-medium text-gray-900 dark:text-gray-200">
+                sotrama_app
+              </dd>
             </div>
             <div class="flex justify-between items-center pt-2">
-              <dt class="text-gray-500 dark:text-gray-400">{{ t`App password` }}</dt>
+              <dt class="text-gray-500 dark:text-gray-400">
+                {{ t`App password` }}
+              </dt>
               <dd class="flex items-center gap-2">
-                <span class="font-mono text-xs text-gray-900 dark:text-gray-200 break-all bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded">
+                <span
+                  class="
+                    font-mono
+                    text-xs text-gray-900
+                    dark:text-gray-200
+                    break-all
+                    bg-gray-200
+                    dark:bg-gray-800
+                    px-2
+                    py-1
+                    rounded
+                  "
+                >
                   {{ summary?.appPassword }}
                 </span>
                 <button
                   type="button"
-                  class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  class="
+                    text-xs text-blue-600
+                    hover:text-blue-700
+                    dark:text-blue-400
+                  "
                   @click="copyPassword"
                 >
                   {{ copied ? t`Copied!` : t`Copy` }}
@@ -340,9 +477,19 @@
             </div>
           </dl>
 
-          <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <div
+            class="
+              mt-4
+              pt-3
+              border-t border-gray-200
+              dark:border-gray-700
+              space-y-2
+            "
+          >
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t`Share the app credentials above with LAN clients — they must never use root.` }}
+              {{
+                t`Share the app credentials above with LAN clients — they must never use root.`
+              }}
             </p>
             <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
               {{
@@ -437,7 +584,9 @@ export default defineComponent({
     },
     installLabel(): string {
       if (this.isDownloading) {
-        return `${t`Downloading MariaDB…`} ${Math.round(this.progressPercent)}%`;
+        return `${t`Downloading MariaDB…`} ${Math.round(
+          this.progressPercent
+        )}%`;
       }
       if (this.installing) {
         return t`Installing MariaDB…`;
@@ -490,7 +639,9 @@ export default defineComponent({
         }
         candidate += 1;
       }
-      this.portMessage = `${t`No free port found between`} ${start} ${t`and`} ${start + 19}.`;
+      this.portMessage = `${t`No free port found between`} ${start} ${t`and`} ${
+        start + 19
+      }.`;
     },
 
     async advancedTest() {
@@ -527,7 +678,9 @@ export default defineComponent({
         await this.probeNextFreePort(this.port);
         const portCheck = await ipc.isPortAvailable(this.port);
         if (!portCheck.available) {
-          this.errorMsg = `${t`Port`} ${this.port} ${t`is in use. Free it and retry.`}`;
+          this.errorMsg = `${t`Port`} ${
+            this.port
+          } ${t`is in use. Free it and retry.`}`;
           return;
         }
 

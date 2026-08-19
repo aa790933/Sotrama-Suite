@@ -33,11 +33,12 @@ export const MARIADB_VERSION = '11.8.8';
 const WINDOWS_MSI_URL = `https://dlm.mariadb.com/4707366/MariaDB/mariadb-${MARIADB_VERSION}/winx64-packages/mariadb-${MARIADB_VERSION}-winx64.msi`;
 const WINDOWS_MSI_FILENAME = `mariadb-${MARIADB_VERSION}-winx64.msi`;
 
-/** 
+/**
  * Pinned SHA-256 of the MariaDB Windows MSI.
  * If empty or set to 'skip', checksum verification is bypassed for local/custom builds.
  */
-export const MARIADB_MSI_SHA256 = '42ee5ab1609031bed58bf19876000fd6c13aca4878126faabc1da490d1fe9ce2';
+export const MARIADB_MSI_SHA256 =
+  '42ee5ab1609031bed58bf19876000fd6c13aca4878126faabc1da490d1fe9ce2';
 
 export function detectPlatform(): Platform {
   switch (process.platform) {
@@ -51,7 +52,12 @@ export function detectPlatform(): Platform {
 }
 
 export function getBundledMsiPath(): string {
-  return path.join((process as any).resourcesPath || process.cwd(), 'mariadb', WINDOWS_MSI_FILENAME);
+  const resourcesPath = (process as { resourcesPath?: string }).resourcesPath;
+  return path.join(
+    resourcesPath ?? process.cwd(),
+    'mariadb',
+    WINDOWS_MSI_FILENAME
+  );
 }
 
 /**
@@ -149,7 +155,9 @@ function runCommand(cmd: string, args: string[]): Promise<RunResult> {
     child.stdout?.on('data', (d: Buffer) => (stdout += d.toString()));
     child.stderr?.on('data', (d: Buffer) => (stderr += d.toString()));
     child.on('close', (code) => resolve({ code: code ?? -1, stdout, stderr }));
-    child.on('error', (err) => resolve({ code: -1, stdout, stderr: err.message }));
+    child.on('error', (err) =>
+      resolve({ code: -1, stdout, stderr: err.message })
+    );
   });
 }
 
@@ -158,7 +166,9 @@ function runCommand(cmd: string, args: string[]): Promise<RunResult> {
  */
 function runElevated(cmd: string, args: string[]): Promise<RunResult> {
   if (process.platform === 'win32') {
-    const joinedArgs = args.map((a) => (a.includes(' ') ? `\\"${a}\\"` : a)).join(' ');
+    const joinedArgs = args
+      .map((a) => (a.includes(' ') ? `\\"${a}\\"` : a))
+      .join(' ');
     const psArgs = [
       '-NoProfile',
       '-ExecutionPolicy',
@@ -170,18 +180,16 @@ function runElevated(cmd: string, args: string[]): Promise<RunResult> {
   }
 
   return new Promise((resolve) => {
-    const fullCmd = `${cmd} ${args.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(' ')}`;
-    sudo.exec(
-      fullCmd,
-      { name: 'Sotrama Suite' },
-      (err, stdout, stderr) => {
-        resolve({
-          code: err ? -1 : 0,
-          stdout: stdout?.toString() ?? '',
-          stderr: stderr?.toString() ?? '',
-        });
-      }
-    );
+    const fullCmd = `${cmd} ${args
+      .map((a) => `'${a.replace(/'/g, "'\\''")}'`)
+      .join(' ')}`;
+    sudo.exec(fullCmd, { name: 'Sotrama Suite' }, (err, stdout, stderr) => {
+      resolve({
+        code: err ? -1 : 0,
+        stdout: stdout?.toString() ?? '',
+        stderr: stderr?.toString() ?? '',
+      });
+    });
   });
 }
 
@@ -337,7 +345,10 @@ async function setBindAddress(
       return { ok: true };
     }
     await fs.writeFile(cfgPath, updated, 'utf-8');
-    await runElevated('cmd.exe', ['/c', 'net stop MariaDB && net start MariaDB']);
+    await runElevated('cmd.exe', [
+      '/c',
+      'net stop MariaDB && net start MariaDB',
+    ]);
     return { ok: true };
   }
 
@@ -379,14 +390,17 @@ async function setBindAddress(
       if (updated === null) {
         return { ok: true };
       }
-      
+
       const tmpPath = path.join(os.tmpdir(), `mariadb_${Date.now()}.cnf`);
       await fs.writeFile(tmpPath, updated, 'utf-8');
       const copyRes = await runElevated('cp', [tmpPath, cfgPath]);
       await fs.remove(tmpPath);
-      
+
       if (copyRes.code !== 0) {
-        return { ok: false, error: `Failed to update config at ${cfgPath}: ${copyRes.stderr}` };
+        return {
+          ok: false,
+          error: `Failed to update config at ${cfgPath}: ${copyRes.stderr}`,
+        };
       }
       break;
     }
@@ -394,7 +408,10 @@ async function setBindAddress(
 
   const restartRes = await runElevated('systemctl', ['restart', 'mariadb']);
   if (restartRes.code !== 0) {
-    return { ok: false, error: `Failed to restart MariaDB service: ${restartRes.stderr}` };
+    return {
+      ok: false,
+      error: `Failed to restart MariaDB service: ${restartRes.stderr}`,
+    };
   }
 
   return { ok: true };
@@ -403,7 +420,9 @@ async function setBindAddress(
 /** Ensure bind-address = 0.0.0.0 is present in the configuration */
 function ensureBindAddress(content: string, port: number): string | null {
   const targetBind = '0.0.0.0';
-  const currentBind = content.match(/bind-address\s*=\s*["']?([^"'\n\r]+)["']?/);
+  const currentBind = content.match(
+    /bind-address\s*=\s*["']?([^"'\n\r]+)["']?/
+  );
   const currentBindValue = currentBind ? currentBind[1].trim() : '127.0.0.1';
 
   if (currentBindValue === targetBind) {
@@ -466,10 +485,10 @@ async function openFirewall(
     ];
     for (const binPath of mariaBinPaths) {
       if (await fs.pathExists(binPath)) {
-        await runElevated(
-          '/usr/libexec/ApplicationFirewall/socketfilterfw',
-          ['--add', binPath]
-        );
+        await runElevated('/usr/libexec/ApplicationFirewall/socketfilterfw', [
+          '--add',
+          binPath,
+        ]);
         break;
       }
     }
@@ -524,7 +543,7 @@ async function createAppUser(
   appPassword: string,
   database: string,
   platform: Platform,
-  hostMode: boolean = false
+  hostMode = false
 ): Promise<{ ok: boolean; error?: string }> {
   const safeDb = database.replace(/`/g, '');
   const safeAppPw = appPassword
