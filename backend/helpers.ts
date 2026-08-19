@@ -2,9 +2,9 @@ import { constants } from 'fs';
 import fs from 'fs/promises';
 import { DatabaseMethod } from 'utils/db/types';
 import { CUSTOM_EVENTS } from 'utils/messages';
-import { KnexColumnType } from './database/types';
+import { DbType } from './database/types';
 
-export const sqliteTypeMap: Record<string, KnexColumnType> = {
+export const mariadbTypeMap: Record<string, DbType> = {
   AutoComplete: 'text',
   Currency: 'text',
   Int: 'integer',
@@ -28,7 +28,7 @@ export const sqliteTypeMap: Record<string, KnexColumnType> = {
 };
 
 export const SYSTEM = '__SYSTEM__';
-export const validTypes = Object.keys(sqliteTypeMap);
+export const validTypes = Object.keys(mariadbTypeMap);
 export function getDefaultMetaFieldValueMap() {
   const now = new Date();
   const iso = now.toISOString().replace('T', ' ').replace('Z', '');

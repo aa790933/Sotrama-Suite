@@ -70,7 +70,7 @@ Sotrama Suite addresses a market gap where small businesses face expensive, comp
 
 - **Electron**: Electron is used to package Sotrama Suite as a standalone desktop application, allowing it to run offline and provide a native-like experience across Windows, macOS, and Linux.
 
-- **SQLite**: Sotrama Suite uses SQLite as its local database. All financial data, transactions, and configurations are stored securely in an SQLite file on the user's machine.
+- **MariaDB**: Sotrama Suite uses MariaDB as its database backend. All financial data, transactions, and configurations are stored in a MariaDB database on the user's machine.
 
 ## Production Setup
 

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex-1 flex justify-center items-center bg-gray-25 dark:bg-gray-900"
+    class="flex-1 flex justify-center items-center bg-gray-50 dark:bg-gray-900 min-h-screen p-4"
     :class="{
       'pointer-events-none': loadingDatabase,
       'window-drag': platform !== 'Windows',
@@ -8,142 +8,101 @@
   >
     <div
       class="
-        w-full w-form
-        shadow-lg
-        rounded-lg
+        w-full
+        max-w-xl
+        max-h-[90vh]
+        shadow-xl
+        rounded-xl
         border
+        border-gray-200
         dark:border-gray-800
         relative
         bg-white
-        dark:bg-gray-875
+        dark:bg-gray-850
+        flex
+        flex-col
+        overflow-hidden
       "
-      style="height: 700px"
     >
-      <!-- Welcome to Sotrama Suite -->
-      <div class="px-4 py-4">
-        <h1 class="text-2xl font-semibold select-none dark:text-gray-25">
+      <!-- Header Section -->
+      <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h1 class="text-2xl font-bold select-none text-gray-900 dark:text-gray-100">
           {{ t`Welcome to Sotrama Suite` }}
         </h1>
-        <p class="text-gray-600 dark:text-gray-400 text-base select-none">
-          {{
-            t`Create a new company or select an existing one from your computer`
-          }}
+        <p class="text-gray-600 dark:text-gray-400 text-sm select-none mt-1">
+          {{ t`Create a new company or select an existing one` }}
         </p>
       </div>
 
-      <hr class="dark:border-gray-800" />
-
-      <!-- New File (Blue Icon) -->
-      <div
-        data-testid="create-new-file"
-        class="px-4 h-row-largest flex flex-row items-center gap-4 p-2"
-        :class="
-          creatingDemo
-            ? ''
-            : 'hover:bg-gray-50 dark:hover:bg-gray-890 cursor-pointer'
-        "
-        @click="newDatabase"
-      >
-        <div class="w-8 h-8 rounded-full bg-blue-500 relative flex-center">
-          <feather-icon
-            name="plus"
-            class="text-white dark:text-gray-900 w-5 h-5"
-          />
-        </div>
-
-        <div>
-          <p class="font-medium dark:text-gray-200">
-            {{ t`New Company` }}
-          </p>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            {{ t`Create a new company and store it on your computer` }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Existing File (Green Icon) -->
-      <div
-        class="px-4 h-row-largest flex flex-row items-center gap-4 p-2"
-        :class="
-          creatingDemo
-            ? ''
-            : 'hover:bg-gray-50 dark:hover:bg-gray-890 cursor-pointer'
-        "
-        @click="existingDatabase"
-      >
+      <!-- Action Buttons -->
+      <div class="p-2 space-y-1">
+        <!-- New Company (Blue Icon) -->
         <div
-          class="
-            w-8
-            h-8
-            rounded-full
-            bg-green-500
-            dark:bg-green-600
-            relative
-            flex-center
+          data-testid="create-new-file"
+          class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
+          :class="
+            creatingDemo
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
           "
+          @click="newDatabase"
         >
-          <feather-icon
-            name="upload"
-            class="w-4 h-4 text-white dark:text-gray-900"
-          />
-        </div>
-        <div>
-          <p class="font-medium dark:text-gray-200">
-            {{ t`Existing Company` }}
-          </p>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            {{ t`Load an existing company from your computer` }}
-          </p>
-        </div>
-      </div>
+          <div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+            <feather-icon
+              name="plus"
+              class="text-white w-5 h-5"
+            />
+          </div>
 
-      <!-- Create Demo (Pink Icon) -->
-      <div
-        v-if="!files?.length"
-        class="px-4 h-row-largest flex flex-row items-center gap-4 p-2"
-        :class="
-          creatingDemo
-            ? ''
-            : 'hover:bg-gray-50 dark:hover:bg-gray-890 cursor-pointer'
-        "
-        @click="createDemo"
-      >
+          <div>
+            <p class="font-medium text-gray-900 dark:text-gray-100 text-sm">
+              {{ t`New Company` }}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {{ t`Create a new company and store it on your computer` }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Create Demo (Pink Icon - Top Action if no files) -->
         <div
-          class="
-            w-8
-            h-8
-            rounded-full
-            bg-pink-500
-            dark:bg-pink-600
-            relative
-            flex-center
+          v-if="!files?.length"
+          class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
+          :class="
+            creatingDemo
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
           "
+          @click="createDemo"
         >
-          <feather-icon name="monitor" class="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <p class="font-medium dark:text-gray-200">
-            {{ t`Create Demo` }}
-          </p>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            {{ t`Create a demo company to try out Sotrama Suite` }}
-          </p>
+          <div class="w-9 h-9 rounded-full bg-pink-500 dark:bg-pink-600 flex items-center justify-center flex-shrink-0">
+            <feather-icon name="monitor" class="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p class="font-medium text-gray-900 dark:text-gray-100 text-sm">
+              {{ t`Create Demo` }}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {{ t`Create a demo company to try out Sotrama Suite` }}
+            </p>
+          </div>
         </div>
       </div>
-      <hr class="dark:border-gray-800" />
 
-      <!-- File List -->
-      <div class="overflow-y-auto" style="max-height: 340px">
+      <hr class="border-gray-200 dark:border-gray-800" />
+
+      <!-- Database File List -->
+      <div class="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-gray-100 dark:divide-gray-800/50">
         <div
           v-for="(file, i) in files"
           :key="file.dbPath"
-          class="h-row-largest px-4 flex gap-4 items-center"
+          class="px-4 py-3 rounded-lg flex gap-4 items-center transition-colors group"
           :class="
             creatingDemo
-              ? ''
-              : 'hover:bg-gray-50 dark:hover:bg-gray-890 cursor-pointer'
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
           "
-          :title="t`${file.companyName} stored at ${file.dbPath}`"
+          :title="`${file.companyName} (${file.dbPath})`"
           @click="selectFile(file)"
         >
           <div
@@ -155,103 +114,86 @@
               justify-center
               items-center
               bg-gray-200
-              dark:bg-gray-800
-              text-gray-500
+              dark:bg-gray-700
+              text-gray-700
+              dark:text-gray-300
               font-semibold
               flex-shrink-0
-              text-base
+              text-xs
             "
           >
             {{ i + 1 }}
           </div>
-          <div class="w-full">
-            <div class="flex justify-between overflow-x-auto items-baseline">
-              <h2 class="font-medium dark:text-gray-200">
+          <div class="w-full min-w-0">
+            <div class="flex justify-between items-baseline gap-2">
+              <h2 class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
                 {{ file.companyName }}
               </h2>
-              <p
-                class="
-                  whitespace-nowrap
-                  text-sm text-gray-600
-                  dark:text-gray-400
-                "
-              >
+              <span class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                 {{ formatDate(file.modified) }}
-              </p>
+              </span>
             </div>
-            <p
-              class="
-                text-sm text-gray-600
-                dark:text-gray-400
-                overflow-x-auto
-                no-scrollbar
-                whitespace-nowrap
-              "
-            >
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 font-mono">
               {{ truncate(file.dbPath) }}
             </p>
           </div>
           <button
+            type="button"
             class="
-              ms-auto
-              p-2
-              hover:bg-red-200
-              dark:hover:bg-red-900 dark:hover:bg-opacity-40
+              p-1.5
+              opacity-0
+              group-hover:opacity-100
+              hover:bg-red-100
+              dark:hover:bg-red-900/40
               rounded-full
-              w-8
-              h-8
-              text-gray-600
-              dark:text-gray-400
-              hover:text-red-400
-              dark:hover:text-red-200
+              text-gray-400
+              hover:text-red-600
+              dark:hover:text-red-300
+              transition-all
             "
-            @click.stop="() => deleteDb(i)"
+            :title="t`Remove from list`"
+            @click.stop="deleteDb(i)"
           >
             <feather-icon name="x" class="w-4 h-4" />
           </button>
         </div>
       </div>
-      <hr v-if="files?.length" class="dark:border-gray-800" />
 
-      <!-- Language Selector -->
-      <div
-        class="
-          w-full
-          flex
-          justify-between
-          items-center
-          absolute
-          p-4
-          text-gray-900
-          dark:text-gray-100
-        "
-        style="top: 100%; transform: translateY(-100%)"
-      >
-        <LanguageSelector v-show="!creatingDemo" class="text-sm w-28" />
+      <hr class="border-gray-200 dark:border-gray-800" />
+
+      <!-- Footer Bar -->
+      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-850 flex justify-between items-center">
+        <LanguageSelector v-show="!creatingDemo" class="text-sm w-32" />
         <button
           v-if="files?.length"
+          type="button"
           class="
-            text-sm
-            bg-gray-100
-            dark:bg-gray-890
-            hover:bg-gray-200
-            dark:hover:bg-gray-900
-            rounded
-            px-4
-            py-1.5
-            w-auto
-            h-8
-            no-scrollbar
-            overflow-x-auto
-            whitespace-nowrap
+            text-xs
+            font-medium
+            bg-white
+            dark:bg-gray-800
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            text-gray-700
+            dark:text-gray-200
+            border
+            border-gray-300
+            dark:border-gray-700
+            rounded-lg
+            px-3.5
+            py-2
+            transition-all
+            disabled:opacity-50
           "
           :disabled="creatingDemo"
           @click="createDemo"
         >
-          {{ creatingDemo ? t`Please Wait` : t`Create Demo` }}
+          {{ creatingDemo ? t`Please Wait…` : t`Create Demo` }}
         </button>
       </div>
     </div>
+
+    <!-- Progress Modal -->
     <Loading
       v-if="creatingDemo"
       :open="creatingDemo"
@@ -261,56 +203,58 @@
       :message="creationMessage"
     />
 
-    <!-- Base Count Selection when Dev -->
+    <!-- Dev Modal for Custom Base Count -->
     <Modal :open-modal="openModal" @closemodal="openModal = false">
-      <div class="p-4 text-gray-900 dark:text-gray-100 w-form">
-        <h2 class="text-xl font-semibold select-none">Set Base Count</h2>
-        <p class="text-base mt-2">
-          Base Count is a lower bound on the number of entries made when
-          creating the dummy instance.
+      <div class="p-6 text-gray-900 dark:text-gray-100 max-w-md w-full">
+        <h2 class="text-lg font-bold select-none">{{ t`Set Base Count` }}</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+          {{ t`Base Count is a lower bound on the number of entries made when creating the dummy instance.` }}
         </p>
-        <div class="flex my-12 justify-center items-baseline gap-4 text-base">
-          <label for="basecount" class="text-gray-600 dark:text-gray-400"
-            >Base Count</label
-          >
+        <div class="my-6 flex items-center justify-center gap-4">
+          <label for="basecount" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ t`Base Count` }}
+          </label>
           <input
-            v-model="baseCount"
+            id="basecount"
+            v-model.number="baseCount"
             type="number"
-            name="basecount"
+            min="1"
             class="
               bg-gray-100
-              dark:bg-gray-875
-              focus:bg-gray-200
-              dark:focus:bg-gray-890
-              rounded-md
-              px-2
-              py-1
+              dark:bg-gray-800
+              border
+              border-gray-300
+              dark:border-gray-700
+              rounded-lg
+              px-3
+              py-1.5
+              text-sm
+              w-28
+              focus:ring-2 focus:ring-blue-500
               outline-none
             "
           />
         </div>
-        <div class="flex justify-between">
-          <Button @click="openModal = false">Cancel</Button>
+        <div class="flex justify-end gap-3">
+          <Button @click="openModal = false">{{ t`Cancel` }}</Button>
           <Button
             type="primary"
-            @click="
-              () => {
-                openModal = false;
-                startDummyInstanceSetup();
-              }
-            "
-            >Create</Button
+            @click="() => { openModal = false; startDummyInstanceSetup(); }"
           >
+            {{ t`Create` }}
+          </Button>
         </div>
       </div>
     </Modal>
   </div>
 </template>
+
 <script lang="ts">
+import { defineComponent } from 'vue';
+import { DateTime } from 'luxon';
 import { setupDummyInstance } from 'dummy';
 import { t } from 'fyo';
 import { Verb } from 'fyo/telemetry/types';
-import { DateTime } from 'luxon';
 import Button from 'src/components/Button.vue';
 import LanguageSelector from 'src/components/Controls/LanguageSelector.vue';
 import FeatherIcon from 'src/components/FeatherIcon.vue';
@@ -319,9 +263,11 @@ import Modal from 'src/components/Modal.vue';
 import { fyo } from 'src/initFyo';
 import { showDialog } from 'src/utils/interactive';
 import { updateConfigFiles } from 'src/utils/misc';
-import { deleteDb, getSavePath, getSelectedFilePath } from 'src/utils/ui';
+import { deleteDb as performDeleteDb } from 'src/utils/ui';
+import type { ConnectionConfig } from 'src/setup/types';
 import type { ConfigFilesWithModified } from 'utils/types';
-import { defineComponent } from 'vue';
+
+declare const ipc: any;
 
 export default defineComponent({
   name: 'DatabaseSelector',
@@ -341,129 +287,169 @@ export default defineComponent({
       creationPercent: 0,
       creatingDemo: false,
       loadingDatabase: false,
-      files: [],
-    } as {
-      openModal: boolean;
-      baseCount: number;
-      creationMessage: string;
-      creationPercent: number;
-      creatingDemo: boolean;
-      loadingDatabase: boolean;
-      files: ConfigFilesWithModified[];
+      files: [] as ConfigFilesWithModified[],
+      currentPlatform: 'Windows',
     };
   },
+  computed: {
+    platform(): string {
+      return this.currentPlatform;
+    },
+  },
   async mounted() {
+    await this.detectPlatform();
     await this.setFiles();
 
-    if (fyo.store.isDevelopment) {
-      // @ts-ignore
-      window.ds = this;
+    if (fyo?.store?.isDevelopment) {
+      (window as any).ds = this;
     }
   },
   methods: {
-    truncate(value: string) {
-      if (value.length < 72) {
-        return value;
-      }
+    t(str: TemplateStringsArray | string) {
+      return typeof str === 'string' ? t(str) : t(str);
+    },
 
-      return '...' + value.slice(value.length - 72);
+    async detectPlatform() {
+      try {
+        if (typeof ipc !== 'undefined' && ipc.getEnv) {
+          const env = await ipc.getEnv();
+          this.currentPlatform = env?.platform === 'win32' ? 'Windows' : env?.platform || 'Windows';
+        } else if (navigator.userAgent.includes('Mac')) {
+          this.currentPlatform = 'Darwin';
+        } else if (navigator.userAgent.includes('Linux')) {
+          this.currentPlatform = 'Linux';
+        }
+      } catch {
+        this.currentPlatform = 'Windows';
+      }
     },
-    formatDate(isoDate: string) {
-      return DateTime.fromISO(isoDate).toRelative();
+
+    truncate(value: string): string {
+      if (!value) return '';
+      return value.length < 65 ? value : '…' + value.slice(value.length - 65);
     },
+
+    formatDate(isoDate: string): string {
+      if (!isoDate) return '';
+      try {
+        const dt = DateTime.fromISO(isoDate);
+        return dt.isValid ? (dt.toRelative() ?? '') : '';
+      } catch {
+        return '';
+      }
+    },
+
     async deleteDb(i: number) {
       const file = this.files[i];
-      const setFiles = this.setFiles.bind(this);
+      if (!file) return;
 
-      await showDialog({
+      const confirmed = await showDialog({
         title: t`Delete ${file.companyName}?`,
-        detail: t`Database file: ${file.dbPath}`,
+        detail: t`Database location: ${file.dbPath}`,
         type: 'warning',
         buttons: [
           {
-            label: this.t`Yes`,
-            async action() {
-              await deleteDb(file.dbPath);
-              await setFiles();
-            },
+            label: t`Yes`,
+            action: () => true,
             isPrimary: true,
           },
           {
-            label: this.t`No`,
-            action() {
-              return null;
-            },
+            label: t`No`,
+            action: () => false,
             isEscape: true,
           },
         ],
       });
+
+      if (confirmed) {
+        await performDeleteDb(file.dbPath);
+        await this.setFiles();
+      }
     },
+
     async createDemo() {
-      if (!fyo.store.isDevelopment) {
+      if (!fyo?.store?.isDevelopment) {
         await this.startDummyInstanceSetup();
       } else {
         this.openModal = true;
       }
     },
+
     async startDummyInstanceSetup() {
-      const { filePath, canceled } = await getSavePath('demo', 'db');
-      if (canceled || !filePath) {
+      const persisted = fyo?.config?.get('lastSelectedFilePath', null) as string | null;
+      if (!persisted) {
+        this.$emit('new-database');
+        return;
+      }
+
+      let filePath: string;
+      try {
+        const cfg = JSON.parse(persisted) as ConnectionConfig;
+        filePath = JSON.stringify({ ...cfg, database: 'demo' });
+      } catch {
+        this.$emit('new-database');
         return;
       }
 
       this.creatingDemo = true;
-      await setupDummyInstance(
-        filePath,
-        fyo,
-        1,
-        this.baseCount,
-        (message, percent) => {
-          this.creationMessage = message;
-          this.creationPercent = percent;
+      this.creationPercent = 0;
+      this.creationMessage = t`Initializing demo setup…`;
+
+      try {
+        await setupDummyInstance(
+          filePath,
+          fyo,
+          1,
+          this.baseCount,
+          (message: string, percent: number) => {
+            this.creationMessage = message;
+            this.creationPercent = percent;
+          }
+        );
+
+        updateConfigFiles(fyo);
+        await fyo.purgeCache();
+        await this.setFiles();
+
+        if (fyo?.telemetry?.log) {
+          fyo.telemetry.log(Verb.Created, 'dummy-instance');
         }
-      );
 
-      updateConfigFiles(fyo);
-      await fyo.purgeCache();
-      await this.setFiles();
-      this.fyo.telemetry.log(Verb.Created, 'dummy-instance');
-      this.creatingDemo = false;
-      this.$emit('file-selected', filePath);
-    },
-    async setFiles() {
-      const dbList = await ipc.getDbList();
-      this.files = dbList?.sort(
-        (a, b) => Date.parse(b.modified) - Date.parse(a.modified)
-      );
-    },
-    newDatabase() {
-      if (this.creatingDemo) {
-        return;
+        this.$emit('file-selected', filePath);
+      } catch (err) {
+        await showDialog({
+          title: t`Demo Creation Failed`,
+          detail: (err as Error)?.message || String(err),
+          type: 'error',
+        });
+      } finally {
+        this.creatingDemo = false;
       }
+    },
 
+    async setFiles() {
+      try {
+        if (typeof ipc !== 'undefined' && ipc.getDbList) {
+          const dbList = await ipc.getDbList();
+          if (Array.isArray(dbList)) {
+            this.files = dbList.sort(
+              (a, b) => (Date.parse(b.modified) || 0) - (Date.parse(a.modified) || 0)
+            );
+          }
+        }
+      } catch {
+        this.files = [];
+      }
+    },
+
+    newDatabase() {
+      if (this.creatingDemo) return;
       this.$emit('new-database');
     },
-    async existingDatabase() {
-      if (this.creatingDemo) {
-        return;
-      }
 
-      const filePath = (await getSelectedFilePath())?.filePaths?.[0];
-      this.emitFileSelected(filePath);
-    },
     selectFile(file: ConfigFilesWithModified) {
-      if (this.creatingDemo) {
-        return;
-      }
-
-      this.emitFileSelected(file.dbPath);
-    },
-    emitFileSelected(filePath: string) {
-      if (!filePath) {
-        return;
-      }
-
-      this.$emit('file-selected', filePath);
+      if (this.creatingDemo || !file?.dbPath) return;
+      this.$emit('file-selected', file.dbPath);
     },
   },
 });

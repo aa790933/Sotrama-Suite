@@ -1,14 +1,9 @@
-import DatabaseCore, { MariaDBConfig } from '../core';
-import { getMapFromList, getDefaultMetaFieldValueMap } from '../../helpers';
+import DatabaseCore from '../core';
+import { getDefaultMetaFieldValueMap } from '../../helpers';
 import { Schema, SchemaMap, SchemaStub, SchemaStubMap } from 'schemas/types';
+import { getTestDbConfig } from './dbTestConfig';
 
-const testDbConfig: MariaDBConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '20012005',
-  database: 'test_books_core',
-};
+const testDbConfig = getTestDbConfig('test_books_core');
 
 const Customer = {
   name: 'Customer',
@@ -79,7 +74,7 @@ const schemaMap = {
     ],
     isSingle: true,
   },
-} as SchemaMap;
+   } as unknown as SchemaMap;
 
 async function main() {
   // Clean database

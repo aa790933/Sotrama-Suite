@@ -1056,14 +1056,6 @@ export async function deleteDb(filePath: string) {
   }
 }
 
-export async function getSelectedFilePath() {
-  return ipc.getOpenFilePath({
-    title: t`Select file`,
-    properties: ['openFile'],
-    filters: [{ name: 'SQLite DB File', extensions: ['db'] }],
-  });
-}
-
 export async function getSavePath(name: string, extention: string) {
   const response = await ipc.getSaveFilePath({
     title: t`Select folder`,
@@ -1073,7 +1065,7 @@ export async function getSavePath(name: string, extention: string) {
   const canceled = response.canceled;
   let filePath = response.filePath;
 
-  if (filePath && !filePath.endsWith(extention) && filePath !== ':memory:') {
+  if (filePath && !filePath.endsWith(extention)) {
     filePath = `${filePath}.${extention}`;
   }
 

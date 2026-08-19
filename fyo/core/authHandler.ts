@@ -26,7 +26,7 @@ export class AuthHandler {
     this.fyo = fyo;
     this.#config = {
       serverURL: '',
-      backend: 'sqlite',
+      backend: 'maria',
       port: 8000,
     };
 

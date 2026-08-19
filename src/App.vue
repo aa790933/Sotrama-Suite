@@ -30,6 +30,7 @@
       @new-database="newDatabase"
       @file-selected="fileSelected"
     />
+    <HostSetup v-if="activeScreen === 'HostSetup'" @host-ready="hostReady" />
     <SetupWizard
       v-if="activeScreen === 'SetupWizard'"
       @setup-complete="setupComplete"
@@ -54,6 +55,7 @@ import { handleErrorWithDialog } from './errorHandling';
 import { fyo } from './initFyo';
 import DatabaseSelector from './pages/DatabaseSelector.vue';
 import Desk from './pages/Desk.vue';
+import HostSetup from './pages/HostSetup.vue';
 import SetupWizard from './pages/SetupWizard/SetupWizard.vue';
 import setupInstance from './setup/setupInstance';
 import { SetupWizardOptions } from './setup/types';
@@ -78,6 +80,7 @@ import { ERPNextSyncSettings } from 'models/baseModels/ERPNextSyncSettings/ERPNe
 import { ErrorLogEnum } from 'fyo/telemetry/types';
 
 enum Screen {
+  HostSetup = 'HostSetup',
   Desk = 'Desk',
   DatabaseSelector = 'DatabaseSelector',
   SetupWizard = 'SetupWizard',
@@ -87,6 +90,7 @@ export default defineComponent({
   name: 'App',
   components: {
     Desk,
+    HostSetup,
     SetupWizard,
     DatabaseSelector,
     WindowsTitleBar,
@@ -153,7 +157,7 @@ export default defineComponent({
         typeof lastSelectedFilePath !== 'string' ||
         !lastSelectedFilePath.length
       ) {
-        this.activeScreen = Screen.DatabaseSelector;
+        this.activeScreen = Screen.HostSetup;
         return;
       }
 
@@ -178,11 +182,19 @@ export default defineComponent({
       updateConfigFiles(fyo);
     },
     newDatabase() {
+      const hasHost = fyo.config.get('lastSelectedFilePath', null) as
+        | string
+        | null;
+      this.activeScreen = hasHost ? Screen.SetupWizard : Screen.HostSetup;
+    },
+    hostReady(configJson: string): void {
+      fyo.config.set('lastSelectedFilePath', configJson);
+      this.dbPath = configJson;
       this.activeScreen = Screen.SetupWizard;
     },
     async fileSelected(filePath: string): Promise<void> {
       fyo.config.set('lastSelectedFilePath', filePath);
-      if (filePath !== ':memory:' && !(await ipc.checkDbAccess(filePath))) {
+      if (!(await ipc.checkDbAccess(filePath))) {
         await showDialog({
           title: this.t`Cannot open file`,
           type: 'error',
@@ -202,10 +214,15 @@ export default defineComponent({
       }
     },
     async setupComplete(setupWizardOptions: SetupWizardOptions): Promise<void> {
-      const companyName = setupWizardOptions.companyName;
-      const filePath = await ipc.getDbDefaultPath(companyName);
-      await setupInstance(filePath, setupWizardOptions, fyo);
+      const base =
+        this.dbPath || (fyo.config.get('lastSelectedFilePath', null) as string);
+      if (!base) {
+        this.activeScreen = Screen.HostSetup;
+        return;
+      }
+      const filePath = base;
       fyo.config.set('lastSelectedFilePath', filePath);
+      await setupInstance(filePath, setupWizardOptions, fyo);
       await this.setDesk(filePath);
     },
     async showSetupWizardOrDesk(filePath: string): Promise<void> {

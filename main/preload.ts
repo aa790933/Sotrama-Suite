@@ -18,6 +18,13 @@ import type {
   SelectFileReturn,
   TemplateFile,
 } from 'utils/types';
+import type {
+  InstallResult,
+  PingOptions,
+  PingResult,
+  PortCheckResult,
+  Platform,
+} from 'utils/mariadb-types';
 
 type IPCRendererListener = Parameters<typeof ipcRenderer.on>[1];
 const ipc = {
@@ -171,11 +178,47 @@ const ipc = {
     )) as ConfigFilesWithModified[];
   },
 
-  async getDbDefaultPath(companyName: string) {
+  async isPortAvailable(port: number) {
     return (await ipcRenderer.invoke(
-      IPC_ACTIONS.GET_DB_DEFAULT_PATH,
-      companyName
+      IPC_ACTIONS.IS_PORT_AVAILABLE,
+      port
+    )) as PortCheckResult;
+  },
+
+  async downloadMariaDBInstaller(emitProgress: boolean) {
+    return (await ipcRenderer.invoke(
+      IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+      emitProgress
     )) as string;
+  },
+
+  async installMariaDB(options: {
+    rootPassword: string;
+    appPassword: string;
+    database: string;
+    port: number;
+    platform?: Platform;
+  }) {
+    return (await ipcRenderer.invoke(
+      IPC_ACTIONS.INSTALL_MARIA_DB,
+      options
+    )) as InstallResult;
+  },
+
+  async pingMariaDB(options: PingOptions) {
+    return (await ipcRenderer.invoke(
+      IPC_ACTIONS.PING_MARIA_DB,
+      options
+    )) as PingResult;
+  },
+
+  registerMariaDBProgressListener(
+    channel:
+      | IPC_ACTIONS.INSTALL_MARIA_DB
+      | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+    listener: IPCRendererListener
+  ) {
+    ipcRenderer.on(channel, listener);
   },
 
   async getEnv() {

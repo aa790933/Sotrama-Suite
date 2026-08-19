@@ -85,7 +85,7 @@ export function getDbError(err: Error) {
     return DatabaseError;
   }
 
-  if (err.message.includes('SQLITE_ERROR: no such table')) {
+  if (err.message.includes("doesn't exist")) {
     return NotFoundError;
   }
 
@@ -93,11 +93,14 @@ export function getDbError(err: Error) {
     return LinkValidationError;
   }
 
-  if (err.message.includes('SQLITE_ERROR: cannot commit')) {
+  if (
+    err.message.includes('Lock wait timeout') ||
+    err.message.includes('Deadlock found')
+  ) {
     return CannotCommitError;
   }
 
-  if (err.message.includes('UNIQUE constraint failed:')) {
+  if (err.message.includes('Duplicate entry')) {
     return DuplicateEntryError;
   }
 

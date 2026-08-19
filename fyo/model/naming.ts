@@ -59,7 +59,9 @@ export async function setName(doc: Doc, fyo: Fyo) {
 
 export async function getNextId(schemaName: string, fyo: Fyo): Promise<string> {
   const lastInserted = await fyo.db.getLastInserted(schemaName);
-  return String(lastInserted + 1).padStart(9, '0');
+  // MariaDB returns COUNT()/MAX() as BigInt; coerce before arithmetic to avoid
+  // `Cannot mix BigInt and other types` on autoincrement-named docs (e.g. SalarySlip).
+  return String(Number(lastInserted) + 1).padStart(9, '0');
 }
 
 export async function getSeriesNext(

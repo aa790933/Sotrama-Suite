@@ -34,9 +34,12 @@ export enum IPC_ACTIONS {
   GET_TEMPLATES = 'get-templates',
   INIT_SHEDULER = 'init-scheduler',
   DELETE_FILE = 'delete-file',
-  GET_DB_DEFAULT_PATH = 'get-db-default-path',
   SEND_API_REQUEST = 'send-api-request',
   // Database messages
+  DOWNLOAD_MARIADB_INSTALLER = 'download-mariadb-installer',
+  INSTALL_MARIA_DB = 'install-mariadb',
+  PING_MARIA_DB = 'ping-mariadb',
+  IS_PORT_AVAILABLE = 'is-port-available',
   DB_CREATE = 'db-create',
   DB_CONNECT = 'db-connect',
   DB_CALL = 'db-call',

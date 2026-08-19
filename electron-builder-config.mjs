@@ -20,7 +20,13 @@ const sotramaSuiteConfig = {
   // add a migration step here first — see git history for a prior draft migration approach.
   appId: 'io.sotrama.suite',
   artifactName: '${productName}-v${version}-${os}-${arch}.${ext}',
-  asarUnpack: '**/*.node',
+  asarUnpack: ['**/*.node', 'mariadb/**/*.msi'],
+  extraFiles: [
+    // Windows: bundle the pinned MariaDB MSI so the "Install for me" path
+    // works offline. The MSI is expected under build/mariadb at build time
+    // (download script); resolveMsiPath falls back to a runtime download.
+    { from: 'build/mariadb', to: 'mariadb', filter: ['*.msi'] },
+  ],
   extraResources: [
     { from: 'log_creds.txt', to: '../creds/log_creds.txt' },
     { from: 'translations', to: '../translations' },

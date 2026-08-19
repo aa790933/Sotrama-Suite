@@ -1,12 +1,7 @@
-import DatabaseCore, { MariaDBConfig } from '../core';
+import DatabaseCore from '../core';
+import { getTestDbConfig } from './dbTestConfig';
 
-const config: MariaDBConfig = {
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '20012005',
-  database: 'test',
-};
+const config = getTestDbConfig('test');
 
 async function main(): Promise<void> {
   const db = new DatabaseCore(undefined, config);

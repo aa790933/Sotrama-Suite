@@ -41,6 +41,13 @@
       "fieldtype": "Int",
       "section": "Employee"
     },
+    {
+      "fieldname": "date",
+      "label": "Posting Date",
+      "fieldtype": "Datetime",
+      "readOnly": true,
+      "section": "Employee"
+    },
 
     {
       "fieldname": "earnings",

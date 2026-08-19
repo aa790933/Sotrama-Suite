@@ -7,7 +7,6 @@ import {
   ipcMain,
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import { constants } from 'fs';
 import fs from 'fs-extra';
 import path from 'path';
 import { SelectFileOptions, SelectFileReturn } from 'utils/types';
@@ -17,6 +16,7 @@ import { emitMainProcessError } from '../backend/helpers';
 import { Main } from '../main';
 import { DatabaseMethod } from '../utils/db/types';
 import { IPC_ACTIONS } from '../utils/messages';
+import type { Platform, PingOptions } from '../utils/mariadb-types';
 import { getUrlAndTokenString, sendError } from './contactMothership';
 import { getLanguageMap } from './getLanguageMap';
 import { getTemplates } from './getPrintTemplates';
@@ -30,6 +30,7 @@ import {
 import { saveHtmlAsPdf } from './saveHtmlAsPdf';
 import { sendAPIRequest } from './api';
 import { initScheduler } from './initSheduler';
+import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
 
 export default function registerIpcMainActionListeners(main: Main) {
   ipcMain.handle(IPC_ACTIONS.CHECK_DB_ACCESS, async (_, dbPath: string) => {
@@ -53,14 +54,63 @@ export default function registerIpcMainActionListeners(main: Main) {
     }
   });
 
-  ipcMain.handle(IPC_ACTIONS.GET_DB_DEFAULT_PATH, async (_, companyName: string) => {
-    return JSON.stringify({
-      host: 'localhost',
-      port: 3306,
-      user: 'root',
-      password: '20012005',
-      database: companyName.toLowerCase().replace(/\s+/g, '_'),
-    });
+  ipcMain.handle(IPC_ACTIONS.IS_PORT_AVAILABLE, async (_, port: number) => {
+    const { isPortAvailable } = await import('./mariadbInstall');
+    return isPortAvailable(port);
+  });
+
+  ipcMain.handle(
+    IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+    async (_, emitProgress: boolean) => {
+      const { resolveMsiPath } = await import('./mariadbInstall');
+      return resolveMsiPath(
+        emitProgress
+          ? (e: { percent: number; downloaded: number; total: number }) => {
+              main.mainWindow?.webContents.send(
+                IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+                e
+              );
+            }
+          : undefined
+      );
+    }
+  );
+
+  ipcMain.handle(
+    IPC_ACTIONS.INSTALL_MARIA_DB,
+    async (
+      _,
+      opts: {
+        rootPassword: string;
+        appPassword: string;
+        database: string;
+        port: number;
+        platform?: Platform;
+        hostMode?: boolean;
+      }
+    ) => {
+      const { installMariaDBSilent, detectPlatform } = await import(
+        './mariadbInstall'
+      );
+      return installMariaDBSilent(
+        {
+          platform: opts.platform ?? detectPlatform(),
+          rootPassword: opts.rootPassword,
+          appPassword: opts.appPassword,
+          database: opts.database,
+          port: opts.port,
+          hostMode: opts.hostMode,
+        },
+        (e: { percent: number; downloaded: number; total: number }) => {
+          main.mainWindow?.webContents.send(IPC_ACTIONS.INSTALL_MARIA_DB, e);
+        }
+      );
+    }
+  );
+
+  ipcMain.handle(IPC_ACTIONS.PING_MARIA_DB, async (_, opts: PingOptions) => {
+    const { pingMariaDB } = await import('./mariadbInstall');
+    return pingMariaDB(opts);
   });
 
   ipcMain.handle(
@@ -228,7 +278,7 @@ export default function registerIpcMainActionListeners(main: Main) {
 
   ipcMain.handle(
     IPC_ACTIONS.SEND_API_REQUEST,
-    async (e, endpoint: string, options: RequestInit | undefined) => {
+    async (e, endpoint: string, options: NodeFetchRequestInit | undefined) => {
       return sendAPIRequest(endpoint, options);
     }
   );

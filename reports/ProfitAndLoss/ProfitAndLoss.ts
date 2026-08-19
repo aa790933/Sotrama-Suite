@@ -80,8 +80,7 @@ export class ProfitAndLoss extends AccountReport {
     if (
       incomeRoots &&
       incomeRoots.length &&
-      !expenseRoots &&
-      !expenseRoots.length
+      (!expenseRoots || !expenseRoots.length)
     ) {
       return this.getIncomeOrExpenseRows(
         incomeRoots,

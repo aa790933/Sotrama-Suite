@@ -460,10 +460,9 @@ export class Doc extends Observable<DocValue | Doc[]> {
       }
 
       for (const childDoc of value) {
-        if (childDoc.parent) {
-          continue;
-        }
-
+        // Table-field children always belong to this doc; re-point regardless
+        // of any temp-name assigned at construction time so they persist and
+        // reload under the parent's real name (autoincrement docs in particular).
         childDoc.parent = this.name;
       }
     }
@@ -890,8 +889,8 @@ export class Doc extends Observable<DocValue | Doc[]> {
 
   async _insert() {
     this._setBaseMetaValues();
-    await this._preSync();
     await setName(this, this.fyo);
+    await this._preSync();
 
     const validDict = this.getValidDict(false, true);
     let data: DocValueMap;

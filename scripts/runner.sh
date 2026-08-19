@@ -1,8 +1,7 @@
 #! /usr/bin/env zsh
 
-# basically uses electron's node to prevent
-# mismatch in NODE_MODULE_VERSION when running
-# better-sqlite3
+# uses electron's node binary so native Node addons share the same
+# NODE_MODULE_VERSION as the running Electron, avoiding ABI mismatches.
 
 export TS_NODE_COMPILER_OPTIONS='{"module":"commonjs"}'
 export ELECTRON_RUN_AS_NODE=true

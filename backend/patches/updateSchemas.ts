@@ -33,7 +33,7 @@ async function execute(dm: DatabaseManager) {
 
   const version = (
     (await db.query(
-      `SELECT value FROM SingleValue WHERE fieldname = ? AND parent = ?`
+      `SELECT value FROM \`singlevalue\` WHERE fieldname = ? AND parent = ?`
     )) as { value: string }[]
   )?.[0]?.value;
 
@@ -51,7 +51,7 @@ async function execute(dm: DatabaseManager) {
    * Just mark the version to prevent re-execution.
    */
   await db.query(
-    `INSERT INTO SingleValue (name, parent, fieldname, value, created, modified, createdBy, modifiedBy)
+    `INSERT INTO \`singlevalue\` (name, parent, fieldname, value, created, modified, createdBy, modifiedBy)
      VALUES (?, 'SystemSettings', 'version', ?, NOW(), NOW(), '__SYSTEM__', '__SYSTEM__')
      ON DUPLICATE KEY UPDATE value = ?`,
     [getRandomString(), '0.5.0-beta.0', '0.5.0-beta.0']

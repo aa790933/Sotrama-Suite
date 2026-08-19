@@ -37,7 +37,10 @@ export function getEarningRowTotal(
   defaultOvertimeRate: number
 ): number {
   if (row.type === 'overtime') {
-    const rate = row.overtimeRate ?? defaultOvertimeRate;
+    const rate =
+      row.overtimeRate && row.overtimeRate > 0
+        ? row.overtimeRate
+        : defaultOvertimeRate;
     const hours = row.hours ?? 0;
     const multiplier = row.restDayOrHoliday
       ? OVERTIME_REST_DAY_MULTIPLIER

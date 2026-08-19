@@ -56,10 +56,10 @@ export class SalarySlip extends Transactional {
 
     const rows: EarningItem[] = this.earnings ?? [];
     const earnings: EarningRow[] = rows.map((e) => ({
-      type: e.type,
+      type: e.type ?? 'other',
       amount: e.amount?.float ?? 0,
       hours: e.hours,
-      overtimeRate: e.overtimeRate?.float ?? 0,
+      overtimeRate: e.overtimeRate?.float,
       restDayOrHoliday: !!e.restDayOrHoliday,
     }));
 

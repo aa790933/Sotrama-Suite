@@ -59,7 +59,7 @@ export class BespokeQueries {
     return (await db.query(
       `SELECT SUM(CAST(baseGrandTotal AS DECIMAL(18,6))) as total,
               SUM(CAST(outstandingAmount AS DECIMAL(18,6))) as outstanding
-       FROM \`${schemaName}\`
+        FROM \`${schemaName.toLowerCase()}\`
        WHERE submitted = ? AND cancelled = ?
        AND date BETWEEN ? AND ?`,
       [1, 0, fromDate, toDate]
@@ -127,7 +127,7 @@ export class BespokeQueries {
          SUM(CAST(debit AS DECIMAL(18,6))) as totalDebit
         FROM \`accountingledgerentry\`
        GROUP BY account`
-    )) as TotalCreditAndDebit;
+    )) as unknown as TotalCreditAndDebit;
   }
 
   static async getStockQuantity(

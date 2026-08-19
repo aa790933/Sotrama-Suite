@@ -190,7 +190,7 @@ function toDocDate(value: RawValue, field: Field) {
     throwError(value, field, 'doc');
   }
 
-  const date = DateTime.fromISO(value).toJSDate();
+  const date = DateTime.fromISO(value.replace(' ', 'T')).toJSDate();
   if (date.toString() === 'Invalid Date') {
     throwError(value, field, 'doc');
   }
@@ -367,23 +367,32 @@ function toRawDate(value: DocValue, field: Field): string | null {
 }
 
 function toRawDateTime(value: DocValue, field: Field): string | null {
-  if (value === null) {
+  if (value === null || value === '') {
     return null;
   }
 
-  if (typeof value === 'string') {
-    return value;
-  }
-
+  // MariaDB's DATETIME rejects ISO-8601 with a 'T' separator and/or a trailing
+  // 'Z' timezone designator (SQLState 22007 / errno 1292). Emit the
+  // space-separated, timezone-naive UTC form that MariaDB accepts, matching
+  // the format used for the singlevalue `modified` column elsewhere. The
+  // driver parses this back into a Date on read (with TZ=UTC), so the UTC
+  // microsecond instant is preserved end-to-end.
+  let date: Date;
   if (value instanceof Date) {
-    return value.toISOString();
+    date = value;
+  } else if (value instanceof DateTime) {
+    date = value.toJSDate();
+  } else if (typeof value === 'string') {
+    date = new Date(value);
+  } else {
+    throwError(value, field, 'raw');
   }
 
-  if (value instanceof DateTime) {
-    return value.toJSDate().toISOString();
+  if (Number.isNaN(date.getTime())) {
+    throwError(value, field, 'raw');
   }
 
-  throwError(value, field, 'raw');
+  return date.toISOString().replace('T', ' ').replace('Z', '');
 }
 
 function toRawCheck(value: DocValue, field: Field): number {
