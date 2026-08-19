@@ -19,7 +19,7 @@ export class BespokeQueries {
     schemaName: string
   ): Promise<number> {
     const rows = (await db.query(
-       `SELECT CAST(name AS UNSIGNED) as num FROM \`${schemaName.toLowerCase()}\` ORDER BY num DESC LIMIT 1`
+      `SELECT CAST(name AS UNSIGNED) as num FROM \`${schemaName.toLowerCase()}\` ORDER BY num DESC LIMIT 1`
     )) as { num: number }[];
 
     const num = rows?.[0]?.num;
@@ -34,7 +34,7 @@ export class BespokeQueries {
     fromDate: string,
     toDate: string
   ) {
-    const query = await db.query(
+    const query = (await db.query(
       `SELECT account, SUM(CAST(debit AS DECIMAL(18,6)) - CAST(credit AS DECIMAL(18,6))) as total
         FROM \`accountingledgerentry\`
        WHERE reverted = ? AND account IN (
@@ -45,7 +45,7 @@ export class BespokeQueries {
        ORDER BY total DESC
        LIMIT 5`,
       [0, fromDate, toDate]
-    ) as { account: string; total: number }[];
+    )) as { account: string; total: number }[];
 
     return query as TopExpenses;
   }
@@ -56,18 +56,20 @@ export class BespokeQueries {
     fromDate: string,
     toDate: string
   ) {
-    return (await db.query(
-      `SELECT SUM(CAST(baseGrandTotal AS DECIMAL(18,6))) as total,
+    return (
+      (await db.query(
+        `SELECT SUM(CAST(baseGrandTotal AS DECIMAL(18,6))) as total,
               SUM(CAST(outstandingAmount AS DECIMAL(18,6))) as outstanding
         FROM \`${schemaName.toLowerCase()}\`
        WHERE submitted = ? AND cancelled = ?
        AND date BETWEEN ? AND ?`,
-      [1, 0, fromDate, toDate]
-    ) as TotalOutstanding[])[0];
+        [1, 0, fromDate, toDate]
+      )) as TotalOutstanding[]
+    )[0];
   }
 
   static async getCashflow(db: DatabaseCore, fromDate: string, toDate: string) {
-    const query = await db.query(
+    const query = (await db.query(
       `SELECT
          SUM(CAST(debit AS DECIMAL(18,6))) as inflow,
          SUM(CAST(credit AS DECIMAL(18,6))) as outflow,
@@ -81,7 +83,7 @@ export class BespokeQueries {
        AND date BETWEEN ? AND ?
        GROUP BY yearmonth`,
       [0, 0, fromDate, toDate]
-    ) as Cashflow;
+    )) as Cashflow;
     return query;
   }
 
@@ -168,7 +170,10 @@ export class BespokeQueries {
       params.push(toDate);
     }
 
-    const value = (await db.query(sql, params)) as Record<string, number | null>[];
+    const value = (await db.query(sql, params)) as Record<
+      string,
+      number | null
+    >[];
     if (!value.length) {
       return null;
     }
@@ -181,10 +186,10 @@ export class BespokeQueries {
     schemaName: ModelNameEnum,
     docName: string
   ): Promise<Record<string, ReturnDocItem> | undefined> {
-    const returnDocRows = await db.query(
-             `SELECT name, returnAgainst FROM \`${schemaName.toLowerCase()}\` WHERE returnAgainst = ? AND submitted = ? AND cancelled = ?`,
+    const returnDocRows = (await db.query(
+      `SELECT name, returnAgainst FROM \`${schemaName.toLowerCase()}\` WHERE returnAgainst = ? AND submitted = ? AND cancelled = ?`,
       [docName, 1, 0]
-    ) as { name: string }[];
+    )) as { name: string }[];
     const returnDocNames = returnDocRows.map((r) => r.name);
 
     if (!returnDocNames.length) {
@@ -437,10 +442,12 @@ export class BespokeQueries {
       {}
     );
 
-    const paymentEntryRows = await db.query(
-      `SELECT parent, referenceName FROM \`${ModelNameEnum.PaymentFor.toLowerCase()}\` WHERE referenceName IN (${sinvNames.map(() => '?').join(', ')})`,
+    const paymentEntryRows = (await db.query(
+      `SELECT parent, referenceName FROM \`${ModelNameEnum.PaymentFor.toLowerCase()}\` WHERE referenceName IN (${sinvNames
+        .map(() => '?')
+        .join(', ')})`,
       [...sinvNames]
-    ) as { parent: string; referenceName: string }[];
+    )) as { parent: string; referenceName: string }[];
 
     const paymentEntryNames = paymentEntryRows.map((doc) => doc.parent);
 
@@ -463,10 +470,10 @@ export class BespokeQueries {
     const transactedAmounts: Record<string, number> = {};
 
     for (const row of groupedAmounts) {
-      const paymentRefs = await db.query(
+      const paymentRefs = (await db.query(
         `SELECT referenceName FROM \`${ModelNameEnum.PaymentFor.toLowerCase()}\` WHERE parent = ?`,
         [row.name]
-      ) as { referenceName: string }[];
+      )) as { referenceName: string }[];
 
       for (const ref of paymentRefs) {
         const sign = invoiceSignMap[ref.referenceName] ?? 1;

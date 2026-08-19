@@ -169,9 +169,9 @@ export class DatabaseManager extends DatabaseDemuxBase {
       return true;
     }
 
-    const query = await db.query(
+    const query = (await db.query(
       `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patchrun' LIMIT 1`
-    ) as unknown[];
+    )) as unknown[];
     return query.length === 0;
   }
 
@@ -191,22 +191,31 @@ export class DatabaseManager extends DatabaseDemuxBase {
     const mysqldumpPath = await this.#getMysqldumpPath();
     if (mysqldumpPath) {
       const { execSync } = await import('child_process');
-      const cmd = `${mysqldumpPath} -h ${this.dbConfig!.host} -P ${this.dbConfig!.port} -u ${this.dbConfig!.user} -p${this.dbConfig!.password} ${this.dbConfig!.database} > ${backupPath}`;
+      const cmd = `${mysqldumpPath} -h ${this.dbConfig!.host} -P ${
+        this.dbConfig!.port
+      } -u ${this.dbConfig!.user} -p${this.dbConfig!.password} ${
+        this.dbConfig!.database
+      } > ${backupPath}`;
       execSync(cmd, { timeout: 60000 });
       await fs.ensureDir(path.dirname(backupPath));
     } else {
       // Fallback: use mariadb SELECT INTO OUTFILE
-      await this.db!.query(`SELECT * FROM singlevalue INTO OUTFILE ?`, [backupPath]);
+      await this.db!.query(`SELECT * FROM singlevalue INTO OUTFILE ?`, [
+        backupPath,
+      ]);
     }
   }
 
   async #getMysqldumpPath(): Promise<string | null> {
     const { execSync } = await import('child_process');
     try {
-      const result = execSync('which mysqldump 2>/dev/null || where mysqldump 2>nul', {
-        encoding: 'utf8',
-        timeout: 5000,
-      });
+      const result = execSync(
+        'which mysqldump 2>/dev/null || where mysqldump 2>nul',
+        {
+          encoding: 'utf8',
+          timeout: 5000,
+        }
+      );
       return result.trim();
     } catch {
       return null;
@@ -230,9 +239,9 @@ export class DatabaseManager extends DatabaseDemuxBase {
       return '0.0.0';
     }
 
-    const query = await this.db.query(
+    const query = (await this.db.query(
       `SELECT value FROM singlevalue WHERE fieldname = 'version' AND parent = 'systemsettings' LIMIT 1`
-    ) as { value: string }[];
+    )) as { value: string }[];
     const value = query[0]?.value;
     return value || '0.0.0';
   }

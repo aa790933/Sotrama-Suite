@@ -22,11 +22,15 @@ async function main(): Promise<void> {
     console.log('Table test_milestone created.\n');
 
     console.log('=== Phase 3: Insert test row ===');
-    await db.query(`INSERT INTO test_milestone (value) VALUES (?)`, ['hello-mariadb']);
+    await db.query(`INSERT INTO test_milestone (value) VALUES (?)`, [
+      'hello-mariadb',
+    ]);
     console.log('Insert completed.\n');
 
     console.log('=== Phase 4: Read rows back ===');
-    const rows = await db.query(`SELECT id, value FROM test_milestone ORDER BY id`) as Array<{
+    const rows = (await db.query(
+      `SELECT id, value FROM test_milestone ORDER BY id`
+    )) as Array<{
       id: number;
       value: string;
     }>;
@@ -34,7 +38,9 @@ async function main(): Promise<void> {
     if (!found) {
       throw new Error('Verification failed: inserted value not found on read.');
     }
-    console.log(`Verification passed: found matching row with id=${found.id}, value="${found.value}"\n`);
+    console.log(
+      `Verification passed: found matching row with id=${found.id}, value="${found.value}"\n`
+    );
 
     console.log('=== Phase 5: Drop table ===');
     await db.query(`DROP TABLE IF EXISTS test_milestone`);

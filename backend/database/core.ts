@@ -1,4 +1,10 @@
-import { Pool, PoolConnection, RowsWithMeta, UpsertResult, createPool } from 'mariadb';
+import {
+  Pool,
+  PoolConnection,
+  RowsWithMeta,
+  UpsertResult,
+  createPool,
+} from 'mariadb';
 import { getDbError, NotFoundError, ValueError } from 'fyo/utils/errors';
 import {
   Field,
@@ -14,7 +20,11 @@ import {
   getValueMapFromList,
 } from '../../utils';
 import { DatabaseBase, GetAllOptions, QueryFilter } from '../../utils/db/types';
-import { getDefaultMetaFieldValueMap, mariadbTypeMap, SYSTEM } from '../helpers';
+import {
+  getDefaultMetaFieldValueMap,
+  mariadbTypeMap,
+  SYSTEM,
+} from '../helpers';
 import {
   AlterConfig,
   ColumnDiff,
@@ -42,8 +52,19 @@ export interface MariaDBConfig {
 type QueryResult = RowsWithMeta<any> | UpsertResult;
 
 const ALLOWED_OPERATORS = new Set([
-  '=', '!=', '<>', '<', '<=', '>', '>=',
-  'like', 'not like', 'in', 'not in', 'is', 'is not'
+  '=',
+  '!=',
+  '<>',
+  '<',
+  '<=',
+  '>',
+  '>=',
+  'like',
+  'not like',
+  'in',
+  'not in',
+  'is',
+  'is not',
 ]);
 
 export default class DatabaseCore extends DatabaseBase {
@@ -126,7 +147,8 @@ export default class DatabaseCore extends DatabaseBase {
     if (!this.pool) {
       throw new Error('Pool not initialized. Call connect() first.');
     }
-    const conn: PoolConnection = this.#txConn ?? (await this.pool.getConnection());
+    const conn: PoolConnection =
+      this.#txConn ?? (await this.pool.getConnection());
     const owned = !this.#txConn;
     try {
       const result = await conn.query(sql, params);
@@ -192,7 +214,8 @@ export default class DatabaseCore extends DatabaseBase {
 
     await config.pre?.();
 
-    const conn: PoolConnection = this.#txConn ?? (await this.pool!.getConnection());
+    const conn: PoolConnection =
+      this.#txConn ?? (await this.pool!.getConnection());
     this.#txConn = conn;
     try {
       await this.query('SET FOREIGN_KEY_CHECKS=0');
@@ -258,11 +281,12 @@ export default class DatabaseCore extends DatabaseBase {
     }
 
     try {
-      const sql = name !== undefined
-        ? `SELECT 1 FROM ${this.#qn(schemaName)} WHERE name = ? LIMIT 1`
-        : `SELECT 1 FROM ${this.#qn(schemaName)} LIMIT 1`;
+      const sql =
+        name !== undefined
+          ? `SELECT 1 FROM ${this.#qn(schemaName)} WHERE name = ? LIMIT 1`
+          : `SELECT 1 FROM ${this.#qn(schemaName)} LIMIT 1`;
       const params = name !== undefined ? [name] : [];
-      const row = await this.query(sql, params) as unknown[];
+      const row = (await this.query(sql, params)) as unknown[];
       return Array.isArray(row) && row.length > 0;
     } catch (err: any) {
       if (err?.errno === 1146 || getDbError(err as Error) === NotFoundError) {
@@ -399,8 +423,14 @@ export default class DatabaseCore extends DatabaseBase {
 
     let values: { fieldname: string; parent: string; value: RawValue }[] = [];
     try {
-      const sql = `SELECT fieldname, value, parent FROM \`singlevalue\` WHERE ${sqlParts.join('')}`;
-      values = (await this.query(sql, params)) as { fieldname: string; parent: string; value: RawValue }[];
+      const sql = `SELECT fieldname, value, parent FROM \`singlevalue\` WHERE ${sqlParts.join(
+        ''
+      )}`;
+      values = (await this.query(sql, params)) as {
+        fieldname: string;
+        parent: string;
+        value: RawValue;
+      }[];
     } catch (err) {
       if (getDbError(err as Error) === NotFoundError) {
         return [];
@@ -464,8 +494,8 @@ export default class DatabaseCore extends DatabaseBase {
       typeof count === 'number'
         ? count
         : typeof count === 'bigint'
-          ? Number(count)
-          : NaN;
+        ? Number(count)
+        : NaN;
     return !Number.isNaN(numCount) && numCount > 0;
   }
 
@@ -596,7 +626,9 @@ export default class DatabaseCore extends DatabaseBase {
     const safeOrder = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
 
     if (Array.isArray(orderBy) && orderBy.length > 0) {
-      sql += ' ORDER BY ' + orderBy.map((col) => `\`${col}\` ${safeOrder}`).join(', ');
+      sql +=
+        ' ORDER BY ' +
+        orderBy.map((col) => `\`${col}\` ${safeOrder}`).join(', ');
     } else if (typeof orderBy === 'string' && orderBy.trim() !== '') {
       sql += ` ORDER BY \`${orderBy}\` ${safeOrder}`;
     }
@@ -624,7 +656,12 @@ export default class DatabaseCore extends DatabaseBase {
     filters: QueryFilter,
     options: GetQueryBuilderOptions
   ): Promise<FieldValueMap[]> {
-    const { sql, params } = this.#buildSelectSql(schemaName, fields, filters, options);
+    const { sql, params } = this.#buildSelectSql(
+      schemaName,
+      fields,
+      filters,
+      options
+    );
     const result = (await this.query(sql, params)) as RowsWithMeta<any>[];
     return result as unknown as FieldValueMap[];
   }
@@ -681,7 +718,10 @@ export default class DatabaseCore extends DatabaseBase {
     const diff: ColumnDiff = { added: [], removed: [] };
 
     for (const field of validFields) {
-      const hasDbType = Object.prototype.hasOwnProperty.call(this.typeMap, field.fieldtype);
+      const hasDbType = Object.prototype.hasOwnProperty.call(
+        this.typeMap,
+        field.fieldtype
+      );
       if (!tableColumns.includes(field.fieldname) && hasDbType) {
         diff.added.push(field);
       }
@@ -741,8 +781,14 @@ export default class DatabaseCore extends DatabaseBase {
       return 'TINYINT(1)';
     }
 
-    if (columnType === 'date' || columnType === 'datetime' || columnType === 'time') {
-      return columnType === 'datetime' ? 'DATETIME(6)' : columnType.toUpperCase();
+    if (
+      columnType === 'date' ||
+      columnType === 'datetime' ||
+      columnType === 'time'
+    ) {
+      return columnType === 'datetime'
+        ? 'DATETIME(6)'
+        : columnType.toUpperCase();
     }
 
     if (field.fieldtype === FieldTypeEnum.Link) {
@@ -752,7 +798,10 @@ export default class DatabaseCore extends DatabaseBase {
     return 'TEXT';
   }
 
-  async #buildCreateTableSql(schemaName: string, tableName?: string): Promise<string> {
+  async #buildCreateTableSql(
+    schemaName: string,
+    tableName?: string
+  ): Promise<string> {
     tableName ??= schemaName;
     tableName = this.#normalizeTableName(tableName);
     const fields = this.schemaMap[schemaName]!.fields.filter(
@@ -788,7 +837,9 @@ export default class DatabaseCore extends DatabaseBase {
       columnDefs.push(colDef);
     }
 
-    return `CREATE TABLE IF NOT EXISTS \`${tableName}\` (${columnDefs.join(', ')})`;
+    return `CREATE TABLE IF NOT EXISTS \`${tableName}\` (${columnDefs.join(
+      ', '
+    )})`;
   }
 
   async #alterTable({ schemaName, diff, newForeignKeys }: AlterConfig) {
@@ -802,13 +853,17 @@ export default class DatabaseCore extends DatabaseBase {
           colDef += ' NOT NULL';
         }
 
-        await this.query(`ALTER TABLE ${this.#qn(schemaName)} ADD COLUMN ${colDef}`);
+        await this.query(
+          `ALTER TABLE ${this.#qn(schemaName)} ADD COLUMN ${colDef}`
+        );
       }
     }
 
     if (diff.removed.length) {
       for (const col of diff.removed) {
-        await this.query(`ALTER TABLE ${this.#qn(schemaName)} DROP COLUMN \`${col}\``);
+        await this.query(
+          `ALTER TABLE ${this.#qn(schemaName)} DROP COLUMN \`${col}\``
+        );
       }
     }
 
@@ -836,7 +891,13 @@ export default class DatabaseCore extends DatabaseBase {
       try {
         const targetTable = field.target.toLowerCase();
         await this.query(
-          `ALTER TABLE ${this.#qn(schemaName)} ADD CONSTRAINT \`fk_${schemaName}_${field.fieldname}\` FOREIGN KEY (\`${field.fieldname}\`) REFERENCES \`${targetTable}\` (name) ON UPDATE CASCADE ON DELETE RESTRICT`
+          `ALTER TABLE ${this.#qn(
+            schemaName
+          )} ADD CONSTRAINT \`fk_${schemaName}_${
+            field.fieldname
+          }\` FOREIGN KEY (\`${
+            field.fieldname
+          }\`) REFERENCES \`${targetTable}\` (name) ON UPDATE CASCADE ON DELETE RESTRICT`
         );
       } catch (err: any) {
         if (!err.message?.includes('Duplicate') && err.errno !== 1005) {
@@ -868,7 +929,9 @@ export default class DatabaseCore extends DatabaseBase {
   }
 
   async #deleteOne(schemaName: string, name: string) {
-    await this.query(`DELETE FROM ${this.#qn(schemaName)} WHERE name = ?`, [name]);
+    await this.query(`DELETE FROM ${this.#qn(schemaName)} WHERE name = ?`, [
+      name,
+    ]);
   }
 
   async #deleteSingle(schemaName: string, fieldname: string) {
@@ -879,7 +942,9 @@ export default class DatabaseCore extends DatabaseBase {
   }
 
   #deleteChildren(schemaName: string, parentName: string) {
-    return this.query(`DELETE FROM ${this.#qn(schemaName)} WHERE parent = ?`, [parentName]);
+    return this.query(`DELETE FROM ${this.#qn(schemaName)} WHERE parent = ?`, [
+      parentName,
+    ]);
   }
 
   #runDeleteOtherChildren(
@@ -896,7 +961,9 @@ export default class DatabaseCore extends DatabaseBase {
 
     const placeholders = added.map(() => '?').join(', ');
     return this.query(
-      `DELETE FROM ${this.#qn(field.target)} WHERE parent = ? AND name NOT IN (${placeholders})`,
+      `DELETE FROM ${this.#qn(
+        field.target
+      )} WHERE parent = ? AND name NOT IN (${placeholders})`,
       [parentName, ...added]
     );
   }
@@ -918,8 +985,13 @@ export default class DatabaseCore extends DatabaseBase {
   }
 
   async #addForeignKeys(schemaName: string) {
-    const tableRows = (await this.query(`SELECT * FROM ${this.#qn(schemaName)}`)) as RowsWithMeta<any>[];
-    await this.prestigeTheTable(schemaName, tableRows as unknown as FieldValueMap[]);
+    const tableRows = (await this.query(
+      `SELECT * FROM ${this.#qn(schemaName)}`
+    )) as RowsWithMeta<any>[];
+    await this.prestigeTheTable(
+      schemaName,
+      tableRows as unknown as FieldValueMap[]
+    );
   }
 
   async #loadChildren(
@@ -944,7 +1016,9 @@ export default class DatabaseCore extends DatabaseBase {
       [name]
     )) as RowsWithMeta<any>[];
 
-    return result.length > 0 ? (result[0] as unknown as FieldValueMap) : undefined;
+    return result.length > 0
+      ? (result[0] as unknown as FieldValueMap)
+      : undefined;
   }
 
   async #getSingle(schemaName: string): Promise<FieldValueMap> {
@@ -988,7 +1062,9 @@ export default class DatabaseCore extends DatabaseBase {
     const values = colNames.map((f) => validMap[f]);
 
     await this.query(
-      `INSERT INTO ${this.#qn(schemaName)} (${colList}) VALUES (${placeholders})`,
+      `INSERT INTO ${this.#qn(
+        schemaName
+      )} (${colList}) VALUES (${placeholders})`,
       values
     );
   }
@@ -1025,7 +1101,13 @@ export default class DatabaseCore extends DatabaseBase {
     } else {
       await this.query(
         `UPDATE \`singlevalue\` SET value = ?, modifiedBy = ?, modified = ? WHERE parent = ? AND fieldname = ?`,
-        [value, SYSTEM, new Date().toISOString().replace('T', ' ').replace('Z', ''), singleSchemaName, fieldname]
+        [
+          value,
+          SYSTEM,
+          new Date().toISOString().replace('T', ' ').replace('Z', ''),
+          singleSchemaName,
+          fieldname,
+        ]
       );
     }
   }
