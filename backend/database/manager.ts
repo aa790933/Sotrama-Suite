@@ -181,28 +181,24 @@ export class DatabaseManager extends DatabaseDemuxBase {
     }
 
     const backupPath = await this.#getBackupFilePath();
-    if (!backupPath) {
+    if (!backupPath || !this.db || !this.dbConfig) {
       return;
     }
 
-    const db = this.getDriver();
-    if (!db) return;
-
     const mysqldumpPath = await this.#getMysqldumpPath();
     if (mysqldumpPath) {
-      const { execSync } = await import('child_process');
-      const cmd = `${mysqldumpPath} -h ${this.dbConfig!.host} -P ${
-        this.dbConfig!.port
-      } -u ${this.dbConfig!.user} -p${this.dbConfig!.password} ${
-        this.dbConfig!.database
-      } > ${backupPath}`;
-      execSync(cmd, { timeout: 60000 });
-      await fs.ensureDir(path.dirname(backupPath));
-    } else {
-      // Fallback: use mariadb SELECT INTO OUTFILE
-      await this.db!.query(`SELECT * FROM singlevalue INTO OUTFILE ?`, [
-        backupPath,
-      ]);
+      try {
+        await fs.ensureDir(path.dirname(backupPath));
+        const { execSync } = await import('child_process');
+        const cmd = `${mysqldumpPath} -h ${this.dbConfig.host} -P ${
+          this.dbConfig.port
+        } -u ${this.dbConfig.user} -p${this.dbConfig.password} ${
+          this.dbConfig.database
+        } > "${backupPath}"`;
+        execSync(cmd, { timeout: 60000 });
+      } catch (err) {
+        console.warn('Backup via mysqldump failed:', (err as Error).message);
+      }
     }
   }
 

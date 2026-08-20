@@ -32,7 +32,7 @@ export async function connectToDatabase(
       countryCode: '',
       error,
       actionSymbol: (await handleDatabaseConnectionError(error, dbPath)) as
-        | typeof dbErrorActionSymbols[keyof typeof dbErrorActionSymbols]
+        | typeof dbErrorActionSymbols[keyof typeof dbErrorActionSymbols],
     };
   }
 }

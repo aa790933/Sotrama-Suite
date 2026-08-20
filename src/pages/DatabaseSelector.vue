@@ -1,6 +1,14 @@
 <template>
   <div
-    class="flex-1 flex justify-center items-center bg-gray-50 dark:bg-gray-900 min-h-screen p-4"
+    class="
+      flex-1 flex
+      justify-center
+      items-center
+      bg-gray-50
+      dark:bg-gray-900
+      min-h-screen
+      p-4
+    "
     :class="{
       'pointer-events-none': loadingDatabase,
       'window-drag': platform !== 'Windows',
@@ -9,24 +17,29 @@
     <div
       class="
         w-full
-        max-w-xl
-        max-h-[90vh]
+        max-w-xl max-h-[90vh]
         shadow-xl
         rounded-xl
-        border
-        border-gray-200
+        border border-gray-200
         dark:border-gray-800
         relative
         bg-white
         dark:bg-gray-850
-        flex
-        flex-col
+        flex flex-col
         overflow-hidden
       "
     >
       <!-- Header Section -->
       <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
-        <h1 class="text-2xl font-bold select-none text-gray-900 dark:text-gray-100">
+        <h1
+          class="
+            text-2xl
+            font-bold
+            select-none
+            text-gray-900
+            dark:text-gray-100
+          "
+        >
           {{ t`Welcome to Sotrama Suite` }}
         </h1>
         <p class="text-gray-600 dark:text-gray-400 text-sm select-none mt-1">
@@ -39,7 +52,15 @@
         <!-- New Company (Blue Icon) -->
         <div
           data-testid="create-new-file"
-          class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
+          class="
+            px-4
+            py-3
+            rounded-lg
+            flex flex-row
+            items-center
+            gap-4
+            transition-colors
+          "
           :class="
             creatingDemo
               ? 'opacity-50 cursor-not-allowed'
@@ -47,11 +68,19 @@
           "
           @click="newDatabase"
         >
-          <div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-            <feather-icon
-              name="plus"
-              class="text-white w-5 h-5"
-            />
+          <div
+            class="
+              w-9
+              h-9
+              rounded-full
+              bg-blue-500
+              flex
+              items-center
+              justify-center
+              flex-shrink-0
+            "
+          >
+            <feather-icon name="plus" class="text-white w-5 h-5" />
           </div>
 
           <div>
@@ -67,7 +96,15 @@
         <!-- Create Demo (Pink Icon - Top Action if no files) -->
         <div
           v-if="!files?.length"
-          class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
+          class="
+            px-4
+            py-3
+            rounded-lg
+            flex flex-row
+            items-center
+            gap-4
+            transition-colors
+          "
           :class="
             creatingDemo
               ? 'opacity-50 cursor-not-allowed'
@@ -75,7 +112,19 @@
           "
           @click="createDemo"
         >
-          <div class="w-9 h-9 rounded-full bg-pink-500 dark:bg-pink-600 flex items-center justify-center flex-shrink-0">
+          <div
+            class="
+              w-9
+              h-9
+              rounded-full
+              bg-pink-500
+              dark:bg-pink-600
+              flex
+              items-center
+              justify-center
+              flex-shrink-0
+            "
+          >
             <feather-icon name="monitor" class="w-4 h-4 text-white" />
           </div>
           <div>
@@ -92,11 +141,29 @@
       <hr class="border-gray-200 dark:border-gray-800" />
 
       <!-- Database File List -->
-      <div class="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-gray-100 dark:divide-gray-800/50">
+      <div
+        class="
+          flex-1
+          overflow-y-auto
+          p-2
+          space-y-1
+          divide-y divide-gray-100
+          dark:divide-gray-800/50
+        "
+      >
         <div
           v-for="(file, i) in files"
           :key="file.dbPath"
-          class="px-4 py-3 rounded-lg flex gap-4 items-center transition-colors group"
+          class="
+            px-4
+            py-3
+            rounded-lg
+            flex
+            gap-4
+            items-center
+            transition-colors
+            group
+          "
           :class="
             creatingDemo
               ? 'opacity-50 cursor-not-allowed'
@@ -126,14 +193,31 @@
           </div>
           <div class="w-full min-w-0">
             <div class="flex justify-between items-baseline gap-2">
-              <h2 class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+              <h2
+                class="
+                  font-medium
+                  text-sm text-gray-900
+                  dark:text-gray-100
+                  truncate
+                "
+              >
                 {{ file.companyName }}
               </h2>
-              <span class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+              <span
+                class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0"
+              >
                 {{ formatDate(file.modified) }}
               </span>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 font-mono">
+            <p
+              class="
+                text-xs text-gray-500
+                dark:text-gray-400
+                truncate
+                mt-0.5
+                font-mono
+              "
+            >
               {{ truncate(file.dbPath) }}
             </p>
           </div>
@@ -162,7 +246,17 @@
       <hr class="border-gray-200 dark:border-gray-800" />
 
       <!-- Footer Bar -->
-      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-850 flex justify-between items-center">
+      <div
+        class="
+          px-6
+          py-4
+          bg-gray-50
+          dark:bg-gray-850
+          flex
+          justify-between
+          items-center
+        "
+      >
         <LanguageSelector v-show="!creatingDemo" class="text-sm w-32" />
         <button
           v-if="files?.length"
@@ -176,8 +270,7 @@
             dark:hover:bg-gray-700
             text-gray-700
             dark:text-gray-200
-            border
-            border-gray-300
+            border border-gray-300
             dark:border-gray-700
             rounded-lg
             px-3.5
@@ -208,10 +301,15 @@
       <div class="p-6 text-gray-900 dark:text-gray-100 max-w-md w-full">
         <h2 class="text-lg font-bold select-none">{{ t`Set Base Count` }}</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-          {{ t`Base Count is a lower bound on the number of entries made when creating the dummy instance.` }}
+          {{
+            t`Base Count is a lower bound on the number of entries made when creating the dummy instance.`
+          }}
         </p>
         <div class="my-6 flex items-center justify-center gap-4">
-          <label for="basecount" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            for="basecount"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             {{ t`Base Count` }}
           </label>
           <input
@@ -222,8 +320,7 @@
             class="
               bg-gray-100
               dark:bg-gray-800
-              border
-              border-gray-300
+              border border-gray-300
               dark:border-gray-700
               rounded-lg
               px-3
@@ -239,7 +336,12 @@
           <Button @click="openModal = false">{{ t`Cancel` }}</Button>
           <Button
             type="primary"
-            @click="() => { openModal = false; startDummyInstanceSetup(); }"
+            @click="
+              () => {
+                openModal = false;
+                startDummyInstanceSetup();
+              }
+            "
           >
             {{ t`Create` }}
           </Button>
@@ -313,7 +415,8 @@ export default defineComponent({
       try {
         if (typeof ipc !== 'undefined' && ipc.getEnv) {
           const env = await ipc.getEnv();
-          this.currentPlatform = env?.platform === 'win32' ? 'Windows' : env?.platform || 'Windows';
+          this.currentPlatform =
+            env?.platform === 'win32' ? 'Windows' : env?.platform || 'Windows';
         } else if (navigator.userAgent.includes('Mac')) {
           this.currentPlatform = 'Darwin';
         } else if (navigator.userAgent.includes('Linux')) {
@@ -333,7 +436,7 @@ export default defineComponent({
       if (!isoDate) return '';
       try {
         const dt = DateTime.fromISO(isoDate);
-        return dt.isValid ? (dt.toRelative() ?? '') : '';
+        return dt.isValid ? dt.toRelative() ?? '' : '';
       } catch {
         return '';
       }
@@ -376,7 +479,9 @@ export default defineComponent({
     },
 
     async startDummyInstanceSetup() {
-      const persisted = fyo?.config?.get('lastSelectedFilePath', null) as string | null;
+      const persisted = fyo?.config?.get('lastSelectedFilePath', null) as
+        | string
+        | null;
       if (!persisted) {
         this.$emit('new-database');
         return;
@@ -430,10 +535,11 @@ export default defineComponent({
     async setFiles() {
       try {
         if (typeof ipc !== 'undefined' && ipc.getDbList) {
-          const dbList = await ipc.getDbList();
+          const dbList = (await ipc.getDbList()) as ConfigFilesWithModified[];
           if (Array.isArray(dbList)) {
             this.files = dbList.sort(
-              (a, b) => (Date.parse(b.modified) || 0) - (Date.parse(a.modified) || 0)
+              (a, b) =>
+                (Date.parse(b.modified) || 0) - (Date.parse(a.modified) || 0)
             );
           }
         }

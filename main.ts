@@ -147,7 +147,37 @@ export class Main {
   }
 
   registerAppProtocol() {
-    protocol.registerBufferProtocol('app', bufferProtocolCallback);
+    if (typeof protocol.handle === 'function') {
+      protocol.handle('app', async (request) => {
+        const { pathname, host } = new URL(request.url);
+        const filePath = path.join(
+          __dirname,
+          'src',
+          decodeURI(host),
+          decodeURI(pathname)
+        );
+        const extension = path.extname(filePath).toLowerCase();
+        const mimeType =
+          {
+            '.js': 'text/javascript',
+            '.css': 'text/css',
+            '.html': 'text/html',
+            '.svg': 'image/svg+xml',
+            '.json': 'application/json',
+          }[extension] ?? 'application/octet-stream';
+
+        try {
+          const data = await fs.promises.readFile(filePath);
+          return new Response(data, {
+            headers: { 'content-type': mimeType },
+          });
+        } catch {
+          return new Response('Not Found', { status: 404 });
+        }
+      });
+    } else {
+      protocol.registerBufferProtocol('app', bufferProtocolCallback);
+    }
 
     // Use the registered protocol url to load the files.
     this.winURL = 'app://./index.html';

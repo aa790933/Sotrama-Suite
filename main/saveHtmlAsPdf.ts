@@ -44,6 +44,11 @@ export async function getInitializedPrintWindow(
     width: Math.floor(width * 28.333333), // pixels
     height: Math.floor(height * 28.333333), // pixels
     show: false,
+    webPreferences: {
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
   });
 
   await printWindow.loadFile(printFilePath);

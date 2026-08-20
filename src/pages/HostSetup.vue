@@ -710,14 +710,14 @@ export default defineComponent({
           }
         );
 
-        const result = await ipc.installMariaDB({
+        const result = (await ipc.installMariaDB({
           rootPassword: this.rootPassword,
           appPassword: this.appPassword,
           database,
           port: this.port,
           platform: undefined,
           hostMode: true,
-        });
+        })) as { ok: boolean; error?: string; log?: string };
 
         if (!result.ok) {
           this.errorMsg = result.error || t`Installation failed.`;

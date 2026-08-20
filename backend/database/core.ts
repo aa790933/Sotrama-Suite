@@ -122,7 +122,7 @@ export default class DatabaseCore extends DatabaseBase {
     this.schemaMap = schemaMap;
   }
 
-  async connect() {
+  connect() {
     this.pool = createPool({
       host: this.connectionParams.host,
       port: this.connectionParams.port,
@@ -151,8 +151,8 @@ export default class DatabaseCore extends DatabaseBase {
       this.#txConn ?? (await this.pool.getConnection());
     const owned = !this.#txConn;
     try {
-      const result = await conn.query(sql, params);
-      return result as QueryResult;
+      const result = (await conn.query(sql, params)) as QueryResult;
+      return result;
     } finally {
       if (owned) {
         conn.release();
@@ -288,8 +288,12 @@ export default class DatabaseCore extends DatabaseBase {
       const params = name !== undefined ? [name] : [];
       const row = (await this.query(sql, params)) as unknown[];
       return Array.isArray(row) && row.length > 0;
-    } catch (err: any) {
-      if (err?.errno === 1146 || getDbError(err as Error) === NotFoundError) {
+    } catch (err: unknown) {
+      const mariadbErr = err as { errno?: number; message?: string };
+      if (
+        mariadbErr?.errno === 1146 ||
+        getDbError(err as Error) === NotFoundError
+      ) {
         return false;
       }
       throw err;
@@ -338,9 +342,9 @@ export default class DatabaseCore extends DatabaseBase {
     const allTableFields: TargetField[] = this.#getTableFields(schemaName);
     const allTableFieldNames: string[] = allTableFields.map((f) => f.fieldname);
     const tableFields: TargetField[] = allTableFields.filter((f) =>
-      (fields as string[]).includes(f.fieldname)
+      (fields ?? []).includes(f.fieldname)
     );
-    const nonTableFieldNames: string[] = (fields as string[]).filter(
+    const nonTableFieldNames: string[] = (fields ?? []).filter(
       (f) => !allTableFieldNames.includes(f)
     );
 
@@ -376,7 +380,7 @@ export default class DatabaseCore extends DatabaseBase {
       order = 'desc',
     } = options;
 
-    return (await this.#getQueryBuilder(
+    return await this.#getQueryBuilder(
       schemaName,
       typeof fields === 'string' ? [fields] : fields,
       filters ?? {},
@@ -387,7 +391,7 @@ export default class DatabaseCore extends DatabaseBase {
         orderBy,
         order,
       }
-    )) as FieldValueMap[];
+    );
   }
 
   async deleteAll(schemaName: string, filters: QueryFilter): Promise<number> {
@@ -577,7 +581,7 @@ export default class DatabaseCore extends DatabaseBase {
           } else {
             const placeholders = p[2].map(() => '?').join(', ');
             whereParts.push(`\`${p[0]}\` IN (${placeholders})`);
-            params.push(...p[2]);
+            params.push(...(p[2] as unknown[]));
           }
         } else {
           whereParts.push(`\`${p[0]}\` ${p[1]} ?`);
@@ -612,7 +616,7 @@ export default class DatabaseCore extends DatabaseBase {
           } else {
             const placeholders = p[2].map(() => '?').join(', ');
             whereParts.push(`\`${p[0]}\` IN (${placeholders})`);
-            params.push(...p[2]);
+            params.push(...(p[2] as unknown[]));
           }
         } else {
           whereParts.push(`\`${p[0]}\` ${p[1]} ?`);
@@ -698,7 +702,7 @@ export default class DatabaseCore extends DatabaseBase {
       filtersArray.push([field, operator, comparisonValue]);
 
       if (Array.isArray(value) && value.length > 2) {
-        let operator2 = String(value[2]).toLowerCase();
+        const operator2 = String(value[2]).toLowerCase();
         const comparisonValue2 = value[3];
         if (!ALLOWED_OPERATORS.has(operator2)) {
           throw new ValueError(`Unsupported SQL operator: ${operator2}`);
@@ -798,10 +802,7 @@ export default class DatabaseCore extends DatabaseBase {
     return 'TEXT';
   }
 
-  async #buildCreateTableSql(
-    schemaName: string,
-    tableName?: string
-  ): Promise<string> {
+  #buildCreateTableSql(schemaName: string, tableName?: string): string {
     tableName ??= schemaName;
     tableName = this.#normalizeTableName(tableName);
     const fields = this.schemaMap[schemaName]!.fields.filter(
@@ -899,8 +900,12 @@ export default class DatabaseCore extends DatabaseBase {
             field.fieldname
           }\`) REFERENCES \`${targetTable}\` (name) ON UPDATE CASCADE ON DELETE RESTRICT`
         );
-      } catch (err: any) {
-        if (!err.message?.includes('Duplicate') && err.errno !== 1005) {
+      } catch (err: unknown) {
+        const mariadbErr = err as { message?: string; errno?: number };
+        if (
+          !mariadbErr.message?.includes('Duplicate') &&
+          mariadbErr.errno !== 1005
+        ) {
           throw err;
         }
       }

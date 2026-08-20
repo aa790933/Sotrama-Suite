@@ -47,5 +47,8 @@ export function accruedLeaveDays(hire: Date, asOf: Date): number {
  */
 export function leaveDurationDays(start: Date, end: Date): number {
   const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.max(0, Math.round((end.getTime() - start.getTime()) / msPerDay) + 1);
+  return Math.max(
+    0,
+    Math.round((end.getTime() - start.getTime()) / msPerDay) + 1
+  );
 }

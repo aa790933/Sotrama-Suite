@@ -222,6 +222,19 @@ const ipc = {
     ipcRenderer.on(channel, listener);
   },
 
+  removeMariaDBProgressListener(
+    channel:
+      | IPC_ACTIONS.INSTALL_MARIA_DB
+      | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+    listener?: IPCRendererListener
+  ) {
+    if (listener) {
+      ipcRenderer.removeListener(channel, listener);
+    } else {
+      ipcRenderer.removeAllListeners(channel);
+    }
+  },
+
   async getEnv() {
     return (await ipcRenderer.invoke(IPC_ACTIONS.GET_ENV)) as {
       isDevelopment: boolean;

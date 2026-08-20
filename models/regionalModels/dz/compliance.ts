@@ -37,17 +37,23 @@ export const PUBLIC_HOLIDAYS_2026: string[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// SPECIAL LEAVES — duration in days. PLACEHOLDER — NEEDS VERIFICATION from the
-// Journal Officiel / official CNAS guidance. These are NOT hard-coded into any
-// accrual logic yet; they exist only so the values live in one auditable place.
+// SPECIAL LEAVES — duration in working days (Loi 90-11 relative aux relations
+// de travail, article 54 modifiée et complétée; Loi 83-11 relative aux assurances
+// sociales pour la maternité).
 // ---------------------------------------------------------------------------
 export const SPECIAL_LEAVE_DURATIONS_2026 = {
-  /** PLACEHOLDER — marriage leave. Verify official duration. */
-  marriage: null as number | null,
-  /** PLACEHOLDER — bereavement leave. Verify official duration. */
-  bereavement: null as number | null,
-  /** PLACEHOLDER — maternity leave. Verify official duration. */
-  maternity: null as number | null,
+  /** Mariage du travailleur (Loi 90-11, art. 54) — 3 jours ouvrables rémunérés. */
+  marriage: 3,
+  /** Naissance d'un enfant du travailleur (Loi 90-11, art. 54) — 3 jours ouvrables rémunérés. */
+  birth: 3,
+  /** Mariage d'un descendant du travailleur (Loi 90-11, art. 54) — 3 jours ouvrables rémunérés. */
+  marriageOfChild: 3,
+  /** Décès ascendant/descendant/conjoint/frère/sœur (Loi 90-11, art. 54) — 3 jours ouvrables rémunérés. */
+  bereavement: 3,
+  /** Circoncision d'un enfant du travailleur (Loi 90-11, art. 54) — 3 jours ouvrables rémunérés. */
+  circumcision: 3,
+  /** Congé de maternité (Loi 83-11, art. 28) — 14 semaines consécutives (98 jours) indemnisées par la CNAS. */
+  maternityDays: 98,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -76,12 +82,11 @@ export const IRG_SMOOTHING_ENABLED = false;
 
 // ---------------------------------------------------------------------------
 // DTS (Déclaration Trimestrielle des Salaires) filing deadline.
-// PLACEHOLDER — NEEDS VERIFICATION. The G50 (20th of following month) and DAS
-// (before 31 March) deadlines were supplied explicitly; the DTS deadline was
-// not, so it is intentionally left unconfirmed here.
+// CNAS regulation: au plus tard dans les 30 jours suivant la fin du trimestre.
 // ---------------------------------------------------------------------------
 export const DTS_FILING_DEADLINE = {
-  /** PLACEHOLDER — 'the 15th of the month following the quarter' is the common rule but NOT verified. */
-  rule: 'NOT_VERIFIED — confirm with CNAS',
-  dayOfMonth: null as number | null,
+  /** Exigée au plus tard dans les 30 jours suivant l'échéance du trimestre civil (CNAS). */
+  rule: 'Within 30 days following the end of each calendar quarter (30 April, 31 July, 31 October, 31 January)',
+  daysAfterQuarter: 30,
 } as const;
+

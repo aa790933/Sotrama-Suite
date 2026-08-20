@@ -22,9 +22,7 @@ export class LeaveApplication extends Doc {
     if (!this.employee || !this.startDate) {
       return 0;
     }
-    const emp = (await this.loadAndGetLink(
-      'employee'
-    )) as {
+    const emp = (await this.loadAndGetLink('employee')) as {
       hireDate?: Date;
     } | null;
     const hire = emp?.hireDate;
