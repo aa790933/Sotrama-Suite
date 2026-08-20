@@ -537,7 +537,7 @@ export default defineComponent({
     async setFiles() {
       try {
         if (typeof ipc !== 'undefined' && ipc.getDbList) {
-          const dbList = (await ipc.getDbList()) as ConfigFilesWithModified[];
+          const dbList = await ipc.getDbList();
           if (Array.isArray(dbList)) {
             this.files = dbList.sort(
               (a, b) =>

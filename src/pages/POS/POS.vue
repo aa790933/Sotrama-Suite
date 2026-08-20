@@ -475,7 +475,7 @@ export default defineComponent({
 
         const existingItems = (this.sinvDoc.items || []).filter(
           (invoiceItem) =>
-            invoiceItem.item === row!.item &&
+            invoiceItem.item === row.item &&
             !invoiceItem.isFreeItem
         ) as InvoiceItem[];
 
