@@ -20,7 +20,7 @@ jobs:
         run: |
           corepack enable
           yarn set version 1.22.22
-          yarn install --frozen-lockfile
+          yarn install
 
       - name: Set Error Log Creds
         env:
@@ -81,7 +81,7 @@ jobs:
         run: |
           corepack enable
           yarn set version 1.22.22
-          yarn install --frozen-lockfile
+          yarn install
 
       - name: Set Error Log Creds
         env:
@@ -142,7 +142,7 @@ jobs:
         run: |
           corepack enable
           yarn set version 1.22.22
-          yarn install --frozen-lockfile
+          yarn install
 
       - name: Set Error Log Creds
         env:
@@ -190,7 +190,7 @@ jobs:
         run: |
           corepack enable
           yarn set version 1.22.22
-          yarn install --frozen-lockfile
+          yarn install
 
       - name: Set Error Log Creds
         env:

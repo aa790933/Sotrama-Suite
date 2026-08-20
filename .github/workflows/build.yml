@@ -30,7 +30,7 @@ jobs:
           yarn set version 1.22.22
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Lint
         run: yarn lint

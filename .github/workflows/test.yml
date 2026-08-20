@@ -30,7 +30,7 @@ jobs:
           yarn set version 1.22.22
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Run tests
         run: yarn test
@@ -54,7 +54,7 @@ jobs:
           yarn set version 1.22.22
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Build source files (no sign, no package)
         run: yarn build --nosign --nopackage

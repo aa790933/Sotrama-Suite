@@ -24,15 +24,16 @@ import registerIpcMainMessageListeners from './main/registerIpcMainMessageListen
 import registerProcessListeners from './main/registerProcessListeners';
 
 // --- Robust crash logger: electron-log if available, fallback to console ---
-let log: {
+type MainLogger = {
   error: (...args: unknown[]) => void;
   warn: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
   transports?: unknown;
-} = console as unknown as typeof log;
+};
+let log: MainLogger = console as unknown as MainLogger;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const el = require('electron-log');
+  const el = require('electron-log') as MainLogger & { initialize?: (opts: unknown) => void };
   if (el && typeof el.initialize === 'function') {
     el.initialize({ preload: true });
   }
@@ -40,7 +41,7 @@ try {
   if (log.transports) {
     // File logging only in packaged app to avoid dev noise
     const file = (log.transports as { file?: { level?: string } }).file;
-    if (file) file.level = app.isPackaged ? 'info' : false as unknown as string;
+    if (file) file.level = app.isPackaged ? 'info' : (false as unknown as string);
   }
 } catch {
   // electron-log not installed yet – console fallback
@@ -278,13 +279,9 @@ export class Main {
 
   registerAppProtocol() {
     // Modern Electron (>=25) uses protocol.handle with Fetch API
-    if (typeof protocol.handle === 'function') {
-      (
-        protocol.handle as (
-          scheme: string,
-          handler: (request: Request) => Promise<Response>
-        ) => void
-      )('app', async (request: Request) => {
+    const protocolHandle = (protocol as unknown as { handle?: (scheme: string, handler: (request: Request) => Promise<Response>) => void }).handle;
+    if (typeof protocolHandle === 'function') {
+      (protocolHandle as (scheme: string, handler: (request: Request) => Promise<Response>) => void)('app', async (request: Request) => {
         try {
           const url = new URL(request.url);
           // app://./index.html  -> host=".", pathname="/index.html"

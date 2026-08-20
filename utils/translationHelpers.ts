@@ -38,8 +38,9 @@ export function getIndexFormat(inp: string | string[] | unknown) {
   }
 
   let str = '';
-  snippets.forEach((s, i) => {
-    if (i === snippets.length - 1) {
+  const safeSnippets = snippets as string[];
+  safeSnippets.forEach((s, i) => {
+    if (i === safeSnippets.length - 1) {
       str += s;
       return;
     }
