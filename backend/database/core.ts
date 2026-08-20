@@ -151,7 +151,7 @@ export default class DatabaseCore extends DatabaseBase {
       this.#txConn ?? (await this.pool.getConnection());
     const owned = !this.#txConn;
     try {
-      const result = (await conn.query(sql, params)) as QueryResult;
+      const result: QueryResult = await conn.query(sql, params);
       return result;
     } finally {
       if (owned) {

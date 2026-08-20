@@ -2,7 +2,7 @@ name: Lint
 
 on:
   push:
-    branches: [$default-branch]
+    branches: [dev, main]
     paths-ignore:
       - '**.md'
   pull_request:
@@ -11,22 +11,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup_and_lint:
-    runs-on: macos-latest
+  lint:
+    runs-on: ubuntu-latest
     steps:
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.18.1'
-
-      - name: Set yarn version
-        run: yarn set version 1.22.18
-
-      - name: Checkout Books
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: yarn
+      - name: Setup Node.js LTS (22.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: yarn.lock
+
+      - name: Pin Yarn Classic
+        run: |
+          corepack enable
+          yarn set version 1.22.22
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Lint
         run: yarn lint

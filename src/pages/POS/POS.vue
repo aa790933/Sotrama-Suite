@@ -475,8 +475,7 @@ export default defineComponent({
 
         const existingItems = (this.sinvDoc.items || []).filter(
           (invoiceItem) =>
-            invoiceItem.item === row.item &&
-            !invoiceItem.isFreeItem
+            invoiceItem.item === row.item && !invoiceItem.isFreeItem
         ) as InvoiceItem[];
 
         await validateQty(

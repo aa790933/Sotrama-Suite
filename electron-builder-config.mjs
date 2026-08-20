@@ -1,4 +1,4 @@
-// App is tagged with a .mjs extension to allow
+// App is tagged with a .mjs extension to allow ESM import
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,22 +9,29 @@ import { fileURLToPath } from 'url';
  */
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-// const root = path.join(dirname, '..', '..');
-const root = dirname; // redundant, but is meant to keep with the previous line
+const root = dirname;
 const buildDirPath = path.join(root, 'dist_electron', 'build');
 const packageDirPath = path.join(root, 'dist_electron', 'bundled');
 
 const sotramaSuiteConfig = {
   productName: 'Sotrama Suite',
-  // If real user data exists under the old io.frappe.books path before a public/production release,
-  // add a migration step here first — see git history for a prior draft migration approach.
   appId: 'io.sotrama.suite',
   artifactName: '${productName}-v${version}-${os}-${arch}.${ext}',
+  // Critical: asar enables packaging, unpack native .node & MSI for runtime access
+  asar: true,
   asarUnpack: ['**/*.node', 'mariadb/**/*.msi'],
+  // Only include built files – buildDirPath already contains the bundled main + renderer
+  files: [
+    '**/*',
+    '!**/*.ts',
+    '!**/*.map',
+    '!**/*.md',
+  ],
+  // Ensure native deps are rebuilt for Electron's Node version
+  npmRebuild: false,
+  buildDependenciesFromSource: false,
   extraFiles: [
-    // Windows: bundle the pinned MariaDB MSI so the "Install for me" path
-    // works offline. The MSI is expected under build/mariadb at build time
-    // (download script); resolveMsiPath falls back to a runtime download.
+    // Windows: bundle the pinned MariaDB MSI so the "Install for me" path works offline
     { from: 'build/mariadb', to: 'mariadb', filter: ['*.msi'] },
   ],
   extraResources: [
@@ -32,11 +39,11 @@ const sotramaSuiteConfig = {
     { from: 'translations', to: '../translations' },
     { from: 'templates', to: '../templates' },
   ],
-  files: '**',
   extends: null,
   directories: {
     output: packageDirPath,
     app: buildDirPath,
+    buildResources: 'build',
   },
   mac: {
     type: 'distribution',

@@ -4,28 +4,52 @@ on:
   pull_request:
     paths-ignore:
       - '**.md'
+  push:
+    branches: [dev, main]
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
 
 jobs:
-  setup_and_build:
-    runs-on: macos-15-intel
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.18.1'
-
-      - name: Set yarn version
-        run: yarn set version 1.22.18
-
-      - name: Checkout Books
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: yarn
+      - name: Setup Node.js LTS (22.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: yarn.lock
 
-      - name: Run build
+      - name: Pin Yarn Classic
+        run: |
+          corepack enable
+          yarn set version 1.22.22
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Build (electron-builder --publish never)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          APPLE_NOTARIZE: 0
-        run: yarn build -mw --publish never
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: yarn build --publish never
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-electron-${{ runner.os }}-${{ github.sha }}
+          path: |
+            dist_electron/bundled
+            dist_electron/build
+          if-no-files-found: warn
+          retention-days: 7

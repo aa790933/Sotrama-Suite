@@ -334,5 +334,32 @@ const ipc = {
   },
 } as const;
 
-contextBridge.exposeInMainWorld('ipc', ipc);
+// Robust preload exposure: supports contextIsolation + sandbox false/true, with fallback logging
+try {
+  if (process.contextIsolated) {
+    contextBridge.exposeInMainWorld('ipc', ipc);
+  } else {
+    // Fallback for environments where contextIsolation is disabled (should not happen in prod)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as unknown as { ipc: typeof ipc }).ipc = ipc;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as unknown as { ipc: typeof ipc }).ipc = ipc;
+  }
+} catch (error) {
+  // Last resort: attempt direct window assignment and log
+  console.error('[preload] contextBridge.exposeInMainWorld failed:', error);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as unknown as { ipc: typeof ipc }).ipc = ipc;
+  } catch {}
+}
+
+// Ensure unhandled preload errors are visible in main logs
+window.addEventListener('error', (event) => {
+  console.error('[preload] window.onerror:', event.error ?? event.message);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[preload] unhandledrejection:', event.reason);
+});
+
 export type IPC = typeof ipc;

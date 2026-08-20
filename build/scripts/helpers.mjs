@@ -18,8 +18,11 @@ export function getMainProcessCommonConfig(root) {
     sourcemap: true,
     sourcesContent: false,
     platform: 'node',
+    // Align with Node LTS 22 host & Electron 33 (Node 20) / Electron 36 (Node 22).
+    // For Electron 33 LTS use node20, for Electron 36 latest use node22. Keep node20 for max compat;
+    // override to node22 when upgrading to Electron 36.
     target: 'node20',
-    external: ['electron', 'electron-store', 'node-fetch'],
+    external: ['electron', 'electron-store', 'electron-log', 'electron-updater', 'node-fetch', 'mariadb'],
     plugins: [excludeVendorFromSourceMap],
     write: true,
   };

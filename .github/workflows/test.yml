@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [$default-branch]
+    branches: [dev, main]
     paths-ignore:
       - '**.md'
   pull_request:
@@ -11,45 +11,53 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup_and_test:
-    runs-on: macos-latest
+  unit-test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.18.1'
-
-      - name: Set yarn version
-        run: yarn set version 1.22.18
-
-      - name: Checkout Books
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: yarn
+      - name: Setup Node.js LTS (22.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: yarn.lock
 
-      - name: Run Tests
+      - name: Pin Yarn Classic
+        run: |
+          corepack enable
+          yarn set version 1.22.22
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
         run: yarn test
 
-  setup_and_uitest:
-    runs-on: macos-latest
+  uitest:
+    runs-on: ubuntu-latest
     steps:
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.18.1'
-
-      - name: Set yarn version
-        run: yarn set version 1.22.18
-
-      - name: Checkout Books
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: yarn
+      - name: Setup Node.js LTS (22.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: yarn.lock
 
-      - name: Build Source Files
+      - name: Pin Yarn Classic
+        run: |
+          corepack enable
+          yarn set version 1.22.22
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build source files (no sign, no package)
         run: yarn build --nosign --nopackage
 
-      - name: Run UI Tests
+      - name: Run UI tests
         run: yarn uitest
