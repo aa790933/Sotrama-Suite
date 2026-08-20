@@ -44,7 +44,7 @@ export class DatabaseManager extends DatabaseDemuxBase {
   async _connect(_dbPath: string, countryCode?: string) {
     countryCode ??= await DatabaseCore.getCountryCode(this.dbConfig!);
     this.db = new DatabaseCore(undefined, this.dbConfig);
-    await this.db.connect();
+    this.db.connect();
     await this.setRawCustomFields();
     const schemaMap = getSchemas(countryCode, this.rawCustomFields);
     this.db.setSchemaMap(schemaMap);
@@ -190,13 +190,10 @@ export class DatabaseManager extends DatabaseDemuxBase {
       try {
         await fs.ensureDir(path.dirname(backupPath));
         const { execSync } = await import('child_process');
-        const cmd = `${mysqldumpPath} -h ${this.dbConfig.host} -P ${
-          this.dbConfig.port
-        } -u ${this.dbConfig.user} -p${this.dbConfig.password} ${
-          this.dbConfig.database
-        } > "${backupPath}"`;
+        const cmd = `${mysqldumpPath} -h ${this.dbConfig.host} -P ${this.dbConfig.port} -u ${this.dbConfig.user} -p${this.dbConfig.password} ${this.dbConfig.database} > "${backupPath}"`;
         execSync(cmd, { timeout: 60000 });
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.warn('Backup via mysqldump failed:', (err as Error).message);
       }
     }

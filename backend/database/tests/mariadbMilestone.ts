@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import DatabaseCore from '../core';
 import { getTestDbConfig } from './dbTestConfig';
 
@@ -8,7 +9,7 @@ async function main(): Promise<void> {
 
   try {
     console.log('=== Phase 1: Connect ===');
-    await db.connect();
+    db.connect();
     console.log('Connected to MariaDB successfully.\n');
 
     console.log('=== Phase 2: Create table ===');
@@ -56,4 +57,4 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+void main();

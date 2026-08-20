@@ -49,7 +49,7 @@ export interface MariaDBConfig {
   database: string;
 }
 
-type QueryResult = RowsWithMeta<any> | UpsertResult;
+type QueryResult = RowsWithMeta<unknown> | UpsertResult;
 
 const ALLOWED_OPERATORS = new Set([
   '=',
@@ -98,7 +98,7 @@ export default class DatabaseCore extends DatabaseBase {
   static async getCountryCode(config: MariaDBConfig): Promise<string> {
     let countryCode = 'in';
     const db = new DatabaseCore(undefined, config);
-    await db.connect();
+    db.connect();
 
     let query: { value: string }[] = [];
     try {
@@ -151,11 +151,11 @@ export default class DatabaseCore extends DatabaseBase {
       this.#txConn ?? (await this.pool.getConnection());
     const owned = !this.#txConn;
     try {
-      const result = (await conn.query(sql, params)) as QueryResult;
+      const result = await conn.query(sql, params);
       return result;
     } finally {
       if (owned) {
-        conn.release();
+        void conn.release();
       }
     }
   }
@@ -181,7 +181,7 @@ export default class DatabaseCore extends DatabaseBase {
       throw err;
     } finally {
       this.#txConn = null;
-      conn.release();
+      void conn.release();
     }
   }
 
@@ -234,7 +234,7 @@ export default class DatabaseCore extends DatabaseBase {
       await this.query('SET FOREIGN_KEY_CHECKS=1');
     } finally {
       this.#txConn = null;
-      conn.release();
+      void conn.release();
     }
 
     if (!hasSingleValueTable) {
@@ -666,7 +666,7 @@ export default class DatabaseCore extends DatabaseBase {
       filters,
       options
     );
-    const result = (await this.query(sql, params)) as RowsWithMeta<any>[];
+    const result = (await this.query(sql, params)) as RowsWithMeta<unknown>[];
     return result as unknown as FieldValueMap[];
   }
 
@@ -875,7 +875,7 @@ export default class DatabaseCore extends DatabaseBase {
 
   async #createTable(schemaName: string, tableName?: string) {
     tableName ??= schemaName;
-    const sql = await this.#buildCreateTableSql(schemaName, tableName);
+    const sql = this.#buildCreateTableSql(schemaName, tableName);
     await this.query(sql);
   }
 
@@ -992,7 +992,7 @@ export default class DatabaseCore extends DatabaseBase {
   async #addForeignKeys(schemaName: string) {
     const tableRows = (await this.query(
       `SELECT * FROM ${this.#qn(schemaName)}`
-    )) as RowsWithMeta<any>[];
+    )) as RowsWithMeta<unknown>[];
     await this.prestigeTheTable(
       schemaName,
       tableRows as unknown as FieldValueMap[]
@@ -1019,7 +1019,7 @@ export default class DatabaseCore extends DatabaseBase {
     const result = (await this.query(
       `SELECT ${fieldList} FROM ${this.#qn(schemaName)} WHERE name = ?`,
       [name]
-    )) as RowsWithMeta<any>[];
+    )) as RowsWithMeta<unknown>[];
 
     return result.length > 0
       ? (result[0] as unknown as FieldValueMap)

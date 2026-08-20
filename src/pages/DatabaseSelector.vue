@@ -369,7 +369,9 @@ import { deleteDb as performDeleteDb } from 'src/utils/ui';
 import type { ConnectionConfig } from 'src/setup/types';
 import type { ConfigFilesWithModified } from 'utils/types';
 
-declare const ipc: any;
+import type { IPC } from 'main/preload';
+
+declare const ipc: IPC;
 
 export default defineComponent({
   name: 'DatabaseSelector',
@@ -403,7 +405,7 @@ export default defineComponent({
     await this.setFiles();
 
     if (fyo?.store?.isDevelopment) {
-      (window as any).ds = this;
+      (window as unknown as Record<string, unknown>).ds = this;
     }
   },
   methods: {

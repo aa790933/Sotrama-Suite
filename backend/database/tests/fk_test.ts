@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import DatabaseCore from '../core';
 import { getDefaultMetaFieldValueMap } from '../../helpers';
 import { SchemaMap, SchemaStub } from 'schemas/types';
@@ -146,7 +147,7 @@ async function main() {
     ...testDbConfig,
     database: 'test',
   });
-  await adminDb.connect();
+  adminDb.connect();
   await adminDb.query(`DROP TABLE IF EXISTS test_books_core.singlevalue`);
   await adminDb.query(`DROP TABLE IF EXISTS test_books_core.customer`);
   await adminDb.query(`DROP TABLE IF EXISTS test_books_core.salesinvoice`);
@@ -155,7 +156,7 @@ async function main() {
   await adminDb.close();
 
   const db = new DatabaseCore(undefined, testDbConfig);
-  await db.connect();
+  db.connect();
   db.setSchemaMap(schemaMap);
 
   // Migrate

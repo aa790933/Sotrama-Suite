@@ -39,7 +39,7 @@ export function getIndexFormat(inp: string | string[] | unknown) {
 
   let str = '';
   snippets.forEach((s, i) => {
-    if (i === snippets!.length - 1) {
+    if (i === snippets.length - 1) {
       str += s;
       return;
     }

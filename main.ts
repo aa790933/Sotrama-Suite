@@ -148,7 +148,12 @@ export class Main {
 
   registerAppProtocol() {
     if (typeof protocol.handle === 'function') {
-      protocol.handle('app', async (request) => {
+      (
+        protocol.handle as (
+          scheme: string,
+          handler: (request: Request) => Promise<Response>
+        ) => void
+      )('app', async (request: Request) => {
         const { pathname, host } = new URL(request.url);
         const filePath = path.join(
           __dirname,

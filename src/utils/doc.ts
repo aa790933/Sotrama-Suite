@@ -84,7 +84,9 @@ export async function getLinkedEntries(
     .filter((sch) => !sch?.isSingle)
     .map((sch) => sch?.fields)
     .flat()
-    .filter((f) => f?.fieldtype === 'DynamicLink') as DynamicLinkField[];
+    .filter(
+      (f): f is DynamicLinkField => f?.fieldtype === 'DynamicLink'
+    );
 
   type Detail = { name: string; created: string };
   type ChildEntryDetail = {

@@ -529,8 +529,10 @@ import { t } from 'fyo';
 import { IPC_ACTIONS } from 'utils/messages';
 import type { ConnectionConfig } from '../setup/types';
 
+import type { IPC } from 'main/preload';
+
 // Declare IPC bridge interface
-declare const ipc: any;
+declare const ipc: IPC;
 
 type ProgressPayload = { percent: number; downloaded: number; total: number };
 
