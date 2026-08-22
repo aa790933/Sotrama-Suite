@@ -1,15 +1,6 @@
 <template>
   <div
-    class="
-      relative
-      bg-white
-      dark:bg-gray-900
-      border
-      dark:border-gray-800
-      flex-center
-      overflow-hidden
-      group
-    "
+    class="relative bg-white dark:bg-gray-900 border dark:border-gray-800 flex-center overflow-hidden group"
     :class="{
       rounded: size === 'form',
       'w-20 h-20 rounded-full': size !== 'small' && size !== 'form',
@@ -22,18 +13,7 @@
     <div v-else :class="[!isReadOnly ? 'group-hover:opacity-90' : '']">
       <div
         v-if="letterPlaceholder"
-        class="
-          flex
-          h-full
-          items-center
-          justify-center
-          text-gray-400
-          dark:text-gray-600
-          font-semibold
-          w-full
-          text-4xl
-          select-none
-        "
+        class="flex h-full items-center justify-center text-gray-400 dark:text-gray-600 font-semibold w-full text-4xl select-none"
       >
         {{ letterPlaceholder }}
       </div>

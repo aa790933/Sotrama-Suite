@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { _electron } from 'playwright';
 import { fileURLToPath } from 'url';
@@ -7,8 +8,18 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(dirname, '..');
 const appSourcePath = path.join(root, 'dist_electron', 'build', 'main.js');
 
+if (!fs.existsSync(appSourcePath)) {
+  console.error(
+    `uitest: ${appSourcePath} not found. Run: yarn build --nosign --nopackage`
+  );
+  process.exit(1);
+}
+
 (async function run() {
-  const electronApp = await _electron.launch({ args: [appSourcePath] });
+  const electronApp = await _electron.launch({
+    args: [appSourcePath],
+    env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' },
+  });
   const window = await electronApp.firstWindow();
   window.setDefaultTimeout(60_000);
 

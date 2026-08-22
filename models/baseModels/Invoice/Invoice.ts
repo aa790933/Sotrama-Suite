@@ -482,7 +482,7 @@ export abstract class Invoice extends Transactional {
       taxes[account].amount = taxes[account].amount.add(taxAmount);
     }
 
-    type Summary = typeof taxes[string] & { idx: number };
+    type Summary = (typeof taxes)[string] & { idx: number };
     const taxArr: Summary[] = [];
     let idx = 0;
     for (const account in taxes) {
@@ -546,13 +546,16 @@ export abstract class Invoice extends Transactional {
 
     const grandTotal = ((this.taxes ?? []) as Doc[])
       .map((doc) => doc.amount as Money)
-      .reduce((a, b) => {
-        if (this.isReturn) {
-          return a.abs().add(b.abs()).neg();
-        }
+      .reduce(
+        (a, b) => {
+          if (this.isReturn) {
+            return a.abs().add(b.abs()).neg();
+          }
 
-        return a.add(b.abs());
-      }, (this.netTotal as Money).abs())
+          return a.add(b.abs());
+        },
+        (this.netTotal as Money).abs()
+      )
       .sub(totalDiscount);
 
     if (this.redeemLoyaltyPoints) {
@@ -1683,8 +1686,9 @@ export abstract class Invoice extends Transactional {
     const names = transfers.map(({ name }) => name).join(', ');
     const label = this.fyo.schemaMap[schemaName]?.label ?? schemaName;
     throw new ValidationError(
-      this.fyo.t`Cannot cancel ${this.schema.label} ${this
-        .name!} because of the following ${label}: ${names}`
+      this.fyo.t`Cannot cancel ${this.schema.label} ${
+        this.name!
+      } because of the following ${label}: ${names}`
     );
   }
 

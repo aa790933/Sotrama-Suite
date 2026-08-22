@@ -151,10 +151,13 @@ export function setChildDocIdx(childDocs: Doc[]) {
 }
 
 export function getFormulaSequence(formulas: FormulaMap) {
-  const depMap = Object.keys(formulas).reduce((acc, k) => {
-    acc[k] = formulas[k]?.dependsOn;
-    return acc;
-  }, {} as Record<string, string[] | undefined>);
+  const depMap = Object.keys(formulas).reduce(
+    (acc, k) => {
+      acc[k] = formulas[k]?.dependsOn;
+      return acc;
+    },
+    {} as Record<string, string[] | undefined>
+  );
   return sequenceDependencies(cloneDeep(depMap));
 }
 

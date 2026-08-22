@@ -36,27 +36,10 @@
     <!-- Compilation Error -->
     <div
       v-else
-      class="
-        h-full
-        bg-red-100
-        dark:bg-red-900 dark:bg-opacity-50
-        w-full
-        text-2xl text-gray-900
-        dark:text-gray-25
-        flex flex-col
-        gap-4
-      "
+      class="h-full bg-red-100 dark:bg-red-900 dark:bg-opacity-50 w-full text-2xl text-gray-900 dark:text-gray-25 flex flex-col gap-4"
     >
       <h1
-        class="
-          text-4xl
-          font-bold
-          text-red-500
-          dark:text-red-200
-          p-4
-          border-b border-red-200
-          dark:border-red-900
-        "
+        class="text-4xl font-bold text-red-500 dark:text-red-200 p-4 border-b border-red-200 dark:border-red-900"
       >
         {{ error.name }}
       </h1>
@@ -64,8 +47,7 @@
       <pre
         v-if="error.detail"
         class="px-4 text-xl text-gray-700 dark:text-gray-400"
-        >{{ error.detail }}</pre
-      >
+        >{{ error.detail }}</pre>
     </div>
   </ScaledContainer>
 </template>

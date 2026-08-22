@@ -1,26 +1,9 @@
 <template>
   <div
-    class="
-      flex-1 flex
-      justify-center
-      items-center
-      bg-gray-50
-      dark:bg-gray-900
-      min-h-screen
-      p-4
-    "
+    class="flex-1 flex justify-center items-center bg-gray-50 dark:bg-gray-900 min-h-screen p-4"
   >
     <div
-      class="
-        w-full
-        max-w-lg
-        shadow-xl
-        rounded-xl
-        border border-gray-200
-        dark:border-gray-800
-        bg-white
-        dark:bg-gray-800
-      "
+      class="w-full max-w-lg shadow-xl rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800"
     >
       <div class="px-6 py-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -37,30 +20,14 @@
         <!-- Error Banner -->
         <div
           v-if="errorMsg"
-          class="
-            mt-4
-            p-3
-            text-sm text-red-700
-            bg-red-100
-            dark:bg-red-900/40 dark:text-red-200
-            rounded-lg
-            border border-red-200
-            dark:border-red-800
-          "
+          class="mt-4 p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-200 rounded-lg border border-red-200 dark:border-red-800"
         >
           {{ errorMsg }}
         </div>
 
         <!-- Mode Selection Tabs -->
         <div
-          class="
-            mt-5
-            flex
-            gap-6
-            border-b border-gray-200
-            dark:border-gray-700
-            pb-3
-          "
+          class="mt-5 flex gap-6 border-b border-gray-200 dark:border-gray-700 pb-3"
         >
           <label class="flex items-center gap-2 cursor-pointer">
             <input
@@ -101,29 +68,14 @@
 
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`Port` }}</label
               >
               <input
                 v-model.number="port"
                 type="number"
                 :disabled="installing"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               <p
                 v-if="portMessage"
@@ -135,29 +87,14 @@
 
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`Database name` }}</label
               >
               <input
                 v-model="database"
                 placeholder="sotrama"
                 :disabled="installing"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {{
@@ -168,20 +105,7 @@
 
             <button
               :disabled="installing || !port || !database"
-              class="
-                w-full
-                mt-2
-                px-4
-                py-2.5
-                rounded-lg
-                bg-blue-600
-                hover:bg-blue-700
-                text-white
-                font-medium
-                shadow-sm
-                transition-all
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
+              class="w-full mt-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               @click="expressInstall"
             >
               {{ installLabel }}
@@ -189,24 +113,10 @@
 
             <div
               v-if="installStage"
-              class="
-                mt-2
-                text-xs text-gray-500
-                dark:text-gray-400
-                flex
-                items-center
-                gap-2
-              "
+              class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2"
             >
               <span
-                class="
-                  inline-block
-                  w-2
-                  h-2
-                  rounded-full
-                  bg-blue-500
-                  animate-pulse
-                "
+                class="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse"
               ></span>
               <span>{{ installStage }}</span>
             </div>
@@ -218,150 +128,62 @@
           <div class="mt-4 space-y-3">
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`Host` }}</label
               >
               <input
                 v-model="host"
                 placeholder="127.0.0.1"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`Port` }}</label
               >
               <input
                 v-model.number="port"
                 type="number"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`Database name` }}</label
               >
               <input
                 v-model="database"
                 placeholder="sotrama"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`User` }}</label
               >
               <input
                 v-model="user"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
             <div>
               <label
-                class="
-                  block
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  dark:text-gray-300
-                "
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >{{ t`Password` }}</label
               >
               <input
                 v-model="password"
                 type="password"
-                class="
-                  mt-1
-                  w-full
-                  px-3
-                  py-2
-                  rounded-lg
-                  border border-gray-300
-                  dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-blue-500 focus:outline-none
-                "
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
             <button
               :disabled="testing || !host || !port || !database || !user"
-              class="
-                w-full
-                mt-2
-                px-4
-                py-2.5
-                rounded-lg
-                bg-blue-600
-                hover:bg-blue-700
-                text-white
-                font-medium
-                shadow-sm
-                transition-all
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
+              class="w-full mt-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               @click="advancedTest"
             >
               {{ testing ? t`Testing…` : t`Test connection` }}
@@ -385,15 +207,7 @@
         <!-- Summary card (express) -->
         <div
           v-if="done"
-          class="
-            mt-4
-            p-5
-            rounded-xl
-            border border-gray-200
-            dark:border-gray-700
-            bg-gray-50
-            dark:bg-gray-900/60
-          "
+          class="mt-4 p-5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60"
         >
           <div class="flex items-center gap-2 mb-3">
             <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
@@ -405,12 +219,7 @@
           </div>
 
           <dl
-            class="
-              space-y-2
-              text-sm
-              divide-y divide-gray-200
-              dark:divide-gray-800
-            "
+            class="space-y-2 text-sm divide-y divide-gray-200 dark:divide-gray-800"
           >
             <div class="flex justify-between pt-2">
               <dt class="text-gray-500 dark:text-gray-400">{{ t`Host` }}</dt>
@@ -448,27 +257,13 @@
               </dt>
               <dd class="flex items-center gap-2">
                 <span
-                  class="
-                    font-mono
-                    text-xs text-gray-900
-                    dark:text-gray-200
-                    break-all
-                    bg-gray-200
-                    dark:bg-gray-800
-                    px-2
-                    py-1
-                    rounded
-                  "
+                  class="font-mono text-xs text-gray-900 dark:text-gray-200 break-all bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded"
                 >
                   {{ summary?.appPassword }}
                 </span>
                 <button
                   type="button"
-                  class="
-                    text-xs text-blue-600
-                    hover:text-blue-700
-                    dark:text-blue-400
-                  "
+                  class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
                   @click="copyPassword"
                 >
                   {{ copied ? t`Copied!` : t`Copy` }}
@@ -478,13 +273,7 @@
           </dl>
 
           <div
-            class="
-              mt-4
-              pt-3
-              border-t border-gray-200
-              dark:border-gray-700
-              space-y-2
-            "
+            class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2"
           >
             <p class="text-xs text-gray-500 dark:text-gray-400">
               {{
@@ -501,19 +290,7 @@
 
         <button
           v-if="canContinue"
-          class="
-            w-full
-            mt-6
-            px-4
-            py-2.5
-            rounded-lg
-            bg-green-600
-            hover:bg-green-700
-            text-white
-            font-medium
-            shadow-sm
-            transition-all
-          "
+          class="w-full mt-6 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all"
           @click="finish"
         >
           {{ t`Continue to company setup` }}

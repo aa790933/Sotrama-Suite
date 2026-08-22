@@ -55,8 +55,7 @@ function evaluateFieldMeta(
   const docRecord = doc as Record<string, unknown> | undefined;
   const metaKey = meta as string;
   const metaObj = docRecord?.[metaKey] as
-    | Record<string, (() => boolean) | undefined>
-    | undefined;
+    Record<string, (() => boolean) | undefined> | undefined;
   const evalFunction = metaObj?.[field.fieldname];
   if (typeof evalFunction === 'function') {
     return evalFunction();
@@ -121,8 +120,7 @@ export async function getLinkedEntries(
     }
 
     const details = (await fyo.db.getAllRaw(field.schemaName, options)) as
-      | Detail[]
-      | ChildEntryDetail[];
+      Detail[] | ChildEntryDetail[];
 
     if (!details.length) {
       continue;

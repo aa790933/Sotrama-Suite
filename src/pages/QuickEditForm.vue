@@ -1,28 +1,10 @@
 <template>
   <div
-    class="
-      border-s
-      dark:border-gray-800
-      h-full
-      overflow-auto
-      w-quick-edit
-      bg-white
-      dark:bg-gray-850
-    "
+    class="border-s dark:border-gray-800 h-full overflow-auto w-quick-edit bg-white dark:bg-gray-850"
   >
     <!-- Quick edit Tool bar -->
     <div
-      class="
-        flex
-        items-center
-        justify-between
-        px-4
-        h-row-largest
-        sticky
-        top-0
-        bg-white
-        dark:bg-gray-850
-      "
+      class="flex items-center justify-between px-4 h-row-largest sticky top-0 bg-white dark:bg-gray-850"
       style="z-index: 1"
     >
       <!-- Close Button  -->

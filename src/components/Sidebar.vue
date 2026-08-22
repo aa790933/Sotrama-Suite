@@ -1,15 +1,6 @@
 <template>
   <div
-    class="
-      py-2
-      h-full
-      flex
-      justify-between
-      flex-col
-      bg-gray-25
-      dark:bg-gray-900
-      relative
-    "
+    class="py-2 h-full flex justify-between flex-col bg-gray-25 dark:bg-gray-900 relative"
     :class="{
       'window-drag': platform !== 'Windows',
     }"
@@ -24,14 +15,7 @@
       >
         <h6
           data-testid="company-name"
-          class="
-            font-semibold
-            dark:text-gray-200
-            whitespace-nowrap
-            overflow-auto
-            no-scrollbar
-            select-none
-          "
+          class="font-semibold dark:text-gray-200 whitespace-nowrap overflow-auto no-scrollbar select-none"
         >
           {{ companyName }}
         </h6>
@@ -40,15 +24,7 @@
       <!-- Sidebar Items -->
       <div v-for="group in groups" :key="group.label">
         <div
-          class="
-            px-4
-            flex
-            items-center
-            cursor-pointer
-            hover:bg-gray-100
-            dark:hover:bg-gray-875
-            h-10
-          "
+          class="px-4 flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-875 h-10"
           :class="
             isGroupActive(group) && !group.items
               ? 'bg-gray-100 dark:bg-gray-875 border-s-4 border-gray-800 dark:border-gray-100'
@@ -82,16 +58,7 @@
           <div
             v-for="item in group.items"
             :key="item.label"
-            class="
-              text-base
-              h-10
-              ps-10
-              cursor-pointer
-              flex
-              items-center
-              hover:bg-gray-100
-              dark:hover:bg-gray-875
-            "
+            class="text-base h-10 ps-10 cursor-pointer flex items-center hover:bg-gray-100 dark:hover:bg-gray-875"
             :class="
               isItemActive(item)
                 ? 'bg-gray-100 dark:bg-gray-875 text-gray-900 dark:text-gray-100 border-s-4 border-gray-800 dark:border-gray-100'
@@ -110,15 +77,7 @@
     <!-- Report Issue and DB Switcher -->
     <div class="window-no-drag flex flex-col gap-2 py-2 px-4">
       <button
-        class="
-          flex
-          text-sm text-gray-600
-          dark:text-gray-500
-          hover:text-gray-800
-          dark:hover:text-gray-400
-          gap-1
-          items-center
-        "
+        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
         @click="openDocumentation"
       >
         <feather-icon name="help-circle" class="h-4 w-4 flex-shrink-0" />
@@ -128,15 +87,7 @@
       </button>
 
       <button
-        class="
-          flex
-          text-sm text-gray-600
-          dark:text-gray-500
-          hover:text-gray-800
-          dark:hover:text-gray-400
-          gap-1
-          items-center
-        "
+        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
         @click="viewShortcuts = true"
       >
         <feather-icon name="command" class="h-4 w-4 flex-shrink-0" />
@@ -145,15 +96,7 @@
 
       <button
         data-testid="change-db"
-        class="
-          flex
-          text-sm text-gray-600
-          dark:text-gray-500
-          hover:text-gray-800
-          dark:hover:text-gray-400
-          gap-1
-          items-center
-        "
+        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
         @click="$emit('change-db-file')"
       >
         <feather-icon name="database" class="h-4 w-4 flex-shrink-0" />
@@ -161,15 +104,7 @@
       </button>
 
       <button
-        class="
-          flex
-          text-sm text-gray-600
-          dark:text-gray-500
-          hover:text-gray-800
-          dark:hover:text-gray-400
-          gap-1
-          items-center
-        "
+        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
         @click="() => reportIssue()"
       >
         <feather-icon name="flag" class="h-4 w-4 flex-shrink-0" />
@@ -190,19 +125,7 @@
 
     <!-- Hide Sidebar Button -->
     <button
-      class="
-        absolute
-        bottom-0
-        end-0
-        text-gray-600
-        dark:text-gray-500
-        hover:bg-gray-100
-        dark:hover:bg-gray-875
-        rounded
-        p-1
-        m-4
-        rtl-rotate-180
-      "
+      class="absolute bottom-0 end-0 text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-875 rounded p-1 m-4 rtl-rotate-180"
       @click="() => toggleSidebar()"
     >
       <feather-icon name="chevrons-left" class="w-4 h-4" />

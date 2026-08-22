@@ -18,12 +18,15 @@ export function getValueMapFromList<T, K extends keyof T, V extends keyof T>(
     );
   }
 
-  return list.reduce((acc, f) => {
-    const keyValue = String(f[key]);
-    const value = f[valueKey];
-    acc[keyValue] = value;
-    return acc;
-  }, {} as Record<string, T[V]>);
+  return list.reduce(
+    (acc, f) => {
+      const keyValue = String(f[key]);
+      const value = f[valueKey];
+      acc[keyValue] = value;
+      return acc;
+    },
+    {} as Record<string, T[V]>
+  );
 }
 
 export function getRandomString(): string {

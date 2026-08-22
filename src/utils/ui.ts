@@ -220,21 +220,24 @@ export function getActionsForDoc(doc?: Doc): Action[] {
 
 export function getGroupedActionsForDoc(doc?: Doc): ActionGroup[] {
   const actions = getActionsForDoc(doc);
-  const actionsMap = actions.reduce((acc, ac) => {
-    if (!ac.group) {
-      ac.group = '';
-    }
+  const actionsMap = actions.reduce(
+    (acc, ac) => {
+      if (!ac.group) {
+        ac.group = '';
+      }
 
-    acc[ac.group] ??= {
-      group: ac.group,
-      label: ac.label ?? '',
-      type: ac.type ?? 'secondary',
-      actions: [],
-    };
+      acc[ac.group] ??= {
+        group: ac.group,
+        label: ac.label ?? '',
+        type: ac.type ?? 'secondary',
+        actions: [],
+      };
 
-    acc[ac.group].actions.push(ac);
-    return acc;
-  }, {} as Record<string, ActionGroup>);
+      acc[ac.group].actions.push(ac);
+      return acc;
+    },
+    {} as Record<string, ActionGroup>
+  );
 
   const grouped = Object.keys(actionsMap)
     .filter(Boolean)
@@ -484,9 +487,8 @@ export async function selectTextFile(filters?: SelectFileOptions['filters']) {
     title: t`Select File`,
     filters,
   };
-  const { success, canceled, filePath, data, name } = await ipc.selectFile(
-    options
-  );
+  const { success, canceled, filePath, data, name } =
+    await ipc.selectFile(options);
 
   if (canceled || !success) {
     showToast({
@@ -887,7 +889,7 @@ export const printSizes = [
 ] as const;
 
 export const paperSizeMap: Record<
-  typeof printSizes[number],
+  (typeof printSizes)[number],
   { width: number; height: number }
 > = {
   A0: {

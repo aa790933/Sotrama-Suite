@@ -1,31 +1,14 @@
 <template>
   <div
     :class="[containerClasses]"
-    class="
-      mt-6
-      w-full
-      text-gray-900
-      dark:text-gray-100
-      text-base
-      focus:outline-none
-    "
+    class="mt-6 w-full text-gray-900 dark:text-gray-100 text-base focus:outline-none"
   >
     <label class="flex w-full">
       <button
         type="button"
         @click="onClick"
         :disabled="isReadOnly"
-        class="
-          w-full
-          flex
-          items-center
-          justify-center
-          p-2
-          rounded-md
-          bg-blue-300
-          hover:bg-blue-400 hover:shadow-md hover:-translate-y-[1px]
-          transition
-        "
+        class="w-full flex items-center justify-center p-2 rounded-md bg-blue-300 hover:bg-blue-400 hover:shadow-md hover:-translate-y-[1px] transition"
       >
         {{ df.label }}
       </button>

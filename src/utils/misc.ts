@@ -140,7 +140,7 @@ export const docsPathMap: Record<string, string | undefined> = {
 };
 
 export async function getDataURL(type: string, data: Uint8Array) {
-  const blob = new Blob([data], { type });
+  const blob = new Blob([data.buffer as ArrayBuffer], { type });
 
   return new Promise<string>((resolve) => {
     const fr = new FileReader();
@@ -162,7 +162,7 @@ export function getCreateFiltersFromListViewFilters(filters: QueryFilter) {
   const createFilters: Record<string, string | number | boolean | null> = {};
 
   for (const key in filters) {
-    let value: typeof filters[string] | undefined | number = filters[key];
+    let value: (typeof filters)[string] | undefined | number = filters[key];
 
     if (Array.isArray(value) && value[0] === 'in' && Array.isArray(value[1])) {
       value = value[1].filter((v) => v !== 'Both')[0];

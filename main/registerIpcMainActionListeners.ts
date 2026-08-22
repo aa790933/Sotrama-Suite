@@ -89,9 +89,8 @@ export default function registerIpcMainActionListeners(main: Main) {
         hostMode?: boolean;
       }
     ) => {
-      const { installMariaDBSilent, detectPlatform } = await import(
-        './mariadbInstall'
-      );
+      const { installMariaDBSilent, detectPlatform } =
+        await import('./mariadbInstall');
       return installMariaDBSilent(
         {
           platform: opts.platform ?? detectPlatform(),

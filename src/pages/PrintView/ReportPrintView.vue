@@ -14,15 +14,7 @@
     >
       <!-- Report Print Display Area -->
       <div
-        class="
-          p-4
-          bg-gray-25
-          dark:bg-gray-890
-          overflow-auto
-          flex
-          justify-center
-          custom-scroll custom-scroll-thumb1
-        "
+        class="p-4 bg-gray-25 dark:bg-gray-890 overflow-auto flex justify-center custom-scroll custom-scroll-thumb1"
       >
         <!-- Report Print Display Container -->
         <ScaledContainer
@@ -188,7 +180,7 @@ export default defineComponent({
     return {
       start: 1,
       limit: 0,
-      printSize: 'A4' as typeof printSizes[number],
+      printSize: 'A4' as (typeof printSizes)[number],
       isLandscape: false,
       scale: 0.65,
       report: null as null | Report,

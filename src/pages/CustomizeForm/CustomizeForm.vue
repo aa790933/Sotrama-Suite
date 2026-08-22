@@ -9,17 +9,7 @@
     <div class="flex text-base w-full flex-col">
       <!-- Select Entry Type -->
       <div
-        class="
-          h-row-largest
-          flex flex-row
-          justify-start
-          items-center
-          w-full
-          gap-2
-          border-b
-          dark:border-gray-800
-          p-4
-        "
+        class="h-row-largest flex flex-row justify-start items-center w-full gap-2 border-b dark:border-gray-800 p-4"
       >
         <AutoComplete
           :df="{

@@ -7,11 +7,7 @@ import { DZPayrollResult } from './payroll';
  */
 
 export type EarningType =
-  | 'housing'
-  | 'transport'
-  | 'bonus'
-  | 'overtime'
-  | 'other';
+  'housing' | 'transport' | 'bonus' | 'overtime' | 'other';
 
 export interface EarningRow {
   type: EarningType;

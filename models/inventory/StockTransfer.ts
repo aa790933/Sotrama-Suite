@@ -269,8 +269,7 @@ export abstract class StockTransfer extends Transfer {
     const messages: string[] = [];
     for (const setting of settings) {
       const value = this.fyo.singles.InventorySettings?.[setting] as
-        | string
-        | undefined;
+        string | undefined;
       const field = this.fyo.getField(ModelNameEnum.InventorySettings, setting);
       if (!value) {
         messages.push(t`${field.label} account not set in Inventory Settings.`);
@@ -406,20 +405,23 @@ export abstract class StockTransfer extends Transfer {
   }
 
   _getTransferMap() {
-    return (this.items ?? []).reduce((acc, item) => {
-      if (!item.item) {
+    return (this.items ?? []).reduce(
+      (acc, item) => {
+        if (!item.item) {
+          return acc;
+        }
+
+        if (!item.quantity) {
+          return acc;
+        }
+
+        acc[item.item] ??= 0;
+        acc[item.item] += item.quantity;
+
         return acc;
-      }
-
-      if (!item.quantity) {
-        return acc;
-      }
-
-      acc[item.item] ??= 0;
-      acc[item.item] += item.quantity;
-
-      return acc;
-    }, {} as Record<string, number>);
+      },
+      {} as Record<string, number>
+    );
   }
 
   override duplicate(): Doc {

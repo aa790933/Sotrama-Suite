@@ -71,14 +71,16 @@
     <ReturnSalesInvoiceModal
       :open-modal="openReturnSalesInvoiceModal"
       :modal-status="openReturnSalesInvoiceModal"
-      @selected-return-invoice="(value:any) => emitEvent('selectedReturnInvoice', value)"
+      @selected-return-invoice="
+        (value: any) => emitEvent('selectedReturnInvoice', value)
+      "
       @toggle-modal="emitEvent('toggleModal', 'ReturnSalesInvoice')"
     />
 
     <AlertModal
       :open-modal="openAlertModal"
       @toggle-modal="emitEvent('toggleModal', 'Alert')"
-      @save-and-continue="(value:any)=>emitEvent('saveAndContinue',value)"
+      @save-and-continue="(value: any) => emitEvent('saveAndContinue', value)"
     />
 
     <div
@@ -86,13 +88,7 @@
       style="height: calc(100vh - var(--h-row-largest))"
     >
       <div
-        class="
-          col-span-5
-          bg-white
-          border
-          rounded-md
-          dark:border-gray-800 dark:bg-gray-850
-        "
+        class="col-span-5 bg-white border rounded-md dark:border-gray-800 dark:bg-gray-850"
       >
         <div class="rounded-md p-4 col-span-5">
           <div class="flex gap-x-2">
@@ -111,7 +107,14 @@
               :border="true"
               :value="itemSearchTerm"
               :show-clear-button="true"
-              @keyup.enter="(event: KeyboardEvent) => emitEvent('handleItemSearch', (event.target as HTMLInputElement).value, true)"
+              @keyup.enter="
+                (event: KeyboardEvent) =>
+                  emitEvent(
+                    'handleItemSearch',
+                    (event.target as HTMLInputElement).value,
+                    true
+                  )
+              "
               @change="(item: string) => emitEvent('handleItemSearch', item)"
             />
 
@@ -126,7 +129,7 @@
               :border="true"
               :show-clear-button="true"
               :value="selectedItemGroup"
-              @change="(group: string) => emitEvent('setItemGroup',group)"
+              @change="(group: string) => emitEvent('setItemGroup', group)"
             />
           </div>
 
@@ -163,15 +166,7 @@
       <div class="col-span-7">
         <div class="flex flex-col gap-3" style="height: calc(100vh - 6rem)">
           <div
-            class="
-              p-4
-              bg-white
-              border
-              rounded-md
-              grow
-              h-full
-              dark:border-gray-800 dark:bg-gray-850
-            "
+            class="p-4 bg-white border rounded-md grow h-full dark:border-gray-800 dark:bg-gray-850"
           >
             <!-- Customer Search -->
             <MultiLabelLink
@@ -182,7 +177,7 @@
               :value="sinvDoc?.party"
               :df="sinvDoc?.fieldMap.party"
               :show-clear-button="true"
-              @change="(value:string) => $emit('setCustomer',value)"
+              @change="(value: string) => $emit('setCustomer', value)"
             />
 
             <SelectedItemTable
@@ -196,13 +191,7 @@
           </div>
 
           <div
-            class="
-              p-3
-              bg-white
-              border
-              rounded-md
-              dark:border-gray-800 dark:bg-gray-850
-            "
+            class="p-3 bg-white border rounded-md dark:border-gray-800 dark:bg-gray-850"
           >
             <div class="w-full grid grid-cols-2 gap-y-2 gap-x-3">
               <div class="flex flex-col justify-end">
@@ -232,7 +221,7 @@
                     :value="additionalDiscounts"
                     :read-only="true"
                     :text-right="true"
-                    @change="(amount:Money)=> additionalDiscounts= amount"
+                    @change="(amount: Money) => (additionalDiscounts = amount)"
                   />
                 </div>
 

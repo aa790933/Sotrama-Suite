@@ -8,16 +8,7 @@
       <!-- Title Row -->
       <Row
         :ratio="ratio"
-        class="
-          border-b
-          dark:border-gray-800
-          px-2
-          text-gray-600
-          dark:text-gray-400
-          w-full
-          flex
-          items-center
-        "
+        class="border-b dark:border-gray-800 px-2 text-gray-600 dark:text-gray-400 w-full flex items-center"
       >
         <div class="flex items-center ps-2">#</div>
         <div
@@ -28,8 +19,8 @@
             df.sub_label
               ? 'flex-col items-center text-center'
               : isNumeric(df)
-              ? 'ms-auto items-center'
-              : 'items-center',
+                ? 'ms-auto items-center'
+                : 'items-center',
           ]"
         >
           <span>{{ df.label }}</span>
@@ -62,16 +53,7 @@
       <Row
         v-if="!isReadOnly"
         :ratio="ratio"
-        class="
-          text-gray-500
-          cursor-pointer
-          px-2
-          w-full
-          h-row-mid
-          flex
-          items-center
-          focus:outline-none focus:ring-1 focus:ring-blue-500
-        "
+        class="text-gray-500 cursor-pointer px-2 w-full h-row-mid flex items-center focus:outline-none focus:ring-1 focus:ring-blue-500"
         :class="value.length > 0 ? 'border-t dark:border-gray-800' : ''"
         tabindex="0"
         @click="addRow"

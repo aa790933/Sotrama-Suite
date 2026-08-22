@@ -7,25 +7,7 @@
       />
     </div>
     <span
-      class="
-        p-2
-        mb-2
-        w-20
-        absolute
-        bottom-full
-        left-1/2
-        transform
-        -translate-x-1/2
-        text-center
-        opacity-0
-        bg-gray-100
-        text-black text-xs
-        rounded-md
-        transition-opacity
-        duration-300
-        group-hover:opacity-100
-        dark:bg-gray-800 dark:text-white
-      "
+      class="p-2 mb-2 w-20 absolute bottom-full left-1/2 transform -translate-x-1/2 text-center opacity-0 bg-gray-100 text-black text-xs rounded-md transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
     >
       {{ tableView ? t`Grid View` : t`List View` }}
     </span>
@@ -50,24 +32,7 @@
     </div>
 
     <span
-      class="
-        mb-2
-        p-2
-        w-28
-        absolute
-        bottom-full
-        left-1/2
-        transform
-        -translate-x-1/2
-        rounded-md
-        opacity-0
-        bg-gray-100
-        text-black text-xs text-center
-        transition-opacity
-        duration-300
-        group-hover:opacity-100
-        dark:bg-gray-800 dark:text-white
-      "
+      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 rounded-md opacity-0 bg-gray-100 text-black text-xs text-center transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
     >
       {{ t`Sales Invoice List` }}
     </span>
@@ -104,25 +69,7 @@
     </div>
 
     <span
-      class="
-        mb-2
-        p-2
-        w-28
-        absolute
-        bottom-full
-        left-1/2
-        transform
-        -translate-x-1/2
-        bg-gray-100
-        text-black text-xs
-        rounded-md
-        text-center
-        opacity-0
-        transition-opacity
-        duration-300
-        group-hover:opacity-100
-        dark:bg-gray-800 dark:text-white
-      "
+      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-100 text-black text-xs rounded-md text-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
     >
       {{ t`Loyalty Program` }}
     </span>
@@ -198,50 +145,13 @@
       </svg>
     </div>
     <span
-      class="
-        mb-2
-        p-2
-        w-28
-        absolute
-        bottom-full
-        left-1/2
-        transform
-        -translate-x-1/2
-        bg-gray-100
-        text-black text-xs
-        rounded-md
-        text-center
-        opacity-0
-        transition-opacity
-        duration-300
-        group-hover:opacity-100
-        dark:bg-gray-800 dark:text-white
-      "
+      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-100 text-black text-xs rounded-md text-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
     >
       Coupon Code
     </span>
     <div
       v-if="appliedCouponsCount !== 0"
-      class="
-        h-4
-        w-4
-        p-2
-        absolute
-        top-0
-        right-0
-        transform
-        translate-x-1/2
-        -translate-y-1/2
-        bg-green-400
-        text-green-900
-        border-red-500
-        rounded-full
-        flex
-        items-center
-        justify-center
-        text-xs
-        cursor-pointer
-      "
+      class="h-4 w-4 p-2 absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-green-400 text-green-900 border-red-500 rounded-full flex items-center justify-center text-xs cursor-pointer"
     >
       {{ appliedCouponsCount }}
     </div>
@@ -271,25 +181,7 @@
     </div>
 
     <span
-      class="
-        absolute
-        bottom-full
-        left-1/2
-        transform
-        -translate-x-1/2
-        mb-2
-        bg-gray-100
-        dark:bg-gray-800 dark:text-white
-        text-black text-xs
-        rounded-md
-        p-2
-        w-28
-        text-center
-        opacity-0
-        group-hover:opacity-100
-        transition-opacity
-        duration-300
-      "
+      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-100 dark:bg-gray-800 dark:text-white text-black text-xs rounded-md p-2 w-28 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     >
       Price List
     </span>
@@ -321,25 +213,7 @@
     </div>
 
     <span
-      class="
-        absolute
-        bottom-full
-        left-1/2
-        transform
-        -translate-x-1/2
-        mb-2
-        bg-gray-100
-        dark:bg-gray-800 dark:text-white
-        text-black text-xs
-        rounded-md
-        p-2
-        w-28
-        text-center
-        opacity-0
-        group-hover:opacity-100
-        transition-opacity
-        duration-300
-      "
+      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-100 dark:bg-gray-800 dark:text-white text-black text-xs rounded-md p-2 w-28 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     >
       Item Enquiry
     </span>

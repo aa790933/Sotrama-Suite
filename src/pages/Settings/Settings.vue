@@ -10,14 +10,7 @@
       <FormHeader
         :form-title="tabLabels[activeTab] ?? ''"
         :form-sub-title="t`Settings`"
-        class="
-          sticky
-          top-0
-          bg-white
-          dark:bg-gray-890
-          border-b
-          dark:border-gray-800
-        "
+        class="sticky top-0 bg-white dark:bg-gray-890 border-b dark:border-gray-800"
       >
       </FormHeader>
 
@@ -45,20 +38,7 @@
       <!-- Tab Bar -->
       <div
         v-if="groupedFields && groupedFields.size > 1"
-        class="
-          mt-auto
-          px-4
-          pb-4
-          flex
-          gap-8
-          border-t
-          dark:border-gray-800
-          flex-shrink-0
-          sticky
-          bottom-0
-          bg-white
-          dark:bg-gray-890
-        "
+        class="mt-auto px-4 pb-4 flex gap-8 border-t dark:border-gray-800 flex-shrink-0 sticky bottom-0 bg-white dark:bg-gray-890"
       >
         <div
           v-for="key of groupedFields.keys()"
@@ -80,15 +60,7 @@
 
       <!-- Credits -->
       <div
-        class="
-          mt-4
-          pb-4
-          px-4
-          text-xs text-gray-500
-          dark:text-gray-500
-          flex flex-col
-          gap-1
-        "
+        class="mt-4 pb-4 px-4 text-xs text-gray-500 dark:text-gray-500 flex flex-col gap-1"
       >
         <div>
           Sotrama Suite — based on

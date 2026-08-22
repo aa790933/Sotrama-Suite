@@ -18,7 +18,7 @@
         :value="selectedBatch"
         :border="true"
         :show-label="true"
-        @change="(value: string) => selectedBatch = value"
+        @change="(value: string) => (selectedBatch = value)"
       />
 
       <div class="mt-8 mb-6 grid grid-cols-2 gap-4">

@@ -156,7 +156,7 @@
           :show-label="true"
           :border="true"
           :value="row.itemDiscountAmount"
-          :read-only="row.itemDiscountPercent as number > 0 || isReadOnly"
+          :read-only="(row.itemDiscountPercent as number) > 0 || isReadOnly"
         />
       </div>
 
@@ -187,14 +187,14 @@
             fieldtype: 'Link',
             target: 'Batch',
             label: t`Batch`,
-            filters: { item: row.item as string},
+            filters: { item: row.item as string },
           }"
           size="medium"
           :value="row.batch"
           :border="true"
           :show-label="true"
           :read-only="false"
-          @change="(value:string) => setBatch(value)"
+          @change="(value: string) => setBatch(value)"
         />
       </div>
 
@@ -229,7 +229,7 @@
           :show-label="true"
           :border="true"
           :required="hasSerialNumber"
-          @change="(value:string)=> setSerialNumber(value)"
+          @change="(value: string) => setSerialNumber(value)"
         />
       </div>
     </div>

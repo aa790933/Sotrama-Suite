@@ -42,26 +42,12 @@
     <div class="flex flex-col ml-1">
       <feather-icon
         name="chevron-up"
-        class="
-          w-3
-          h-3
-          cursor-pointer
-          hover:text-blue-500
-          text-gray-700
-          dark:text-gray-200
-        "
+        class="w-3 h-3 cursor-pointer hover:text-blue-500 text-gray-700 dark:text-gray-200"
         @click="adjustQuantity(1)"
       />
       <feather-icon
         name="chevron-down"
-        class="
-          w-3
-          h-3
-          cursor-pointer
-          hover:text-blue-500
-          text-gray-700
-          dark:text-gray-200
-        "
+        class="w-3 h-3 cursor-pointer hover:text-blue-500 text-gray-700 dark:text-gray-200"
         @click="adjustQuantity(-1)"
       />
     </div>
@@ -127,7 +113,7 @@
         :border="true"
         :show-label="true"
         :value="getDisplayTransferQuantity()"
-        @change="(value:string) => row.set('transferQuantity', value)"
+        @change="(value: string) => row.set('transferQuantity', value)"
         :read-only="isReadOnly"
       />
     </div>
@@ -146,7 +132,7 @@
         :show-label="true"
         :border="true"
         :value="row.transferUnit ?? ''"
-        @change="(value:string) => row.set('transferUnit', value)"
+        @change="(value: string) => row.set('transferUnit', value)"
         :read-only="isReadOnly"
       />
     </div>
@@ -163,7 +149,7 @@
         :border="true"
         :show-label="true"
         :value="row.quantity"
-        @change="(value:number) => setQuantity(value)"
+        @change="(value: number) => setQuantity(value)"
         :read-only="isUOMConversionEnabled"
       />
     </div>
@@ -183,7 +169,7 @@
         :border="true"
         :value="row.rate"
         :read-only="isRateReadOnly()"
-        @change="(value:Money) => setRate((row.rate = value))"
+        @change="(value: Money) => setRate((row.rate = value))"
       />
     </div>
     <div class="px-6 pt-6 col-span-2">
@@ -199,8 +185,10 @@
         :show-label="true"
         :border="true"
         :value="row.itemDiscountAmount"
-        :read-only="isDiscountsReadOnly(row.itemDiscountPercent as number > 0)"
-        @change="(value:number) => setItemDiscount('amount', value)"
+        :read-only="
+          isDiscountsReadOnly((row.itemDiscountPercent as number) > 0)
+        "
+        @change="(value: number) => setItemDiscount('amount', value)"
       />
     </div>
 
@@ -217,7 +205,7 @@
         :border="true"
         :value="row.itemDiscountPercent"
         :read-only="isDiscountsReadOnly(!row.itemDiscountAmount?.isZero())"
-        @change="(value:number) => setItemDiscount('percent', value)"
+        @change="(value: number) => setItemDiscount('percent', value)"
       />
     </div>
 
@@ -233,13 +221,13 @@
           fieldtype: 'Link',
           target: 'Batch',
           label: t`Batch`,
-          filters: { item: row.item as string},
+          filters: { item: row.item as string },
         }"
         :value="row.batch"
         :border="true"
         :show-label="true"
         :read-only="false"
-        @change="(value:string) => setBatch(value)"
+        @change="(value: string) => setBatch(value)"
       />
     </div>
 
@@ -271,7 +259,7 @@
         :show-label="true"
         :border="true"
         :required="hasSerialNumber"
-        @change="(value:string)=> setSerialNumber(value)"
+        @change="(value: string) => setSerialNumber(value)"
       />
     </div>
   </template>

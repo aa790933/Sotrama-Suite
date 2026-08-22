@@ -29,18 +29,7 @@
           autocomplete="off"
           spellcheck="false"
           :placeholder="t`Type to search...`"
-          class="
-            bg-gray-100
-            dark:bg-gray-800
-            text-2xl
-            focus:outline-none
-            w-full
-            placeholder-gray-500
-            text-gray-900
-            dark:text-gray-100
-            rounded-md
-            p-3
-          "
+          class="bg-gray-100 dark:bg-gray-800 text-2xl focus:outline-none w-full placeholder-gray-500 text-gray-900 dark:text-gray-100 rounded-md p-3"
           @keydown.up="up"
           @keydown.down="down"
           @keydown.enter="() => select()"
@@ -123,14 +112,7 @@
             </button>
           </div>
           <button
-            class="
-              hover:text-gray-900
-              dark:hover:text-gray-25
-              py-0.5
-              rounded
-              text-gray-700
-              dark:text-gray-300
-            "
+            class="hover:text-gray-900 dark:hover:text-gray-25 py-0.5 rounded text-gray-700 dark:text-gray-300"
             @click="showMore = !showMore"
           >
             {{ showMore ? t`Less Filters` : t`More Filters` }}
@@ -161,15 +143,7 @@
             <button
               v-for="sf in schemaFilters"
               :key="sf.value"
-              class="
-                border
-                px-1
-                py-0.5
-                rounded-lg
-                border-blue-100
-                dark:border-blue-800
-                whitespace-nowrap
-              "
+              class="border px-1 py-0.5 rounded-lg border-blue-100 dark:border-blue-800 whitespace-nowrap"
               :class="{
                 'bg-blue-100 dark:bg-blue-800':
                   searcher?.filters.schemaFilters[sf.value],
@@ -193,12 +167,7 @@
             <p>↩ {{ t`Select` }}</p>
             <p><span class="tracking-tighter">esc</span> {{ t`Close` }}</p>
             <button
-              class="
-                flex
-                items-center
-                hover:text-gray-800
-                dark:hover:text-gray-300
-              "
+              class="flex items-center hover:text-gray-800 dark:hover:text-gray-300"
               @click="openDocs"
             >
               <feather-icon name="help-circle" class="w-4 h-4 me-1" />
@@ -212,14 +181,7 @@
 
           <div
             v-if="(searcher?.numSearches ?? 0) > 50"
-            class="
-              border border-gray-100
-              dark:border-gray-875
-              rounded
-              flex
-              justify-self-end
-              ms-2
-            "
+            class="border border-gray-100 dark:border-gray-875 rounded flex justify-self-end ms-2"
           >
             <template
               v-for="c in allowedLimits.filter(
@@ -322,10 +284,13 @@ export default defineComponent({
       };
     },
     groupColorClassMap(): Record<SearchGroup, string> {
-      return searchGroups.reduce((map, g) => {
-        map[g] = getBgTextColorClass(this.groupColorMap[g]);
-        return map;
-      }, {} as Record<SearchGroup, string>);
+      return searchGroups.reduce(
+        (map, g) => {
+          map[g] = getBgTextColorClass(this.groupColorMap[g]);
+          return map;
+        },
+        {} as Record<SearchGroup, string>
+      );
     },
     suggestions(): SearchItems {
       if (!this.searcher) {

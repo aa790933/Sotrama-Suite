@@ -14,15 +14,7 @@
     >
       <div class="w-full" @click="toggleDropdown">
         <div
-          class="
-            flex
-            items-center
-            justify-between
-            bg-transparent
-            w-full
-            cursor-pointer
-            custom-scroll custom-scroll-thumb2
-          "
+          class="flex items-center justify-between bg-transparent w-full cursor-pointer custom-scroll custom-scroll-thumb2"
           :class="{
             'pointer-events-none': isReadOnly,
             'text-gray-500': !value,
@@ -58,39 +50,16 @@
         </div>
         <div
           v-if="dropdownVisible"
-          class="
-            absolute
-            z-10
-            mt-4
-            w-60
-            bg-white
-            dark:bg-gray-850
-            border border-gray-300
-            dark:border-gray-700
-            cursor-pointer
-            rounded-md
-            shadow-lg
-          "
+          class="absolute z-10 mt-4 w-60 bg-white dark:bg-gray-850 border border-gray-300 dark:border-gray-700 cursor-pointer rounded-md shadow-lg"
         >
           <ul
-            class="
-              max-h-40
-              p-1
-              overflow-auto
-              custom-scroll custom-scroll-thumb1
-            "
+            class="max-h-40 p-1 overflow-auto custom-scroll custom-scroll-thumb1"
           >
             <li
               v-for="option in options"
               :key="option.value"
               @click="selectOption(option)"
-              class="
-                p-1.5
-                rounded-md
-                hover:bg-gray-100
-                dark:hover:bg-gray-875
-                flex
-              "
+              class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-875 flex"
               :class="selectValue !== option.label ? 'pl-6' : 'pl-2'"
             >
               <svg

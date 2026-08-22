@@ -8,18 +8,7 @@
     />
     <div
       v-else
-      class="
-        bg-gray-500
-        flex
-        h-full
-        items-center
-        justify-center
-        text-white
-        dark:text-gray-900
-        w-full
-        text-base
-        uppercase
-      "
+      class="bg-gray-500 flex h-full items-center justify-center text-white dark:text-gray-900 w-full text-base uppercase"
     >
       {{ label && label[0] }}
     </div>

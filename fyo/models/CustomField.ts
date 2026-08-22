@@ -74,8 +74,9 @@ export class CustomField extends Doc {
       const field = this.parentFields?.[value];
       if (field && !field.isCustom) {
         throw new ValueError(
-          this.fyo.t`Fieldname ${value} already exists for ${this.parentdoc!
-            .name!}`
+          this.fyo.t`Fieldname ${value} already exists for ${
+            this.parentdoc!.name!
+          }`
         );
       }
 

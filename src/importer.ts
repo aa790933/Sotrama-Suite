@@ -222,11 +222,14 @@ export class Importer {
     const schema = this.fyo.schemaMap[this.schemaName];
     const targetFieldnameMap = schema?.fields
       .filter((f) => f.fieldtype === FieldTypeEnum.Table)
-      .reduce((acc, f) => {
-        const { target, fieldname } = f as TargetField;
-        acc[target] = fieldname;
-        return acc;
-      }, {} as Record<string, string>);
+      .reduce(
+        (acc, f) => {
+          const { target, fieldname } = f as TargetField;
+          acc[target] = fieldname;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
 
     for (const [name, data] of dataMap.entries()) {
       const doc = this.fyo.doc.getNewDoc(this.schemaName, data, false);
@@ -263,15 +266,18 @@ export class Importer {
     const nameIndices = this.assignedTemplateFields
       .map((key, index) => ({ key, index }))
       .filter((f) => f.key?.endsWith('.name'))
-      .reduce((acc, f) => {
-        if (f.key == null) {
-          return acc;
-        }
+      .reduce(
+        (acc, f) => {
+          if (f.key == null) {
+            return acc;
+          }
 
-        const schemaName = f.key.split('.')[0];
-        acc[schemaName] = f.index;
-        return acc;
-      }, {} as Record<string, number>);
+          const schemaName = f.key.split('.')[0];
+          acc[schemaName] = f.index;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
     const nameIndex = nameIndices?.[this.schemaName];
     if (nameIndex < 0) {
@@ -571,14 +577,17 @@ function getTemplateFields(
   const fields: TemplateField[] = [];
 
   const targetSchemaFieldMap =
-    fyo.schemaMap[importer.schemaName]?.fields.reduce((acc, f) => {
-      if (!(f as TargetField).target) {
-        return acc;
-      }
+    fyo.schemaMap[importer.schemaName]?.fields.reduce(
+      (acc, f) => {
+        if (!(f as TargetField).target) {
+          return acc;
+        }
 
-      acc[f.fieldname] = f;
-      return acc;
-    }, {} as Record<string, Field>) ?? {};
+        acc[f.fieldname] = f;
+        return acc;
+      },
+      {} as Record<string, Field>
+    ) ?? {};
 
   while (schemas.length) {
     const { schema, parentSchemaChildField } = schemas.pop() ?? {};

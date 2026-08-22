@@ -6,25 +6,15 @@
     >
       <Row
         :ratio="ratio"
-        class="
-          mt-2
-          px-2
-          w-full
-          flex
-          items-center
-          border
-          rounded-t-md
-          text-gray-600
-          dark:border-gray-800 dark:text-gray-400
-        "
+        class="mt-2 px-2 w-full flex items-center border rounded-t-md text-gray-600 dark:border-gray-800 dark:text-gray-400"
       >
         <div
           v-for="df in tableFields"
           :key="df.fieldname"
           class="flex items-center p-2 text-lg"
           :class="{
-        'ms-auto': isNumeric(df as Field),
-      }"
+            'ms-auto': isNumeric(df as Field),
+          }"
         >
           {{ df.label }}
         </div>
@@ -35,18 +25,7 @@
         :key="row.id"
         :ratio="ratio"
         :border="true"
-        class="
-          px-2
-          w-full
-          border
-          flex
-          items-center
-          justify-center
-          group
-          h-row-mid
-          hover:bg-gray-25
-          dark:border-gray-800 dark:bg-gray-890
-        "
+        class="px-2 w-full border flex items-center justify-center group h-row-mid hover:bg-gray-25 dark:border-gray-800 dark:bg-gray-890"
         @click="handleChange(row)"
       >
         <FormControl
@@ -66,25 +45,15 @@
     >
       <Row
         :ratio="ratio"
-        class="
-          mt-2
-          px-2
-          w-full
-          flex
-          items-center
-          border
-          rounded-t-md
-          text-gray-600
-          dark:border-gray-800 dark:text-gray-400
-        "
+        class="mt-2 px-2 w-full flex items-center border rounded-t-md text-gray-600 dark:border-gray-800 dark:text-gray-400"
       >
         <div
           v-for="df in tableFields"
           :key="df.fieldname"
           class="flex items-center p-2 text-lg"
           :class="{
-        'ms-auto': isNumeric(df as Field),
-      }"
+            'ms-auto': isNumeric(df as Field),
+          }"
         >
           {{ df.label }}
         </div>
@@ -94,18 +63,7 @@
         :key="row.id"
         :ratio="ratio"
         :border="true"
-        class="
-          px-2
-          w-full
-          border
-          flex
-          items-center
-          justify-center
-          group
-          h-row-mid
-          hover:bg-gray-25
-          dark:bg-gray-890 dark:border-gray-800
-        "
+        class="px-2 w-full border flex items-center justify-center group h-row-mid hover:bg-gray-25 dark:bg-gray-890 dark:border-gray-800"
         @click="handleChange(row)"
       >
         <FormControl

@@ -19,17 +19,7 @@
         <Button class="w-40" @click="toggleDropdown"> Create </Button>
         <div
           v-if="showDropdown"
-          class="
-            absolute
-            top-full
-            mt-1
-            bg-white
-            border border-gray-300
-            rounded
-            shadow-lg
-            z-10
-            w-40
-          "
+          class="absolute top-full mt-1 bg-white border border-gray-300 rounded shadow-lg z-10 w-40"
         >
           <div
             v-for="option in actionOptions"

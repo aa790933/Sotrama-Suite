@@ -1,19 +1,6 @@
 <template>
   <div
-    class="
-      px-2
-      w-36
-      flex
-      items-center
-      border
-      rounded
-      bg-gray-50
-      dark:text-gray-200
-      dark:border-gray-800
-      dark:bg-gray-890
-      dark:focus-within:bg-gray-900
-      focus-within:bg-gray-100
-    "
+    class="px-2 w-36 flex items-center border rounded bg-gray-50 dark:text-gray-200 dark:border-gray-800 dark:bg-gray-890 dark:focus-within:bg-gray-900 focus-within:bg-gray-100"
   >
     <input
       ref="scanner"

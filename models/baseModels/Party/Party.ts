@@ -33,23 +33,20 @@ export class Party extends Doc {
     let outstandingAmount = this.fyo.pesa(0);
 
     if (role === 'Customer' || role === 'Both') {
-      const outstandingReceive = await this._getTotalOutstandingAmount(
-        'SalesInvoice'
-      );
+      const outstandingReceive =
+        await this._getTotalOutstandingAmount('SalesInvoice');
       outstandingAmount = outstandingAmount.add(outstandingReceive);
     }
 
     if (role === 'Supplier') {
-      const outstandingPay = await this._getTotalOutstandingAmount(
-        'PurchaseInvoice'
-      );
+      const outstandingPay =
+        await this._getTotalOutstandingAmount('PurchaseInvoice');
       outstandingAmount = outstandingAmount.add(outstandingPay);
     }
 
     if (role === 'Both') {
-      const outstandingPay = await this._getTotalOutstandingAmount(
-        'PurchaseInvoice'
-      );
+      const outstandingPay =
+        await this._getTotalOutstandingAmount('PurchaseInvoice');
       outstandingAmount = outstandingAmount.sub(outstandingPay);
     }
 

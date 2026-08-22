@@ -15,7 +15,7 @@
           :value="ItemEnquiry.item"
           :border="true"
           :show-label="true"
-          @change="(value: string) => ItemEnquiry.item = value"
+          @change="(value: string) => (ItemEnquiry.item = value)"
         />
 
         <Text
@@ -27,7 +27,7 @@
           :value="ItemEnquiry.description"
           :border="true"
           :show-label="true"
-          @change="(value: string) => ItemEnquiry.description = value"
+          @change="(value: string) => (ItemEnquiry.description = value)"
         />
 
         <Link
@@ -40,10 +40,12 @@
           :value="ItemEnquiry.customer"
           :border="true"
           :show-label="true"
-          @change="(value: string) => {
-      ItemEnquiry.customer = value;
-      updateCustomerContact(value);
-    }"
+          @change="
+            (value: string) => {
+              ItemEnquiry.customer = value;
+              updateCustomerContact(value);
+            }
+          "
         />
 
         <Data
@@ -55,7 +57,7 @@
           :value="ItemEnquiry.contact"
           :border="true"
           :show-label="true"
-          @change="(value: string) => ItemEnquiry.contact = value"
+          @change="(value: string) => (ItemEnquiry.contact = value)"
         />
 
         <Link
@@ -68,7 +70,7 @@
           :value="ItemEnquiry.similarProduct"
           :border="true"
           :show-label="true"
-          @change="(value: string) => ItemEnquiry.similarProduct = value"
+          @change="(value: string) => (ItemEnquiry.similarProduct = value)"
         />
       </div>
 

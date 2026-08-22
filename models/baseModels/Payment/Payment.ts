@@ -144,8 +144,9 @@ export class Payment extends Transactional {
 
       if (refDoc?.party !== this.party) {
         throw new ValidationError(
-          t`${refDoc.name!} party ${refDoc.party!} is different from ${this
-            .party!}`
+          t`${refDoc.name!} party ${refDoc.party!} is different from ${
+            this.party!
+          }`
         );
       }
     }
@@ -306,7 +307,7 @@ export class Payment extends Transactional {
       }
     }
 
-    type Summary = typeof taxes[string][string] & { idx: number };
+    type Summary = (typeof taxes)[string][string] & { idx: number };
     const taxArr: Summary[] = [];
     let idx = 0;
     for (const payment_account in taxes) {

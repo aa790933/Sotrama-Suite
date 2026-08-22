@@ -140,12 +140,10 @@ export async function getRegionalModels(
     const { Employee } = await import('./regionalModels/dz/Employee');
     const { EarningItem } = await import('./regionalModels/dz/EarningItem');
     const { Attendance } = await import('./regionalModels/dz/Attendance');
-    const { LeaveApplication } = await import(
-      './regionalModels/dz/LeaveApplication'
-    );
-    const { PayrollSettings } = await import(
-      './regionalModels/dz/PayrollSettings'
-    );
+    const { LeaveApplication } =
+      await import('./regionalModels/dz/LeaveApplication');
+    const { PayrollSettings } =
+      await import('./regionalModels/dz/PayrollSettings');
     const { SalarySlip } = await import('./regionalModels/dz/SalarySlip');
     return {
       Department,

@@ -498,8 +498,8 @@ export default class DatabaseCore extends DatabaseBase {
       typeof count === 'number'
         ? count
         : typeof count === 'bigint'
-        ? Number(count)
-        : NaN;
+          ? Number(count)
+          : NaN;
     return !Number.isNaN(numCount) && numCount > 0;
   }
 
@@ -1241,9 +1241,7 @@ export default class DatabaseCore extends DatabaseBase {
       const added: string[] = [];
 
       const tableFieldValue = fieldValueMap[field.fieldname] as
-        | FieldValueMap[]
-        | undefined
-        | null;
+        FieldValueMap[] | undefined | null;
       if (getIsNullOrUndef(tableFieldValue)) {
         continue;
       }

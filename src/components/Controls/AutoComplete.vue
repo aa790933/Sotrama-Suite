@@ -65,15 +65,7 @@
         <div v-if="canLink" class="flex items-center gap-1">
           <button
             v-if="value && showClearButton"
-            class="
-              p-0.5
-              rounded
-              bg-transparent
-              text-gray-600
-              hover:text-gray-800
-              dark:text-gray-300 dark:hover:text-gray-100
-              transition-colors
-            "
+            class="p-0.5 rounded bg-transparent text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
             @click.stop.prevent="clearValue"
             @mousedown.prevent
           >

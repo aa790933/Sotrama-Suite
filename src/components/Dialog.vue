@@ -5,21 +5,7 @@
       <div v-if="open" class="backdrop z-20 flex justify-center items-center">
         <!-- Dialog -->
         <div
-          class="
-            bg-white
-            dark:bg-gray-850
-            border
-            dark:border-gray-800
-            rounded-lg
-            text-gray-900
-            dark:text-gray-25
-            p-4
-            shadow-2xl
-            w-dialog
-            flex flex-col
-            gap-4
-            inner
-          "
+          class="bg-white dark:bg-gray-850 border dark:border-gray-800 rounded-lg text-gray-900 dark:text-gray-25 p-4 shadow-2xl w-dialog flex flex-col gap-4 inner"
         >
           <div class="flex justify-between items-center">
             <h1 class="font-semibold">{{ title }}</h1>

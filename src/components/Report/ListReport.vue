@@ -5,16 +5,7 @@
       <!--Title Row -->
       <div
         ref="titlerow"
-        class="
-          w-full
-          overflow-x-hidden
-          flex
-          items-center
-          dark:text-gray-25
-          border-b
-          dark:border-gray-800
-          px-4
-        "
+        class="w-full overflow-x-hidden flex items-center dark:text-gray-25 border-b dark:border-gray-800 px-4"
         :style="{
           height: `${hconst}px`,
           paddingRight: 'calc(var(--w-scrollbar) + 1rem)',
@@ -24,14 +15,7 @@
           v-for="(col, c) in report.columns"
           :key="c + '-col'"
           :style="getCellStyle(col, c)"
-          class="
-            text-base
-            px-3
-            flex-shrink-0
-            overflow-x-auto
-            whitespace-nowrap
-            no-scrollbar
-          "
+          class="text-base px-3 flex-shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar"
         >
           {{ col.label }}
         </div>
@@ -64,14 +48,7 @@
               v-for="(cell, c) in row.cells"
               :key="`${c}-${r}-cell`"
               :style="getCellStyle(cell, c)"
-              class="
-                text-base
-                px-3
-                flex-shrink-0
-                overflow-x-auto
-                whitespace-nowrap
-                no-scrollbar
-              "
+              class="text-base px-3 flex-shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar"
               :class="[getCellColorClass(cell)]"
             >
               {{ cell.value }}
@@ -83,14 +60,7 @@
     </div>
     <p
       v-else
-      class="
-        w-full
-        text-center
-        mt-20
-        text-gray-800
-        dark:text-gray-100
-        text-base
-      "
+      class="w-full text-center mt-20 text-gray-800 dark:text-gray-100 text-base"
     >
       {{ report.loading ? t`Loading Report...` : t`No Values to be Displayed` }}
     </p>

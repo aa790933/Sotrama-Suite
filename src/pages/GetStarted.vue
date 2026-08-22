@@ -2,11 +2,7 @@
   <div class="flex flex-col overflow-y-hidden">
     <PageHeader :title="t`Set Up Your Workspace`" />
     <div
-      class="
-        flex-1
-        overflow-y-auto overflow-x-hidden
-        custom-scroll custom-scroll-thumb1
-      "
+      class="flex-1 overflow-y-auto overflow-x-hidden custom-scroll custom-scroll-thumb1"
     >
       <div
         v-for="section in sections"
@@ -21,15 +17,7 @@
             class="w-full md:w-1/3 sm:w-1/2"
           >
             <div
-              class="
-                flex flex-col
-                justify-between
-                h-40
-                p-4
-                border
-                dark:border-gray-800 dark:text-gray-50
-                rounded-lg
-              "
+              class="flex flex-col justify-between h-40 p-4 border dark:border-gray-800 dark:text-gray-50 rounded-lg"
               @mouseenter="() => (activeCard = item.key)"
               @mouseleave="() => (activeCard = null)"
             >

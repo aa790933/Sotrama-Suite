@@ -21,14 +21,7 @@
           <FeatherIcon name="chevron-left" class="w-4 h-4" />
         </button>
         <button
-          class="
-            font-mono
-            cursor-pointer
-            w-2
-            h-2
-            rounded-full
-            border-gray-400 border-2
-          "
+          class="font-mono cursor-pointer w-2 h-2 rounded-full border-gray-400 border-2"
           @click="selectToday"
         />
         <button
@@ -48,14 +41,7 @@
           <div
             v-for="day of weekdays"
             :key="day"
-            class="
-              w-7
-              h-7
-              flex
-              items-center
-              justify-center
-              text-xs text-gray-600
-            "
+            class="w-7 h-7 flex items-center justify-center text-xs text-gray-600"
           >
             {{ day }}
           </div>
@@ -66,17 +52,7 @@
           <div
             v-for="item of weekdayList"
             :key="`${item.year}-${item.month}-${item.day}`"
-            class="
-              w-7
-              h-7
-              flex
-              items-center
-              justify-center
-              text-xs
-              rounded-full
-              cursor-pointer
-              hover:bg-gray-100
-            "
+            class="w-7 h-7 flex items-center justify-center text-xs rounded-full cursor-pointer hover:bg-gray-100"
             :class="getDayClass(item)"
             @click="select(item)"
           >

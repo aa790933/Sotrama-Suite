@@ -15,7 +15,7 @@
       :tabindex="isReadOnly ? '-1' : '0'"
       @blur="onBlur"
       @focus="onFocus"
-      @input="(e:Event) => $emit('input', e)"
+      @input="(e: Event) => $emit('input', e)"
     />
     <div
       v-show="!showInput"

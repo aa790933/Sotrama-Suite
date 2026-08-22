@@ -71,14 +71,16 @@
     <ReturnSalesInvoiceModal
       :open-modal="openReturnSalesInvoiceModal"
       :modal-status="openReturnSalesInvoiceModal"
-      @selected-return-invoice="(value:any) => emitEvent('selectedReturnInvoice', value)"
+      @selected-return-invoice="
+        (value: any) => emitEvent('selectedReturnInvoice', value)
+      "
       @toggle-modal="emitEvent('toggleModal', 'ReturnSalesInvoice')"
     />
 
     <AlertModal
       :open-modal="openAlertModal"
       @toggle-modal="emitEvent('toggleModal', 'Alert')"
-      @save-and-continue="(value:any)=>emitEvent('saveAndContinue',value)"
+      @save-and-continue="(value: any) => emitEvent('saveAndContinue', value)"
     />
 
     <KeyboardModal
@@ -86,7 +88,7 @@
       :open-modal="openKeyboardModal"
       :modal-status="openKeyboardModal"
       :selected-item-field="selectedItemField"
-      :selected-item-row="(selectedItemRow as SalesInvoiceItem)"
+      :selected-item-row="selectedItemRow as SalesInvoiceItem"
       @toggle-modal="emitEvent('toggleModal', 'Keyboard')"
       @apply-pricing-rule="emitEvent('applyPricingRule')"
     />
@@ -95,16 +97,7 @@
       <div class="col-span-3 flex h-auto w-full">
         <div class="grid grid-rows-5 w-full gap-3">
           <div
-            class="
-              p-4
-              grow
-              h-full
-              row-span-5
-              bg-white
-              border
-              rounded-md
-              dark:bg-gray-850 dark:border-gray-800
-            "
+            class="p-4 grow h-full row-span-5 bg-white border rounded-md dark:bg-gray-850 dark:border-gray-800"
           >
             <!-- Customer Search -->
             <MultiLabelLink
@@ -115,7 +108,7 @@
               :value="sinvDoc?.party"
               :df="sinvDoc?.fieldMap.party"
               :show-clear-button="true"
-              @change="(value:string) => $emit('setCustomer',value)"
+              @change="(value: string) => $emit('setCustomer', value)"
             />
 
             <ModernPOSSelectedItemTable
@@ -130,14 +123,7 @@
           </div>
 
           <div
-            class="
-              h-full
-              p-2
-              bg-white
-              border
-              rounded-md
-              dark:bg-gray-850 dark:border-gray-800
-            "
+            class="h-full p-2 bg-white border rounded-md dark:bg-gray-850 dark:border-gray-800"
           >
             <div class="grid grid-cols-2 gap-2">
               <FloatingLabelFloatInput
@@ -165,7 +151,7 @@
                 :value="additionalDiscounts"
                 :read-only="true"
                 :text-right="true"
-                @change="(amount:Money)=> additionalDiscounts = amount"
+                @change="(amount: Money) => (additionalDiscounts = amount)"
               />
             </div>
 
@@ -299,14 +285,7 @@
       </div>
 
       <div
-        class="
-          bg-white
-          border
-          rounded-md
-          col-span-6
-          flex flex-col
-          dark:bg-gray-850 dark:border-gray-800
-        "
+        class="bg-white border rounded-md col-span-6 flex flex-col dark:bg-gray-850 dark:border-gray-800"
         style="height: calc(100vh - 6rem)"
       >
         <div class="rounded-md p-4 col-span-5">
@@ -326,7 +305,14 @@
               :border="true"
               :value="itemSearchTerm"
               :show-clear-button="true"
-              @keyup.enter="(event: KeyboardEvent) => emitEvent('handleItemSearch', (event.target as HTMLInputElement).value, true)"
+              @keyup.enter="
+                (event: KeyboardEvent) =>
+                  emitEvent(
+                    'handleItemSearch',
+                    (event.target as HTMLInputElement).value,
+                    true
+                  )
+              "
               @change="(item: string) => emitEvent('handleItemSearch', item)"
             />
 
@@ -341,7 +327,7 @@
               :border="true"
               :show-clear-button="true"
               :value="selectedItemGroup"
-              @change="(group: string) => emitEvent('setItemGroup',group)"
+              @change="(group: string) => emitEvent('setItemGroup', group)"
             />
           </div>
 
@@ -350,7 +336,7 @@
             :items="items"
             :item-qty-map="itemQuantityMap as ItemQtyMap"
             :item-visibility="itemVisibility"
-            @add-item="(item:string) => emitEvent('addItem', item)"
+            @add-item="(item: string) => emitEvent('addItem', item)"
           />
 
           <ModernPOSItemsGrid
@@ -358,7 +344,7 @@
             :items="items"
             :item-qty-map="itemQuantityMap as ItemQtyMap"
             :item-visibility="itemVisibility"
-            @add-item="(item:string) => emitEvent('addItem', item)"
+            @add-item="(item: string) => emitEvent('addItem', item)"
           />
 
           <div class="flex fixed bottom-0 p-1 ml-3 mb-7 gap-x-3">

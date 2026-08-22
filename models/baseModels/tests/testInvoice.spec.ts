@@ -54,11 +54,11 @@ test('create test docs', async (t) => {
   );
 
   for (const batch of Object.values(batchMap)) {
-    await fyo.doc.getNewDoc(ModelNameEnum.Batch, batch).sync(),
+    (await fyo.doc.getNewDoc(ModelNameEnum.Batch, batch).sync(),
       t.ok(
         fyo.db.exists(ModelNameEnum.Batch, batch.name),
         `batch ${batch.name} exists`
-      );
+      ));
   }
 });
 

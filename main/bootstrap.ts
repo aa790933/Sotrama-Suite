@@ -155,7 +155,7 @@ export class Main {
     };
 
     this.registerListeners();
-    if (this.isMac && this.isDevelopment) {
+    if (this.isMac && this.isDevelopment && app.dock) {
       app.dock.setIcon(this.icon);
     }
   }

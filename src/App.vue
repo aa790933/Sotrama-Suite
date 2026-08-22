@@ -1,14 +1,7 @@
 <template>
   <div
     id="app"
-    class="
-      dark:bg-gray-900
-      h-screen
-      flex flex-col
-      font-sans
-      overflow-hidden
-      antialiased
-    "
+    class="dark:bg-gray-900 h-screen flex flex-col font-sans overflow-hidden antialiased"
     :dir="languageDirection"
     :language="language"
   >
@@ -184,8 +177,7 @@ export default defineComponent({
     },
     newDatabase() {
       const hasHost = fyo.config.get('lastSelectedFilePath', null) as
-        | string
-        | null;
+        string | null;
       this.activeScreen = hasHost ? Screen.SetupWizard : Screen.HostSetup;
     },
     hostReady(configJson: string): void {

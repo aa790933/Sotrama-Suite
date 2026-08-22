@@ -3,13 +3,7 @@
     <FormHeader :form-title="t`Shortcuts`" />
     <hr class="dark:border-gray-800" />
     <div
-      class="
-        h-96
-        overflow-y-auto
-        custom-scroll custom-scroll-thumb2
-        text-gray-900
-        dark:text-gray-100
-      "
+      class="h-96 overflow-y-auto custom-scroll custom-scroll-thumb2 text-gray-900 dark:text-gray-100"
     >
       <template v-for="g in groups" :key="g.label">
         <div class="p-4 w-full">

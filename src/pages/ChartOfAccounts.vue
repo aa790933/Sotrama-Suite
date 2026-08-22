@@ -10,30 +10,13 @@
     <!-- Chart of Accounts -->
     <div
       v-if="root"
-      class="
-        flex-1 flex flex-col
-        overflow-y-auto
-        mb-4
-        custom-scroll custom-scroll-thumb1
-      "
+      class="flex-1 flex flex-col overflow-y-auto mb-4 custom-scroll custom-scroll-thumb1"
     >
       <!-- Chart of Accounts Indented List -->
       <template v-for="account in allAccounts" :key="account.name">
         <!-- Account List Item -->
         <div
-          class="
-            py-2
-            cursor-pointer
-            hover:bg-gray-50
-            dark:hover:bg-gray-890 dark:text-gray-25
-            group
-            flex
-            items-center
-            border-b
-            dark:border-gray-800
-            flex-shrink-0
-            pe-4
-          "
+          class="py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-890 dark:text-gray-25 group flex items-center border-b dark:border-gray-800 flex-shrink-0 pe-4"
           :class="[
             account.level !== 0 ? 'text-base' : 'text-lg',
             isQuickEditOpen(account) ? 'bg-gray-200 dark:bg-gray-900' : '',
@@ -54,40 +37,20 @@
             <div class="ms-6 hidden group-hover:block">
               <button
                 v-if="account.isGroup"
-                class="
-                  text-xs text-gray-800
-                  dark:text-gray-400
-                  hover:text-gray-900
-                  dark:hover:text-gray-100
-                  focus:outline-none
-                "
+                class="text-xs text-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none"
                 @click.stop="addAccount(account, 'addingAccount')"
               >
                 {{ t`Add Account` }}
               </button>
               <button
                 v-if="account.isGroup"
-                class="
-                  ms-3
-                  text-xs text-gray-800
-                  dark:text-gray-400
-                  hover:text-gray-900
-                  dark:hover:text-gray-100
-                  focus:outline-none
-                "
+                class="ms-3 text-xs text-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none"
                 @click.stop="addAccount(account, 'addingGroupAccount')"
               >
                 {{ t`Add Group` }}
               </button>
               <button
-                class="
-                  ms-3
-                  text-xs text-gray-800
-                  dark:text-gray-400
-                  hover:text-gray-900
-                  dark:hover:text-gray-100
-                  focus:outline-none
-                "
+                class="ms-3 text-xs text-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none"
                 @click.stop="deleteAccount(account)"
               >
                 {{ account.isGroup ? t`Delete Group` : t`Delete Account` }}
@@ -108,18 +71,7 @@
         <div
           v-if="account.addingAccount || account.addingGroupAccount"
           :key="account.name + '-adding-account'"
-          class="
-            px-4
-            border-b
-            dark:border-gray-800
-            cursor-pointer
-            hover:bg-gray-50
-            dark:hover:bg-gray-890
-            group
-            flex
-            items-center
-            text-base
-          "
+          class="px-4 border-b dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-890 group flex items-center text-base"
           :style="getGroupStyle(account.level + 1)"
         >
           <component :is="getIconComponent(account.addingGroupAccount)" />
@@ -127,11 +79,7 @@
             <input
               :ref="account.name"
               v-model="newAccountName"
-              class="
-                focus:outline-none
-                bg-transparent
-                dark:placeholder-gray-600 dark:text-gray-400
-              "
+              class="focus:outline-none bg-transparent dark:placeholder-gray-600 dark:text-gray-400"
               :class="{ 'text-gray-600 dark:text-gray-400': insertingAccount }"
               :placeholder="t`New Account`"
               type="text"
@@ -143,14 +91,7 @@
             />
             <button
               v-if="!insertingAccount"
-              class="
-                ms-4
-                text-xs text-gray-800
-                dark:text-gray-400
-                hover:text-gray-900
-                dark:hover:text-gray-100
-                focus:outline-none
-              "
+              class="ms-4 text-xs text-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none"
               @click="
                 (e) => createNewAccount(account, account.addingGroupAccount)
               "
@@ -159,14 +100,7 @@
             </button>
             <button
               v-if="!insertingAccount"
-              class="
-                ms-4
-                text-xs text-gray-800
-                dark:text-gray-400
-                hover:text-gray-900
-                dark:hover:text-gray-100
-                focus:outline-none
-              "
+              class="ms-4 text-xs text-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none"
               @click="cancelAddingAccount(account)"
             >
               {{ t`Cancel` }}

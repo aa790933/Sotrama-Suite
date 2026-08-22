@@ -41,7 +41,7 @@ export default class SystemSettings extends Doc {
             ({
               value: countryInfo[c]?.locale,
               label: `${c} (${countryInfo[c]?.locale ?? t`Not Found`})`,
-            } as SelectOption)
+            }) as SelectOption
         );
     },
     currency() {

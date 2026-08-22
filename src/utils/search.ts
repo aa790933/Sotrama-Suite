@@ -104,7 +104,7 @@ function getCreateList(fyo: Fyo): SearchItem[] {
         group: 'Create',
         action: getCreateAction(fyo, schemaName),
         schemaName,
-      } as SearchItem)
+      }) as SearchItem
   );
 
   const filteredCreateList = [
@@ -239,7 +239,7 @@ function getListViewList(fyo: Fyo): SearchItem[] {
           label: s!.label,
           route: `/list/${s!.name}`,
           group: 'List',
-        } as SearchItem)
+        }) as SearchItem
     );
 
   const filteredLists = [

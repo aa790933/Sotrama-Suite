@@ -7,14 +7,7 @@
     <template #body>
       <FormHeader
         :form-title="t`Set up your organization`"
-        class="
-          sticky
-          top-0
-          bg-white
-          dark:bg-gray-890
-          border-b
-          dark:border-gray-800
-        "
+        class="sticky top-0 bg-white dark:bg-gray-890 border-b dark:border-gray-800"
       >
       </FormHeader>
 
@@ -45,20 +38,7 @@
 
       <!-- Buttons Bar -->
       <div
-        class="
-          mt-auto
-          p-4
-          flex
-          items-center
-          justify-between
-          border-t
-          dark:border-gray-800
-          flex-shrink-0
-          sticky
-          bottom-0
-          bg-white
-          dark:bg-gray-890
-        "
+        class="mt-auto p-4 flex items-center justify-between border-t dark:border-gray-800 flex-shrink-0 sticky bottom-0 bg-white dark:bg-gray-890"
       >
         <p v-if="loading" class="text-base text-gray-600 dark:text-gray-400">
           {{ t`Loading instance...` }}

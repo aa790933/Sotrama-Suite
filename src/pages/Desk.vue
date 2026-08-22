@@ -8,26 +8,14 @@ import { toggleSidebar } from 'src/utils/ui';
       <!-- eslint-disable vue/require-explicit-emits -->
       <Sidebar
         v-show="showSidebar"
-        class="
-          flex-shrink-0
-          border-e
-          dark:border-gray-800
-          whitespace-nowrap
-          w-sidebar
-        "
+        class="flex-shrink-0 border-e dark:border-gray-800 whitespace-nowrap w-sidebar"
         :dark-mode="darkMode"
         @change-db-file="$emit('change-db-file')"
       />
     </Transition>
 
     <div
-      class="
-        flex flex-1
-        overflow-y-hidden
-        custom-scroll custom-scroll-thumb1
-        bg-white
-        dark:bg-gray-875
-      "
+      class="flex flex-1 overflow-y-hidden custom-scroll custom-scroll-thumb1 bg-white dark:bg-gray-875"
     >
       <router-view v-slot="{ Component }">
         <keep-alive>
@@ -56,21 +44,7 @@ import { toggleSidebar } from 'src/utils/ui';
     <!-- Show Sidebar Button -->
     <button
       v-show="!showSidebar"
-      class="
-        absolute
-        bottom-0
-        start-0
-        text-gray-600
-        dark:text-gray-400
-        hover:bg-gray-100
-        dark:hover:bg-gray-900
-        rounded
-        rtl-rotate-180
-        p-1
-        m-4
-        opacity-0
-        hover:opacity-100 hover:shadow-md
-      "
+      class="absolute bottom-0 start-0 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded rtl-rotate-180 p-1 m-4 opacity-0 hover:opacity-100 hover:shadow-md"
       @click="() => toggleSidebar()"
     >
       <feather-icon name="chevrons-right" class="w-4 h-4" />

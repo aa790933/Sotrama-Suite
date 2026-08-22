@@ -14,16 +14,7 @@
         <feather-icon
           v-if="!readOnly && !isRowIndexVisible"
           name="x"
-          class="
-            w-4
-            h-4
-            -ms-1
-            cursor-pointer
-            rounded
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-50
-            dark:focus:bg-gray-800
-            transition
-          "
+          class="w-4 h-4 -ms-1 cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-50 dark:focus:bg-gray-800 transition"
           :button="true"
           tabindex="0"
           role="button"
@@ -33,19 +24,7 @@
         />
         <span
           v-if="!readOnly && isRowIndexVisible"
-          class="
-            absolute
-            left-0
-            top-0
-            w-full
-            h-full
-            flex
-            items-center
-            justify-center
-            focus:outline-none
-            focus-visible:ring-2 focus-visible:ring-blue-500
-            rounded
-          "
+          class="absolute left-0 top-0 w-full h-full flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
           tabindex="0"
           role="button"
           aria-label="Delete row"

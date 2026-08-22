@@ -2,15 +2,7 @@
   <div :class="level > 0 ? 'ms-2 ps-2 border-l dark:border-gray-800' : ''">
     <template v-for="r of rows" :key="r.key">
       <div
-        class="
-          flex
-          gap-2
-          text-sm text-gray-600
-          dark:text-gray-400
-          whitespace-nowrap
-          overflow-auto
-          no-scrollbar
-        "
+        class="flex gap-2 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap overflow-auto no-scrollbar"
         :class="[typeof r.value === 'object' ? 'cursor-pointer' : '']"
         @click="r.collapsed = !r.collapsed"
       >
@@ -23,37 +15,13 @@
         </div>
         <div
           v-else-if="Array.isArray(r.value)"
-          class="
-            text-blue-600
-            dark:text-blue-100
-            bg-blue-100
-            dark:bg-blue-600
-            border-white
-            dark:border-blue-600
-            border
-            tracking-tighter
-            rounded
-            text-xs
-            px-1
-          "
+          class="text-blue-600 dark:text-blue-100 bg-blue-100 dark:bg-blue-600 border-white dark:border-blue-600 border tracking-tighter rounded text-xs px-1"
         >
           Array
         </div>
         <div
           v-else
-          class="
-            text-pink-600
-            dark:text-pink-100
-            bg-pink-100
-            dark:bg-pink-600
-            border-white
-            dark:border-pink-600
-            border
-            tracking-tighter
-            rounded
-            text-xs
-            px-1
-          "
+          class="text-pink-600 dark:text-pink-100 bg-pink-100 dark:bg-pink-600 border-white dark:border-pink-600 border tracking-tighter rounded text-xs px-1"
         >
           Object
         </div>

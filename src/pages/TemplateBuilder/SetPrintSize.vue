@@ -51,7 +51,7 @@ import FormHeader from 'src/components/FormHeader.vue';
 import { paperSizeMap, printSizes } from 'src/utils/ui';
 import { defineComponent } from 'vue';
 
-type SizeName = typeof printSizes[number];
+type SizeName = (typeof printSizes)[number];
 export default defineComponent({
   components: { Float, FormHeader, Select, Button },
   props: { doc: { type: PrintTemplate, required: true } },

@@ -48,17 +48,7 @@
     <div class="flex text-base w-full flex-col">
       <!-- Select Import Type -->
       <div
-        class="
-          h-row-largest
-          flex flex-row
-          justify-start
-          items-center
-          w-full
-          gap-2
-          border-b
-          dark:border-gray-800
-          p-4
-        "
+        class="h-row-largest flex flex-row justify-start items-center w-full gap-2 border-b dark:border-gray-800 p-4"
       >
         <AutoComplete
           :df="{
@@ -115,18 +105,7 @@
       >
         <!-- Column Assignment Row -->
         <div
-          class="
-            grid
-            sticky
-            top-0
-            py-4
-            pe-4
-            bg-white
-            dark:bg-gray-875
-            border-b border-e
-            dark:border-gray-800
-            gap-4
-          "
+          class="grid sticky top-0 py-4 pe-4 bg-white dark:bg-gray-875 border-b border-e dark:border-gray-800 gap-4"
           style="z-index: 1; width: fit-content"
           :style="gridTemplateColumn"
         >
@@ -139,24 +118,16 @@
             :border="true"
             :df="gridColumnTitleDf"
             :value="importer.assignedTemplateFields[index]!"
-            @change="(value: string | null) => importer.setTemplateField(index, value)"
+            @change="
+              (value: string | null) => importer.setTemplateField(index, value)
+            "
           />
         </div>
 
         <!-- Values Grid -->
         <div
           v-if="importer.valueMatrix.length"
-          class="
-            grid
-            py-4
-            pe-4
-            bg-white
-            dark:bg-gray-875
-            gap-4
-            border-e
-            last:border-b
-            dark:border-gray-800
-          "
+          class="grid py-4 pe-4 bg-white dark:bg-gray-875 gap-4 border-e last:border-b dark:border-gray-800"
           style="width: fit-content"
           :style="gridTemplateColumn"
         >
@@ -196,8 +167,8 @@
                   val.value != null
                     ? String(val.value)
                     : val.rawValue != null
-                    ? String(val.rawValue)
-                    : ''
+                      ? String(val.rawValue)
+                      : ''
                 "
                 :read-only="true"
               />
@@ -212,19 +183,21 @@
                 "
                 :title="getFieldTitle(val)"
                 :df="
-                    importer.templateFieldsMap.get(
-                      importer.assignedTemplateFields[cidx]!
-                    )
-                  "
+                  importer.templateFieldsMap.get(
+                    importer.assignedTemplateFields[cidx]!
+                  )
+                "
                 size="small"
                 :rows="1"
                 :border="true"
                 :value="val.error ? null : val.value"
                 :read-only="false"
-                @change="(value: DocValue)=> {
-                    importer.valueMatrix[ridx][cidx]!.error = false
-                    importer.valueMatrix[ridx][cidx]!.value = value
-                  }"
+                @change="
+                  (value: DocValue) => {
+                    importer.valueMatrix[ridx][cidx]!.error = false;
+                    importer.valueMatrix[ridx][cidx]!.value = value;
+                  }
+                "
               />
             </template>
           </template>
@@ -232,15 +205,7 @@
 
         <div
           v-else
-          class="
-            ps-4
-            text-gray-700
-            dark:text-gray-300
-            sticky
-            left-0
-            flex
-            items-center
-          "
+          class="ps-4 text-gray-700 dark:text-gray-300 sticky left-0 flex items-center"
           style="height: 62.5px"
         >
           {{ t`No rows added. Select a file or add rows.` }}
@@ -292,7 +257,7 @@
                 :show-label="true"
                 :read-only="tf.required"
                 :value="importer.templateFieldsPicked.get(tf.fieldKey)"
-                @change="(value:boolean) => pickColumn(tf.fieldKey, value)"
+                @change="(value: boolean) => pickColumn(tf.fieldKey, value)"
               />
               <p v-if="tf.required" class="w-0 text-red-600 -ml-4">*</p>
             </div>

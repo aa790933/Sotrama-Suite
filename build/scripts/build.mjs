@@ -141,9 +141,8 @@ function copyPackageJson() {
  * are passed on as builderArgs.
  */
 async function packageApp() {
-  const { configureBuildCommand } = await await import(
-    'electron-builder/out/builder.js'
-  );
+  const { configureBuildCommand } =
+    await await import('electron-builder/out/builder.js');
 
   const builderArgs = rawArgs
     .command(['build', '*'], 'Build', configureBuildCommand)

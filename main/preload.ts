@@ -215,8 +215,7 @@ const ipc = {
 
   registerMariaDBProgressListener(
     channel:
-      | IPC_ACTIONS.INSTALL_MARIA_DB
-      | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+      IPC_ACTIONS.INSTALL_MARIA_DB | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
     listener: IPCRendererListener
   ) {
     ipcRenderer.on(channel, listener);
@@ -224,8 +223,7 @@ const ipc = {
 
   removeMariaDBProgressListener(
     channel:
-      | IPC_ACTIONS.INSTALL_MARIA_DB
-      | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+      IPC_ACTIONS.INSTALL_MARIA_DB | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
     listener?: IPCRendererListener
   ) {
     if (listener) {

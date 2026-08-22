@@ -1,15 +1,6 @@
 <template>
   <div
-    class="
-      flex
-      items-center
-      bg-gray-50
-      dark:bg-gray-890 dark:border-gray-800
-      rounded-md
-      text-sm
-      p-1
-      border
-    "
+    class="flex items-center bg-gray-50 dark:bg-gray-890 dark:border-gray-800 rounded-md text-sm p-1 border"
   >
     <div
       class="rate-container gap-2"
@@ -20,16 +11,7 @@
       "
     >
       <input
-        class="
-          text-right
-          dark:text-gray-400
-          border-transparent
-          focus:border-gray-500 focus:outline-none
-          dark:focus:ring-1
-          focus:ring-gray-600
-          bg-gray-50
-          border
-        "
+        class="text-right dark:text-gray-400 border-transparent focus:border-gray-500 focus:outline-none dark:focus:ring-1 focus:ring-gray-600 bg-gray-50 border"
         v-model="fromValue"
         type="number"
         :disabled="disabled"
@@ -50,16 +32,7 @@
       "
     >
       <input
-        class="
-          text-right
-          dark:text-gray-400
-          border-transparent
-          focus:border-gray-500 focus:outline-none
-          dark:focus:ring-1
-          focus:ring-gray-600
-          bg-gray-50
-          border
-        "
+        class="text-right dark:text-gray-400 border-transparent focus:border-gray-500 focus:outline-none dark:focus:ring-1 focus:ring-gray-600 bg-gray-50 border"
         type="number"
         :value="isSwapped ? fromValue / exchangeRate : exchangeRate * fromValue"
         :disabled="disabled"
@@ -71,16 +44,7 @@
 
     <button
       v-if="!disabled"
-      class="
-        bg-green-100
-        dark:bg-green-600
-        px-2
-        ms-1
-        -me-0.5
-        h-full
-        border-s
-        dark:border-gray-800
-      "
+      class="bg-green-100 dark:bg-green-600 px-2 ms-1 -me-0.5 h-full border-s dark:border-gray-800"
       @click="swap"
     >
       <feather-icon

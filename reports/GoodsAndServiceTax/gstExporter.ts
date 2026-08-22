@@ -384,8 +384,8 @@ function generateB2csData(report: BaseGSTR): B2CSInvRecord[] {
       txval: row.taxVal,
       rt: row.rate,
       iamt: !row.inState ? (row.taxVal * row.rate) / 100 : 0,
-      camt: row.inState ? row.cgstAmt ?? 0 : 0,
-      samt: row.inState ? row.sgstAmt ?? 0 : 0,
+      camt: row.inState ? (row.cgstAmt ?? 0) : 0,
+      samt: row.inState ? (row.sgstAmt ?? 0) : 0,
       csamt: 0,
     };
 

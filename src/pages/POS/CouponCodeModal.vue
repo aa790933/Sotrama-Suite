@@ -12,21 +12,11 @@
         :style="{ height: appliedCoupons.length >= 2 ? '11vh' : '8vh' }"
       >
         <Row
-          v-for="(coupon,index) in appliedCoupons as AppliedCouponCodes[]"
+          v-for="(coupon, index) in appliedCoupons as AppliedCouponCodes[]"
           :key="index"
           :ratio="ratio"
           :border="true"
-          class="
-            border-b border-l border-r
-            dark:border-gray-800
-            relative
-            group
-            h-coupon-mid
-            hover:bg-gray-25
-            dark:bg-gray-890
-            items-center
-            justify-center
-          "
+          class="border-b border-l border-r dark:border-gray-800 relative group h-coupon-mid hover:bg-gray-25 dark:bg-gray-890 items-center justify-center"
         >
           <div class="flex flex-row w-full items-center">
             <div class="flex flex-row">

@@ -7,7 +7,9 @@
         :border="true"
         :text-right="true"
         :value="paidAmount"
-        @change="(amount:Money)=>  $emit('setPaidAmount', (amount as Money).float)"
+        @change="
+          (amount: Money) => $emit('setPaidAmount', (amount as Money).float)
+        "
       />
       <div class="grid grid-cols-2 gap-6">
         <Button
@@ -33,7 +35,7 @@
           :required="!transferAmount.isZero()"
           :read-only="false"
           :value="transferRefNo"
-          @change="(value:string) => $emit('setTransferRefNo', value)"
+          @change="(value: string) => $emit('setTransferRefNo', value)"
         />
 
         <Date
@@ -44,7 +46,7 @@
           :required="!transferAmount.isZero()"
           :read-only="false"
           :value="transferClearanceDate"
-          @change="(value:Date) => $emit('setTransferClearanceDate', value)"
+          @change="(value: Date) => $emit('setTransferClearanceDate', value)"
         />
       </div>
 

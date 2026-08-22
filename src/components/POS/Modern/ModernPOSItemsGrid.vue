@@ -1,40 +1,14 @@
 <template>
   <div
-    class="
-      flex flex-col
-      items-center
-      gap-4
-      my-3
-      px-4
-      py-2
-      rounded-t-md
-      text-black
-      w-full
-      overflow-y-auto
-      custom-scroll custom-scroll-thumb2
-    "
+    class="flex flex-col items-center gap-4 my-3 px-4 py-2 rounded-t-md text-black w-full overflow-y-auto custom-scroll custom-scroll-thumb2"
     style="height: 80vh"
   >
     <!-- Items Grid -->
     <div
-      class="
-        gap-2
-        w-full
-        grid grid-cols-1
-        sm:grid-cols-2
-        md:grid-cols-4
-        lg:grid-cols-6
-        xl:grid-cols-7'
-      "
+      class="gap-2 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7'"
     >
       <div
-        class="
-          pb-3
-          border border-gray-300
-          dark:border-gray-800
-          flex flex-col
-          text-sm text-center
-        "
+        class="pb-3 border border-gray-300 dark:border-gray-800 flex flex-col text-sm text-center"
         @click="handleChange(item as POSItem)"
         v-for="item in items as POSItem[]"
         :key="item.name"
@@ -50,16 +24,7 @@
 
             <div
               v-else
-              class="
-                rounded-lg
-                bg-gray-100
-                w-full
-                h-full
-                flex
-                justify-center
-                items-center
-                dark:bg-gray-850
-              "
+              class="rounded-lg bg-gray-100 w-full h-full flex justify-center items-center dark:bg-gray-850"
             >
               <p class="text-4xl font-semibold text-gray-400 select-none">
                 {{ getExtractedWords(item.name) }}
@@ -67,17 +32,7 @@
             </div>
             <p
               v-if="itemVisibility !== 'ERP Sync Items'"
-              class="
-                w-6
-                h-6
-                top-1
-                right-1
-                absolute
-                rounded-full
-                flex
-                justify-center
-                items-center
-              "
+              class="w-6 h-6 top-1 right-1 absolute rounded-full flex justify-center items-center"
               :class="
                 item.availableQty > 0
                   ? 'bg-green-100 text-green-900'

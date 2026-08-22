@@ -1,44 +1,18 @@
 <template>
   <div
-    class="
-      flex-1 flex
-      justify-center
-      items-center
-      bg-gray-50
-      dark:bg-gray-900
-      min-h-screen
-      p-4
-    "
+    class="flex-1 flex justify-center items-center bg-gray-50 dark:bg-gray-900 min-h-screen p-4"
     :class="{
       'pointer-events-none': loadingDatabase,
       'window-drag': platform !== 'Windows',
     }"
   >
     <div
-      class="
-        w-full
-        max-w-xl max-h-[90vh]
-        shadow-xl
-        rounded-xl
-        border border-gray-200
-        dark:border-gray-800
-        relative
-        bg-white
-        dark:bg-gray-850
-        flex flex-col
-        overflow-hidden
-      "
+      class="w-full max-w-xl max-h-[90vh] shadow-xl rounded-xl border border-gray-200 dark:border-gray-800 relative bg-white dark:bg-gray-850 flex flex-col overflow-hidden"
     >
       <!-- Header Section -->
       <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
         <h1
-          class="
-            text-2xl
-            font-bold
-            select-none
-            text-gray-900
-            dark:text-gray-100
-          "
+          class="text-2xl font-bold select-none text-gray-900 dark:text-gray-100"
         >
           {{ t`Welcome to Sotrama Suite` }}
         </h1>
@@ -52,15 +26,7 @@
         <!-- New Company (Blue Icon) -->
         <div
           data-testid="create-new-file"
-          class="
-            px-4
-            py-3
-            rounded-lg
-            flex flex-row
-            items-center
-            gap-4
-            transition-colors
-          "
+          class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
           :class="
             creatingDemo
               ? 'opacity-50 cursor-not-allowed'
@@ -69,16 +35,7 @@
           @click="newDatabase"
         >
           <div
-            class="
-              w-9
-              h-9
-              rounded-full
-              bg-blue-500
-              flex
-              items-center
-              justify-center
-              flex-shrink-0
-            "
+            class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0"
           >
             <feather-icon name="plus" class="text-white w-5 h-5" />
           </div>
@@ -96,15 +53,7 @@
         <!-- Create Demo (Pink Icon - Top Action if no files) -->
         <div
           v-if="!files?.length"
-          class="
-            px-4
-            py-3
-            rounded-lg
-            flex flex-row
-            items-center
-            gap-4
-            transition-colors
-          "
+          class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
           :class="
             creatingDemo
               ? 'opacity-50 cursor-not-allowed'
@@ -113,17 +62,7 @@
           @click="createDemo"
         >
           <div
-            class="
-              w-9
-              h-9
-              rounded-full
-              bg-pink-500
-              dark:bg-pink-600
-              flex
-              items-center
-              justify-center
-              flex-shrink-0
-            "
+            class="w-9 h-9 rounded-full bg-pink-500 dark:bg-pink-600 flex items-center justify-center flex-shrink-0"
           >
             <feather-icon name="monitor" class="w-4 h-4 text-white" />
           </div>
@@ -142,28 +81,12 @@
 
       <!-- Database File List -->
       <div
-        class="
-          flex-1
-          overflow-y-auto
-          p-2
-          space-y-1
-          divide-y divide-gray-100
-          dark:divide-gray-800/50
-        "
+        class="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-gray-100 dark:divide-gray-800/50"
       >
         <div
           v-for="(file, i) in files"
           :key="file.dbPath"
-          class="
-            px-4
-            py-3
-            rounded-lg
-            flex
-            gap-4
-            items-center
-            transition-colors
-            group
-          "
+          class="px-4 py-3 rounded-lg flex gap-4 items-center transition-colors group"
           :class="
             creatingDemo
               ? 'opacity-50 cursor-not-allowed'
@@ -173,33 +96,14 @@
           @click="selectFile(file)"
         >
           <div
-            class="
-              w-8
-              h-8
-              rounded-full
-              flex
-              justify-center
-              items-center
-              bg-gray-200
-              dark:bg-gray-700
-              text-gray-700
-              dark:text-gray-300
-              font-semibold
-              flex-shrink-0
-              text-xs
-            "
+            class="w-8 h-8 rounded-full flex justify-center items-center bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold flex-shrink-0 text-xs"
           >
             {{ i + 1 }}
           </div>
           <div class="w-full min-w-0">
             <div class="flex justify-between items-baseline gap-2">
               <h2
-                class="
-                  font-medium
-                  text-sm text-gray-900
-                  dark:text-gray-100
-                  truncate
-                "
+                class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate"
               >
                 {{ file.companyName }}
               </h2>
@@ -210,31 +114,14 @@
               </span>
             </div>
             <p
-              class="
-                text-xs text-gray-500
-                dark:text-gray-400
-                truncate
-                mt-0.5
-                font-mono
-              "
+              class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 font-mono"
             >
               {{ truncate(file.dbPath) }}
             </p>
           </div>
           <button
             type="button"
-            class="
-              p-1.5
-              opacity-0
-              group-hover:opacity-100
-              hover:bg-red-100
-              dark:hover:bg-red-900/40
-              rounded-full
-              text-gray-400
-              hover:text-red-600
-              dark:hover:text-red-300
-              transition-all
-            "
+            class="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-full text-gray-400 hover:text-red-600 dark:hover:text-red-300 transition-all"
             :title="t`Remove from list`"
             @click.stop="deleteDb(i)"
           >
@@ -247,37 +134,13 @@
 
       <!-- Footer Bar -->
       <div
-        class="
-          px-6
-          py-4
-          bg-gray-50
-          dark:bg-gray-850
-          flex
-          justify-between
-          items-center
-        "
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-850 flex justify-between items-center"
       >
         <LanguageSelector v-show="!creatingDemo" class="text-sm w-32" />
         <button
           v-if="files?.length"
           type="button"
-          class="
-            text-xs
-            font-medium
-            bg-white
-            dark:bg-gray-800
-            hover:bg-gray-100
-            dark:hover:bg-gray-700
-            text-gray-700
-            dark:text-gray-200
-            border border-gray-300
-            dark:border-gray-700
-            rounded-lg
-            px-3.5
-            py-2
-            transition-all
-            disabled:opacity-50
-          "
+          class="text-xs font-medium bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg px-3.5 py-2 transition-all disabled:opacity-50"
           :disabled="creatingDemo"
           @click="createDemo"
         >
@@ -317,19 +180,7 @@
             v-model.number="baseCount"
             type="number"
             min="1"
-            class="
-              bg-gray-100
-              dark:bg-gray-800
-              border border-gray-300
-              dark:border-gray-700
-              rounded-lg
-              px-3
-              py-1.5
-              text-sm
-              w-28
-              focus:ring-2 focus:ring-blue-500
-              outline-none
-            "
+            class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm w-28 focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
         <div class="flex justify-end gap-3">
@@ -438,7 +289,7 @@ export default defineComponent({
       if (!isoDate) return '';
       try {
         const dt = DateTime.fromISO(isoDate);
-        return dt.isValid ? dt.toRelative() ?? '' : '';
+        return dt.isValid ? (dt.toRelative() ?? '') : '';
       } catch {
         return '';
       }
@@ -482,8 +333,7 @@ export default defineComponent({
 
     async startDummyInstanceSetup() {
       const persisted = fyo?.config?.get('lastSelectedFilePath', null) as
-        | string
-        | null;
+        string | null;
       if (!persisted) {
         this.$emit('new-database');
         return;

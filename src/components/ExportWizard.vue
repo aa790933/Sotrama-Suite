@@ -70,7 +70,9 @@
             :df="getField(ef)"
             :show-label="true"
             :value="ef.export"
-            @change="(value: boolean) => setExportFieldValue(ef, value, efs.target)"
+            @change="
+              (value: boolean) => setExportFieldValue(ef, value, efs.target)
+            "
           />
         </div>
       </div>

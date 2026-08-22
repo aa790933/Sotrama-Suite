@@ -235,7 +235,7 @@ test('Shipment, cancel and delete', async (t) => {
   const doc = await fyo.doc.getDoc(ModelNameEnum.Shipment, name);
   t.ok(doc.isSubmitted, `doc ${name} is submitted`);
   await assertDoesNotThrow(async () => await doc.cancel());
-  t.ok(doc.isCancelled), `doc is cancelled`;
+  (t.ok(doc.isCancelled), `doc is cancelled`);
 
   t.equal(await fyo.db.getStockQuantity(item, location), 10, 'stock changed');
   t.equal((await getSLEs(name, doc.schemaName, fyo)).length, 0, 'sle deleted');
@@ -269,7 +269,7 @@ test('Purchase Receipt, cancel and delete', async (t) => {
   const doc = await fyo.doc.getDoc(ModelNameEnum.PurchaseReceipt, name);
   t.ok(doc.isSubmitted, `doc ${name} is submitted`);
   await assertDoesNotThrow(async () => await doc.cancel());
-  t.ok(doc.isCancelled), `doc is cancelled`;
+  (t.ok(doc.isCancelled), `doc is cancelled`);
 
   t.equal(await fyo.db.getStockQuantity(item, location), null, 'stock changed');
   t.equal((await getSLEs(name, doc.schemaName, fyo)).length, 0, 'sle deleted');

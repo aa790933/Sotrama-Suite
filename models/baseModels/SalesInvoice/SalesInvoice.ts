@@ -138,12 +138,15 @@ export class SalesInvoice extends Invoice {
         } else {
           baseGrandTotal = ((this.taxes ?? []) as Doc[])
             .map((doc) => doc.amount as Money)
-            .reduce((a, b) => {
-              if (this.isReturn) {
-                return a.abs().add(b.abs()).neg();
-              }
-              return a.add(b.abs());
-            }, (this.netTotal as Money).abs())
+            .reduce(
+              (a, b) => {
+                if (this.isReturn) {
+                  return a.abs().add(b.abs()).neg();
+                }
+                return a.add(b.abs());
+              },
+              (this.netTotal as Money).abs()
+            )
             .sub(totalDiscount);
         }
 

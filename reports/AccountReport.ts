@@ -83,7 +83,7 @@ export abstract class AccountReport extends LedgerReport {
             rawValue: '',
             width: c.width,
             align: 'left',
-          } as ReportCell)
+          }) as ReportCell
       ),
     };
   }

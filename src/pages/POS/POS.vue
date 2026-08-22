@@ -16,7 +16,7 @@
         (!posProfile?.posUI && fyo.singles.POSSettings?.posUI === 'Classic')
       "
       :table-view="tableView"
-      :profile="(posProfile as POSProfile)"
+      :profile="posProfile as POSProfile"
       :total-quantity="totalQuantity"
       :item-quantity-qap="itemQtyMap"
       :loyalty-points="loyaltyPoints"
@@ -26,13 +26,13 @@
       :item-search-term="itemSearchTerm"
       :selected-item-group="selectedItemGroup"
       :is-pos-shift-open="isPosShiftOpen"
-      :items="(items as [] as POSItem[])"
+      :items="items as [] as POSItem[]"
       :item-visibility="itemVisibility"
-      :sinv-doc="(sinvDoc as SalesInvoice)"
+      :sinv-doc="sinvDoc as SalesInvoice"
       :disable-pay-button="disablePayButton"
       :open-payment-modal="openPaymentModal"
-      :item-discounts="(itemDiscounts as Money)"
-      :coupons="(coupons as AppliedCouponCodes)"
+      :item-discounts="itemDiscounts as Money"
+      :coupons="coupons as AppliedCouponCodes"
       :open-price-list-modal="openPriceListModal"
       :open-item-enquiry-modal="openItemEnquiryModal"
       :applied-coupons-count="appliedCouponsCount"
@@ -75,7 +75,7 @@
     <ModernPOS
       v-else
       :table-view="tableView"
-      :profile="(posProfile as POSProfile)"
+      :profile="posProfile as POSProfile"
       :total-quantity="totalQuantity"
       :item-quantity-qap="itemQtyMap"
       :loyalty-points="loyaltyPoints"
@@ -85,14 +85,14 @@
       :item-search-term="itemSearchTerm"
       :selected-item-group="selectedItemGroup"
       :is-pos-shift-open="isPosShiftOpen"
-      :items="(items as [] as POSItem[])"
+      :items="items as [] as POSItem[]"
       :item-visibility="itemVisibility"
-      :sinv-doc="(sinvDoc as SalesInvoice)"
+      :sinv-doc="sinvDoc as SalesInvoice"
       :disable-pay-button="disablePayButton"
       :open-payment-modal="openPaymentModal"
       :open-keyboard-modal="openKeyboardModal"
-      :item-discounts="(itemDiscounts as Money)"
-      :coupons="(coupons as AppliedCouponCodes)"
+      :item-discounts="itemDiscounts as Money"
+      :coupons="coupons as AppliedCouponCodes"
       :open-price-list-modal="openPriceListModal"
       :open-item-enquiry-modal="openItemEnquiryModal"
       :applied-coupons-count="appliedCouponsCount"
@@ -1219,9 +1219,8 @@ export default defineComponent({
       await this.paymentDoc.set('amount', this.fyo.pesa(this.paidAmount.float));
       await this.paymentDoc.set('referenceType', ModelNameEnum.SalesInvoice);
 
-      const paymentMethodDoc = await this.paymentDoc.loadAndGetLink(
-        'paymentMethod'
-      );
+      const paymentMethodDoc =
+        await this.paymentDoc.loadAndGetLink('paymentMethod');
 
       if (paymentMethodDoc?.type !== 'Cash') {
         await this.paymentDoc.setMultiple({

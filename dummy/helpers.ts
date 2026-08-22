@@ -15,12 +15,15 @@ export const partyPurchaseItemMap: Record<string, string[]> = {
 
 export const purchaseItemPartyMap: Record<string, string> = Object.keys(
   partyPurchaseItemMap
-).reduce((acc, party) => {
-  for (const item of partyPurchaseItemMap[party]) {
-    acc[item] = party;
-  }
-  return acc;
-}, {} as Record<string, string>);
+).reduce(
+  (acc, party) => {
+    for (const item of partyPurchaseItemMap[party]) {
+      acc[item] = party;
+    }
+    return acc;
+  },
+  {} as Record<string, string>
+);
 
 export const flow = [
   0.35, // Jan

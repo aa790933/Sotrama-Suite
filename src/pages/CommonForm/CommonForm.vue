@@ -4,10 +4,12 @@
       <Barcode
         v-if="canShowBarcode"
         class="h-8"
-        @item-selected="(name:string) => {
-          // @ts-ignore
-          doc?.addItem(name);
-        }"
+        @item-selected="
+          (name: string) => {
+            // @ts-ignore
+            doc?.addItem(name);
+          }
+        "
       />
       <ExchangeRate
         v-if="canShowExchangeRate"
@@ -76,14 +78,7 @@
     <template #body>
       <FormHeader
         :form-title="title"
-        class="
-          sticky
-          top-0
-          bg-white
-          dark:bg-gray-890
-          border-b
-          dark:border-gray-800
-        "
+        class="sticky top-0 bg-white dark:bg-gray-890 border-b dark:border-gray-800"
       >
         <StatusPill v-if="hasDoc" :doc="doc" />
       </FormHeader>
@@ -117,20 +112,7 @@
       <!-- Tab Bar -->
       <div
         v-if="groupedFields && groupedFields.size > 1"
-        class="
-          mt-auto
-          px-4
-          pb-4
-          flex
-          gap-8
-          border-t
-          dark:border-gray-800
-          flex-shrink-0
-          sticky
-          bottom-0
-          bg-white
-          dark:bg-gray-875
-        "
+        class="mt-auto px-4 pb-4 flex gap-8 border-t dark:border-gray-800 flex-shrink-0 sticky bottom-0 bg-white dark:bg-gray-875"
       >
         <div
           v-for="key of groupedFields.keys()"
@@ -164,8 +146,8 @@
           :doc="doc"
           :fieldname="row.fieldname"
           :index="row.index"
-          @previous="(i:number) => row!.index = i"
-          @next="(i:number) => row!.index = i"
+          @previous="(i: number) => (row!.index = i)"
+          @next="(i: number) => (row!.index = i)"
           @close="() => (row = null)"
         />
       </Transition>

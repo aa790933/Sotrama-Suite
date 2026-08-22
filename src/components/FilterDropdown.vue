@@ -37,20 +37,7 @@
                 class="flex items-center justify-between text-base gap-2"
               >
                 <div
-                  class="
-                    cursor-pointer
-                    w-4
-                    h-4
-                    flex
-                    items-center
-                    justify-center
-                    text-gray-600
-                    dark:text-gray-400
-                    hover:text-gray-800
-                    dark:hover:text-gray-300
-                    rounded-md
-                    group
-                  "
+                  class="cursor-pointer w-4 h-4 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 rounded-md group"
                 >
                   <span class="hidden group-hover:inline-block">
                     <feather-icon
@@ -129,19 +116,7 @@
         </div>
         <div class="flex justify-between border-t dark:border-gray-800">
           <div
-            class="
-              text-base
-              border-t
-              dark:border-gray-800
-              p-2
-              flex
-              items-center
-              text-gray-600
-              dark:text-gray-500
-              cursor-pointer
-              hover:bg-gray-100
-              dark:hover:bg-gray-875
-            "
+            class="text-base border-t dark:border-gray-800 p-2 flex items-center text-gray-600 dark:text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-875"
             @click.stop="addNewFilter"
           >
             <feather-icon name="plus" class="w-4 h-4" />
@@ -151,17 +126,7 @@
           <div class="flex">
             <div
               v-if="filters.length"
-              class="
-                text-base
-                p-2
-                flex
-                items-center
-                text-gray-600
-                dark:text-gray-500
-                cursor-pointer
-                hover:bg-gray-100
-                dark:hover:bg-gray-875
-              "
+              class="text-base p-2 flex items-center text-gray-600 dark:text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-875"
               @click="clearAllFilters"
             >
               <feather-icon name="trash-2" class="w-4 h-4" />
@@ -171,19 +136,7 @@
             <div
               v-if="filters.length"
               @click="applyFilters"
-              class="
-                text-base
-                border-t
-                dark:border-gray-800
-                p-2
-                flex
-                items-center
-                text-gray-600
-                dark:text-gray-500
-                cursor-pointer
-                hover:bg-gray-100
-                dark:hover:bg-gray-875
-              "
+              class="text-base border-t dark:border-gray-800 p-2 flex items-center text-gray-600 dark:text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-875"
             >
               <feather-icon name="search" class="w-4 h-4" />
               <span class="ml-2 text-sm">{{ t`Apply` }}</span>
@@ -218,7 +171,7 @@ const conditions = [
   { label: t`Is Not Empty`, value: 'is not null' },
 ] as const;
 
-type Condition = typeof conditions[number]['label'];
+type Condition = (typeof conditions)[number]['label'];
 
 type Filter = {
   fieldname: string;

@@ -258,8 +258,7 @@ export function getRegionalCombinedSchemas(
 
 function getRegionalSchemaMap(countryCode: string): SchemaStubMap {
   const countrySchemas = cloneDeep(regionalSchemas[countryCode]) as
-    | SchemaStub[]
-    | undefined;
+    SchemaStub[] | undefined;
   if (countrySchemas === undefined) {
     return {};
   }
