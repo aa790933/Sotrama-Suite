@@ -51,20 +51,17 @@ const sotramaSuiteConfig = {
     artifactName: '${productName}-v${version}-mac-${arch}.${ext}',
     category: 'public.app-category.finance',
     icon: 'build/icon.icns',
-    notarize: {
-      teamId: process.env.APPLE_TEAM_ID || '',
-    },
+    // electron-builder >= 24: notarize is boolean; credentials are read from
+    // APPLE_API_KEY / APPLE_API_KEY_ID / APPLE_API_ISSUER and APPLE_TEAM_ID env
+    notarize: true,
     hardenedRuntime: true,
-    gatekeeperAssess: false,
     darkModeSupport: false,
     entitlements: 'build/entitlements.mac.plist',
     entitlementsInherit: 'build/entitlements.mac.plist',
     publish: ['github'],
   },
   win: {
-    publisherName: 'Frappe Technologies Pvt. Ltd.',
     artifactName: '${productName}-v${version}-windows-${arch}.${ext}',
-    signDlls: true,
     icon: 'build/icon.ico',
     publish: ['github'],
     target: [

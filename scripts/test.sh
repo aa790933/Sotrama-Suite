@@ -6,4 +6,4 @@ if [ $# -eq 0 ]
 fi
 
 export IS_TEST=true
-./scripts/runner.sh ./node_modules/.bin/tape $TEST_PATH | ./node_modules/.bin/tap-spec
+bash ./scripts/runner.sh ./node_modules/.bin/tape $TEST_PATH | ./node_modules/.bin/tap-spec
