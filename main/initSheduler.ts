@@ -1,11 +1,16 @@
 import Bree from 'bree';
+import { app } from 'electron';
 import path from 'path';
-import main from 'main';
+import type { Main } from 'main';
 
 let bree: Bree;
 
-export async function initScheduler(interval: string) {
-  const jobsRoot = path.join(__dirname, '..', '..', 'jobs');
+export async function initScheduler(main: Main, interval: string) {
+  // Worker files live outside the bundler graph; in packaged builds they are
+  // shipped via extraResources instead of the asar.
+  const jobsRoot = app.isPackaged
+    ? path.join(process.resourcesPath, 'jobs')
+    : path.join(__dirname, '..', '..', 'jobs');
 
   if (bree) {
     await bree.stop();

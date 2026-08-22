@@ -46,7 +46,6 @@ function updatePaths() {
   fs.ensureDirSync(buildDirPath);
   fs.removeSync(packageDirPath);
   fs.ensureDirSync(packageDirPath);
-  fs.ensureDirSync(path.join(buildDirPath, 'node_modules'));
 }
 
 async function buildMainProcessSource() {

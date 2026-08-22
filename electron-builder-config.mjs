@@ -1,4 +1,5 @@
 // App is tagged with a .mjs extension to allow ESM import
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -13,31 +14,31 @@ const root = dirname;
 const buildDirPath = path.join(root, 'dist_electron', 'build');
 const packageDirPath = path.join(root, 'dist_electron', 'bundled');
 
+/**
+ * Optional payloads must not abort packaging: CI builds without release
+ * credentials or the MariaDB MSI are still expected to produce installers.
+ */
+const optionalCopy = (from, to, filter) =>
+  fs.existsSync(path.join(root, from))
+    ? [{ from: path.join(root, from), to, ...(filter ? { filter } : {}) }]
+    : [];
+
 const sotramaSuiteConfig = {
   productName: 'Sotrama Suite',
   appId: 'io.sotrama.suite',
   artifactName: '${productName}-v${version}-${os}-${arch}.${ext}',
-  // Critical: asar enables packaging, unpack native .node & MSI for runtime access
   asar: true,
   asarUnpack: ['**/*.node', 'mariadb/**/*.msi'],
   // Only include built files – buildDirPath already contains the bundled main + renderer
-  files: [
-    '**/*',
-    '!**/*.ts',
-    '!**/*.map',
-    '!**/*.md',
-  ],
-  // Ensure native deps are rebuilt for Electron's Node version
+  files: ['**/*', '!**/*.ts', '!**/*.map', '!**/*.md'],
   npmRebuild: false,
   buildDependenciesFromSource: false,
-  extraFiles: [
-    // Windows: bundle the pinned MariaDB MSI so the "Install for me" path works offline
-    { from: 'build/mariadb', to: 'mariadb', filter: ['*.msi'] },
-  ],
+  extraFiles: optionalCopy(path.join('build', 'mariadb'), 'mariadb', ['*.msi']),
   extraResources: [
-    { from: 'log_creds.txt', to: '../creds/log_creds.txt' },
-    { from: 'translations', to: '../translations' },
-    { from: 'templates', to: '../templates' },
+    ...optionalCopy('log_creds.txt', '../creds/log_creds.txt'),
+    { from: path.join(root, 'translations'), to: '../translations' },
+    { from: path.join(root, 'templates'), to: '../templates' },
+    { from: path.join(root, 'jobs'), to: 'jobs' },
   ],
   extends: null,
   directories: {

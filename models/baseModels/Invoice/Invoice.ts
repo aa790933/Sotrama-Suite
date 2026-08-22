@@ -970,7 +970,10 @@ export abstract class Invoice extends Transactional {
   }
 
   async updateIsItemsFullyReturned(doc?: Invoice) {
-    if (!doc?.returnAgainst || doc.schemaName !== (ModelNameEnum.SalesInvoice as string)) {
+    if (
+      !doc?.returnAgainst ||
+      doc.schemaName !== (ModelNameEnum.SalesInvoice as string)
+    ) {
       return;
     }
 

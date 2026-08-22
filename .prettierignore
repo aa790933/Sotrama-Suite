@@ -3,3 +3,4 @@
 **/dummy/*.json
 **/.github/ISSUE_TEMPLATE/*.yml
 **/patches/v0_21_0/*
+.yarn/releases/

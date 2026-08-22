@@ -273,7 +273,7 @@ export default function registerIpcMainActionListeners(main: Main) {
   );
 
   ipcMain.handle(IPC_ACTIONS.INIT_SHEDULER, async (_, interval: string) => {
-    return initScheduler(interval);
+    return initScheduler(main, interval);
   });
 
   ipcMain.handle(

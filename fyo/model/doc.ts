@@ -921,7 +921,8 @@ export class Doc extends Observable<DocValue | Doc[]> {
     return this;
   }
   async _hasERPSyncableItems(): Promise<boolean> {
-    const isSalesInvoice = this.schemaName === (ModelNameEnum.SalesInvoice as string);
+    const isSalesInvoice =
+      this.schemaName === (ModelNameEnum.SalesInvoice as string);
     if (!isSalesInvoice) {
       return true;
     }
@@ -954,7 +955,8 @@ export class Doc extends Observable<DocValue | Doc[]> {
     this.fyo.doc.observer.trigger(`sync:${this.schemaName}`, this.name);
 
     if (this._addDocToSyncQueue && !!this.shouldDocSyncToERPNext) {
-      const isSalesInvoice = this.schemaName === (ModelNameEnum.SalesInvoice as string);
+      const isSalesInvoice =
+        this.schemaName === (ModelNameEnum.SalesInvoice as string);
       const hasERPSyncableItems = await this._hasERPSyncableItems();
 
       if (

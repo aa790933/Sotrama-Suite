@@ -15,28 +15,58 @@ test('accrual rate and cap are 2.5 days/month and 30 days', (t) => {
 });
 
 test('under one full month worked yields 0 accrued days', (t) => {
-  t.equal(accruedLeaveDays(jane('2024-07-01T00:00:00Z'), jane('2024-07-15T00:00:00Z')), 0);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-01T00:00:00Z'),
+      jane('2024-07-15T00:00:00Z')
+    ),
+    0
+  );
   t.end();
 });
 
 test('one full month worked yields 2.5 days', (t) => {
-  t.equal(accruedLeaveDays(jane('2024-07-01T00:00:00Z'), jane('2024-08-01T00:00:00Z')), 2.5);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-01T00:00:00Z'),
+      jane('2024-08-01T00:00:00Z')
+    ),
+    2.5
+  );
   t.end();
 });
 
 test('three full months worked yields 7.5 days (cap not yet hit)', (t) => {
-  t.equal(accruedLeaveDays(jane('2024-07-01T00:00:00Z'), jane('2024-10-01T00:00:00Z')), 7.5);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-01T00:00:00Z'),
+      jane('2024-10-01T00:00:00Z')
+    ),
+    7.5
+  );
   t.end();
 });
 
 test('twelve full months worked yields 30 days (cap applies)', (t) => {
-  t.equal(accruedLeaveDays(jane('2024-07-01T00:00:00Z'), jane('2025-07-01T00:00:00Z')), 30);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-01T00:00:00Z'),
+      jane('2025-07-01T00:00:00Z')
+    ),
+    30
+  );
   t.end();
 });
 
 test('seniority beyond one year does not compound past the cap', (t) => {
   // 36 months tenure -> still capped at 30
-  t.equal(accruedLeaveDays(jane('2022-07-01T00:00:00Z'), jane('2025-07-01T00:00:00Z')), 30);
+  t.equal(
+    accruedLeaveDays(
+      jane('2022-07-01T00:00:00Z'),
+      jane('2025-07-01T00:00:00Z')
+    ),
+    30
+  );
   t.end();
 });
 
@@ -54,19 +84,46 @@ test('the Jan-15 -> Mar-20 worked example', (t) => {
 
 test('hire day-of-month later in the month is not counted as full until reached', (t) => {
   // hired Jul 15, asOf Jul 20 -> 0 full months (same month, partial)
-  t.equal(accruedLeaveDays(jane('2024-07-15T00:00:00Z'), jane('2024-07-20T00:00:00Z')), 0);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-15T00:00:00Z'),
+      jane('2024-07-20T00:00:00Z')
+    ),
+    0
+  );
   // asOf the 1st month later, day reached -> 1 full month -> 2.5
-  t.equal(accruedLeaveDays(jane('2024-07-15T00:00:00Z'), jane('2024-08-15T00:00:00Z')), 2.5);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-15T00:00:00Z'),
+      jane('2024-08-15T00:00:00Z')
+    ),
+    2.5
+  );
   // asOf one day short of the anniversary -> 0
-  t.equal(accruedLeaveDays(jane('2024-07-15T00:00:00Z'), jane('2024-08-14T00:00:00Z')), 0);
+  t.equal(
+    accruedLeaveDays(
+      jane('2024-07-15T00:00:00Z'),
+      jane('2024-08-14T00:00:00Z')
+    ),
+    0
+  );
   t.end();
 });
 
 test('leaveDurationDays counts both endpoints inclusively', (t) => {
   const d = (iso: string) => new Date(iso);
-  t.equal(leaveDurationDays(d('2026-02-10T00:00:00Z'), d('2026-02-10T00:00:00Z')), 1); // same day = 1
-  t.equal(leaveDurationDays(d('2026-02-01T00:00:00Z'), d('2026-02-10T00:00:00Z')), 10); // 10 inclusive
-  t.equal(leaveDurationDays(d('2026-02-10T00:00:00Z'), d('2026-02-21T00:00:00Z')), 12); // 12 inclusive
+  t.equal(
+    leaveDurationDays(d('2026-02-10T00:00:00Z'), d('2026-02-10T00:00:00Z')),
+    1
+  ); // same day = 1
+  t.equal(
+    leaveDurationDays(d('2026-02-01T00:00:00Z'), d('2026-02-10T00:00:00Z')),
+    10
+  ); // 10 inclusive
+  t.equal(
+    leaveDurationDays(d('2026-02-10T00:00:00Z'), d('2026-02-21T00:00:00Z')),
+    12
+  ); // 12 inclusive
   t.end();
 });
 

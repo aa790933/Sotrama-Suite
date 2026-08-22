@@ -275,7 +275,8 @@ export class StockTransferItem extends TransferItem {
         try {
           if (
             !this.isSales &&
-            this.parentdoc?.schemaName === (ModelNameEnum.PurchaseReceipt as string)
+            this.parentdoc?.schemaName ===
+              (ModelNameEnum.PurchaseReceipt as string)
           ) {
             const serialNumbers = await generateSerialNumbersForItem(
               this.fyo,

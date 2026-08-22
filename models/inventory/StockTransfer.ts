@@ -681,7 +681,10 @@ async function validateSerialNumberStatus(doc: StockTransfer) {
       );
     }
 
-    if (doc.schemaName === (ModelNameEnum.Shipment as string) && status !== 'Active') {
+    if (
+      doc.schemaName === (ModelNameEnum.Shipment as string) &&
+      status !== 'Active'
+    ) {
       throw new ValidationError(
         t`Serial Number ${serialNumber} is not Active.`
       );

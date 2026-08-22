@@ -110,12 +110,18 @@ test('Annual leave with insufficient balance is blocked at submit', async (t) =>
   // Accrued as of the leave start (Feb 10 2026, hire Jan 1 2025):
   // 13 full months -> capped at 30 (the engine is cumulative-from-hire).
   t.equal(
-    accruedLeaveDays(new Date(Date.UTC(2025, 0, 1)), new Date(Date.UTC(2026, 1, 10))),
+    accruedLeaveDays(
+      new Date(Date.UTC(2025, 0, 1)),
+      new Date(Date.UTC(2026, 1, 10))
+    ),
     30,
     'accrued as of Feb 10 2026 = 30 (cap)'
   );
   t.equal(
-    leaveDurationDays(new Date(Date.UTC(2026, 1, 1)), new Date(Date.UTC(2026, 1, 10))),
+    leaveDurationDays(
+      new Date(Date.UTC(2026, 1, 1)),
+      new Date(Date.UTC(2026, 1, 10))
+    ),
     10,
     'seed duration = 10 inclusive days'
   );
@@ -160,7 +166,9 @@ test('Annual leave with insufficient balance is blocked at submit', async (t) =>
     'block raised the balance error message'
   );
   t.ok(
-    msg.includes('8 day(s)') && msg.includes('20 day(s)') && msg.includes('already used 22'),
+    msg.includes('8 day(s)') &&
+      msg.includes('20 day(s)') &&
+      msg.includes('already used 22'),
     'error message reports requested/proposed/used/remaining: ' + msg
   );
   t.notOk(lc.submitted, 'leave C was not submitted after the block');
