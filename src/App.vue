@@ -108,9 +108,10 @@ export default defineComponent({
     provide(injectionKeys.shortcutsKey, shortcuts);
     provide(injectionKeys.languageDirectionKey, languageDirection);
 
-    const databaseSelector = ref<InstanceType<typeof DatabaseSelector> | null>(
-      null
-    );
+    type DatabaseSelectorRef = {
+      existingDatabase: () => Promise<void> | void;
+    } | null;
+    const databaseSelector = ref<DatabaseSelectorRef>(null);
 
     return {
       keys,

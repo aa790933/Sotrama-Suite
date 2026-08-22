@@ -1,5 +1,5 @@
 export default class CacheManager {
-  _keyValueCache: Map<string, unknown | undefined>;
+  _keyValueCache: Map<string, unknown>;
   _hashCache: Map<string, Map<string, unknown> | undefined>;
 
   constructor() {

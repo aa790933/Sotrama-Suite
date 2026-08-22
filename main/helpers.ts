@@ -50,9 +50,7 @@ export async function getConfigFilesWithModified(files: ConfigFile[]) {
   return filesWithModified;
 }
 
-export async function getErrorHandledReponse(
-  func: () => Promise<unknown> | unknown
-) {
+export async function getErrorHandledReponse(func: () => unknown) {
   const response: BackendResponse = {};
 
   try {

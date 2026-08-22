@@ -1,5 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-require('source-map-support').install({
+const sourceMapSupport =
+  require('source-map-support') as typeof import('source-map-support');
+sourceMapSupport.install({
   handleUncaughtExceptions: false,
   environment: 'node',
 });
@@ -33,7 +35,9 @@ type MainLogger = {
 let log: MainLogger = console as unknown as MainLogger;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const el = require('electron-log') as MainLogger & { initialize?: (opts: unknown) => void };
+  const el = require('electron-log') as MainLogger & {
+    initialize?: (opts: unknown) => void;
+  };
   if (el && typeof el.initialize === 'function') {
     el.initialize({ preload: true });
   }
@@ -41,7 +45,8 @@ try {
   if (log.transports) {
     // File logging only in packaged app to avoid dev noise
     const file = (log.transports as { file?: { level?: string } }).file;
-    if (file) file.level = app.isPackaged ? 'info' : (false as unknown as string);
+    if (file)
+      file.level = app.isPackaged ? 'info' : (false as unknown as string);
   }
 } catch {
   // electron-log not installed yet – console fallback
@@ -54,7 +59,10 @@ function setupCrashHandlers() {
       emitMainProcessError(error);
     } catch {}
     if (!app.isPackaged) {
-      dialog.showErrorBox('Unexpected Error', `${error.message}\n\n${error.stack ?? ''}`);
+      dialog.showErrorBox(
+        'Unexpected Error',
+        `${error.message}\n\n${error.stack ?? ''}`
+      );
     }
   });
 
@@ -92,7 +100,15 @@ export class Main {
     this.icon = this.resolveIconPath();
 
     protocol.registerSchemesAsPrivileged([
-      { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true, corsEnabled: true } },
+      {
+        scheme: 'app',
+        privileges: {
+          secure: true,
+          standard: true,
+          supportFetchAPI: true,
+          corsEnabled: true,
+        },
+      },
     ]);
 
     if (this.isDevelopment) {
@@ -171,7 +187,10 @@ export class Main {
       } catch {}
     }
     const fallback = path.join(__dirname, 'main', 'preload.js');
-    log.warn('[main] preload not found in candidates, using fallback:', fallback);
+    log.warn(
+      '[main] preload not found in candidates, using fallback:',
+      fallback
+    );
     return fallback;
   }
 
@@ -232,7 +251,14 @@ export class Main {
         this.registerAppProtocol();
       }
 
-      log.info('[main] loading URL:', this.winURL, 'isPackaged:', app.isPackaged, 'isDevelopment:', this.isDevelopment);
+      log.info(
+        '[main] loading URL:',
+        this.winURL,
+        'isPackaged:',
+        app.isPackaged,
+        'isDevelopment:',
+        this.isDevelopment
+      );
       await this.mainWindow.loadURL(this.winURL);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -246,14 +272,20 @@ export class Main {
           if (fs.existsSync(fallbackPath)) {
             await this.mainWindow.loadFile(fallbackPath);
           } else {
-            dialog.showErrorBox('Failed to load app', `${error.message}\nURL: ${this.winURL}\nFallback: ${fallbackPath}`);
+            dialog.showErrorBox(
+              'Failed to load app',
+              `${error.message}\nURL: ${this.winURL}\nFallback: ${fallbackPath}`
+            );
           }
         } catch (fallbackErr) {
           log.error('[main] fallback loadFile also failed:', fallbackErr);
           dialog.showErrorBox('Failed to load app', `${error.message}`);
         }
       } else {
-        dialog.showErrorBox('Failed to load dev server', `${error.message}\nURL: ${this.winURL}\nIs vite running on 6969?`);
+        dialog.showErrorBox(
+          'Failed to load dev server',
+          `${error.message}\nURL: ${this.winURL}\nIs vite running on 6969?`
+        );
       }
     }
 
@@ -279,9 +311,21 @@ export class Main {
 
   registerAppProtocol() {
     // Modern Electron (>=25) uses protocol.handle with Fetch API
-    const protocolHandle = (protocol as unknown as { handle?: (scheme: string, handler: (request: Request) => Promise<Response>) => void }).handle;
+    const protocolHandle = (
+      protocol as unknown as {
+        handle?: (
+          scheme: string,
+          handler: (request: Request) => Promise<Response>
+        ) => void;
+      }
+    ).handle;
     if (typeof protocolHandle === 'function') {
-      (protocolHandle as (scheme: string, handler: (request: Request) => Promise<Response>) => void)('app', async (request: Request) => {
+      (
+        protocolHandle as (
+          scheme: string,
+          handler: (request: Request) => Promise<Response>
+        ) => void
+      )('app', async (request: Request) => {
         try {
           const url = new URL(request.url);
           // app://./index.html  -> host=".", pathname="/index.html"
@@ -289,11 +333,24 @@ export class Main {
           let filePath: string;
           if (url.host && url.host !== '.' && !url.pathname.includes('.')) {
             // Rare case: host contains filename without leading dot
-            filePath = path.join(__dirname, 'src', decodeURI(url.host), decodeURI(url.pathname));
+            filePath = path.join(
+              __dirname,
+              'src',
+              decodeURI(url.host),
+              decodeURI(url.pathname)
+            );
           } else {
-            const pathname = url.pathname === '/' && url.host !== '.' ? `/${url.host}` : url.pathname;
+            const pathname =
+              url.pathname === '/' && url.host !== '.'
+                ? `/${url.host}`
+                : url.pathname;
             const hostPart = url.host === '.' ? '' : url.host;
-            filePath = path.join(__dirname, 'src', decodeURI(hostPart), decodeURI(pathname));
+            filePath = path.join(
+              __dirname,
+              'src',
+              decodeURI(hostPart),
+              decodeURI(pathname)
+            );
             // Normalize: app://./index.html -> __dirname/src/index.html
             if (filePath.endsWith(path.join('src', '.'))) {
               filePath = path.join(__dirname, 'src', 'index.html');
@@ -348,18 +405,26 @@ export class Main {
       this.mainWindow = null;
     });
 
-    this.mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
-      log.error('[main] did-fail-load:', { errorCode, errorDescription, validatedURL, winURL: this.winURL });
-      // Avoid infinite loop: only retry once
-      if (validatedURL === this.winURL) {
-        setTimeout(() => {
-          this.mainWindow?.loadURL(this.winURL).catch((err) => {
-            log.error('[main] retry loadURL failed:', err);
-            emitMainProcessError(err);
-          });
-        }, 1000);
+    this.mainWindow.webContents.on(
+      'did-fail-load',
+      (_event, errorCode, errorDescription, validatedURL) => {
+        log.error('[main] did-fail-load:', {
+          errorCode,
+          errorDescription,
+          validatedURL,
+          winURL: this.winURL,
+        });
+        // Avoid infinite loop: only retry once
+        if (validatedURL === this.winURL) {
+          setTimeout(() => {
+            this.mainWindow?.loadURL(this.winURL).catch((err) => {
+              log.error('[main] retry loadURL failed:', err);
+              emitMainProcessError(err);
+            });
+          }, 1000);
+        }
       }
-    });
+    );
 
     this.mainWindow.webContents.on('render-process-gone', (_event, details) => {
       log.error('[main] render-process-gone (window):', details);
@@ -380,11 +445,24 @@ function bufferProtocolCallback(
     const url = new URL(request.url);
     let filePath: string;
     if (url.host && url.host !== '.' && !url.pathname.includes('.')) {
-      filePath = path.join(__dirname, 'src', decodeURI(url.host), decodeURI(url.pathname));
+      filePath = path.join(
+        __dirname,
+        'src',
+        decodeURI(url.host),
+        decodeURI(url.pathname)
+      );
     } else {
-      const pathname = url.pathname === '/' && url.host !== '.' ? `/${url.host}` : url.pathname;
+      const pathname =
+        url.pathname === '/' && url.host !== '.'
+          ? `/${url.host}`
+          : url.pathname;
       const hostPart = url.host === '.' ? '' : url.host;
-      filePath = path.join(__dirname, 'src', decodeURI(hostPart), decodeURI(pathname));
+      filePath = path.join(
+        __dirname,
+        'src',
+        decodeURI(hostPart),
+        decodeURI(pathname)
+      );
       if (filePath.endsWith(path.join('src', '.'))) {
         filePath = path.join(__dirname, 'src', 'index.html');
       }

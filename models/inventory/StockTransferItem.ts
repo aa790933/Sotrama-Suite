@@ -44,7 +44,7 @@ export class StockTransferItem extends TransferItem {
   parentdoc?: StockTransfer;
 
   get isSales() {
-    return this.schemaName === ModelNameEnum.ShipmentItem;
+    return this.schemaName === (ModelNameEnum.ShipmentItem as string);
   }
 
   get isReturn(): boolean {
@@ -275,7 +275,7 @@ export class StockTransferItem extends TransferItem {
         try {
           if (
             !this.isSales &&
-            this.parentdoc?.schemaName === ModelNameEnum.PurchaseReceipt
+            this.parentdoc?.schemaName === (ModelNameEnum.PurchaseReceipt as string)
           ) {
             const serialNumbers = await generateSerialNumbersForItem(
               this.fyo,
@@ -290,7 +290,7 @@ export class StockTransferItem extends TransferItem {
 
           if (
             this.isSales &&
-            this.parentdoc?.schemaName === ModelNameEnum.Shipment
+            this.parentdoc?.schemaName === (ModelNameEnum.Shipment as string)
           ) {
             const salesInvoice = (await this.fyo.doc.getDoc(
               ModelNameEnum.SalesInvoice,

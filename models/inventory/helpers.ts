@@ -17,15 +17,15 @@ import SerialNumberSeries from 'fyo/models/SerialNumberSeries';
 export async function validateBatch(
   doc: StockMovement | StockTransfer | Invoice
 ) {
-  if (doc.schemaName === ModelNameEnum.SalesQuote) {
+  if (doc.schemaName === (ModelNameEnum.SalesQuote as string)) {
     return;
   }
 
   if (
-    doc.schemaName === ModelNameEnum.PurchaseInvoice ||
-    doc.schemaName === ModelNameEnum.PurchaseReceipt ||
-    doc.schemaName === ModelNameEnum.StockMovement ||
-    doc.schemaName === ModelNameEnum.Shipment
+    doc.schemaName === (ModelNameEnum.PurchaseInvoice as string) ||
+    doc.schemaName === (ModelNameEnum.PurchaseReceipt as string) ||
+    doc.schemaName === (ModelNameEnum.StockMovement as string) ||
+    doc.schemaName === (ModelNameEnum.Shipment as string)
   ) {
     for (const row of doc.items ?? []) {
       if (row.item && row.batch) {
@@ -86,7 +86,7 @@ async function validateItemRowBatch(
 }
 
 export async function validateSerialNumber(doc: StockMovement | StockTransfer) {
-  if (doc.schemaName === ModelNameEnum.SalesQuote) {
+  if (doc.schemaName === (ModelNameEnum.SalesQuote as string)) {
     return;
   }
   if (doc.isCancelled) {
@@ -326,14 +326,14 @@ function getSerialNumberStatus(
   isCancel: boolean,
   isReturn: boolean
 ): SerialNumberStatus {
-  if (doc.schemaName === ModelNameEnum.Shipment) {
+  if (doc.schemaName === (ModelNameEnum.Shipment as string)) {
     if (isReturn) {
       return isCancel ? 'Delivered' : 'Active';
     }
     return isCancel ? 'Active' : 'Delivered';
   }
 
-  if (doc.schemaName === ModelNameEnum.PurchaseReceipt) {
+  if (doc.schemaName === (ModelNameEnum.PurchaseReceipt as string)) {
     if (isReturn) {
       return isCancel ? 'Active' : 'Delivered';
     }

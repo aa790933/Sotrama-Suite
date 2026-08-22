@@ -87,7 +87,7 @@ export type ListsMap = Record<string, ListFunction | undefined>;
 
 export interface Action {
   label: string;
-  action: (doc: Doc, router: Router) => Promise<void> | void | unknown;
+  action: (doc: Doc, router: Router) => Promise<void> | void;
   condition?: (doc: Doc) => boolean;
   group?: string;
   type?: 'primary' | 'secondary';

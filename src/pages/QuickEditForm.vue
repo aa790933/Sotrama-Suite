@@ -136,8 +136,11 @@ export default defineComponent({
       context = useDocShortcuts(shortcuts, doc, context, true);
     }
 
+    type TwoColumnFormRef = {
+      onChange: (field: Field, value: DocValue) => void;
+    } | null;
     return {
-      form: ref<InstanceType<typeof TwoColumnForm> | null>(null),
+      form: ref<TwoColumnFormRef>(null),
       doc,
       context,
       shortcuts,

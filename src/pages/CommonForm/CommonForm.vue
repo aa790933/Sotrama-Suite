@@ -238,11 +238,12 @@ export default defineComponent({
       context = useDocShortcuts(shortcuts, docOrNull, 'CommonForm', true);
     }
 
+    type ClickableRef = { $el: { click(): void } } | null;
     return {
       docOrNull,
       shortcuts,
       context,
-      printButton: ref<InstanceType<typeof Button> | null>(null),
+      printButton: ref<ClickableRef>(null),
     };
   },
   data() {

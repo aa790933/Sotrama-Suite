@@ -602,7 +602,7 @@ export class Payment extends Transactional {
 
     if (
       refDoc &&
-      refDoc.schema.name === ModelNameEnum.SalesInvoice &&
+      refDoc.schema.name === (ModelNameEnum.SalesInvoice as string) &&
       refDoc.isReturned
     ) {
       const accountsMap = await this._getAccountsMap();

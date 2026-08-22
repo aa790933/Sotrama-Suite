@@ -269,7 +269,7 @@ export default defineComponent({
       let templateName;
 
       if (
-        this.schemaName == ModelNameEnum.SalesInvoice &&
+        this.schemaName == (ModelNameEnum.SalesInvoice as string) &&
         (this.doc as Doc).isPOS
       ) {
         templateName = this.fyo.singles.Defaults?.posPrintTemplate;

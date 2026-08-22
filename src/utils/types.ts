@@ -13,7 +13,7 @@ export type ToastDuration = keyof typeof toastDurationMap;
 
 export interface MessageDialogButton {
   label: string;
-  action: () => Promise<unknown> | unknown;
+  action: () => unknown;
 }
 
 export interface MessageDialogOptions {

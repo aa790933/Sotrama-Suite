@@ -40,7 +40,7 @@ export interface COAChildAccount {
   accountType?: AccountType;
   accountNumber?: string;
   isGroup?: boolean;
-  [key: string]: COAChildAccount | boolean | AccountType | string | undefined;
+  [key: string]: COAChildAccount | boolean | string | undefined;
 }
 
 export interface COATree {

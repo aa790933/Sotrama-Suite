@@ -267,7 +267,7 @@ export function getMakePaymentAction(fyo: Fyo): Action {
         hideFields.push('paymentType');
       }
 
-      if (doc.schemaName === ModelNameEnum.SalesInvoice) {
+      if (doc.schemaName === (ModelNameEnum.SalesInvoice as string)) {
         hideFields.push('account');
       } else {
         hideFields.push('paymentAccount');
@@ -846,7 +846,7 @@ export async function addItem<M extends ModelsWithItems>(name: string, doc: M) {
 
   if (
     doc instanceof StockTransfer &&
-    doc.schemaName === ModelNameEnum.PurchaseReceipt
+    doc.schemaName === (ModelNameEnum.PurchaseReceipt as string)
   ) {
     const serialNumbers = await generateSerialNumbersForItem(doc.fyo, name, 1);
     if (serialNumbers) {

@@ -44,7 +44,7 @@ export abstract class StockTransfer extends Transfer {
   returnAgainst?: string;
 
   get isSales() {
-    return this.schemaName === ModelNameEnum.Shipment;
+    return this.schemaName === (ModelNameEnum.Shipment as string);
   }
 
   get isReturn(): boolean {
@@ -163,7 +163,7 @@ export abstract class StockTransfer extends Transfer {
     numberSeries: (doc) => getNumberSeries(doc.schemaName, doc.fyo),
     terms: (doc) => {
       const defaults = doc.fyo.singles.Defaults;
-      if (doc.schemaName === ModelNameEnum.Shipment) {
+      if (doc.schemaName === (ModelNameEnum.Shipment as string)) {
         return defaults?.shipmentTerms ?? '';
       }
 
@@ -673,7 +673,7 @@ async function validateSerialNumberStatus(doc: StockTransfer) {
     }
 
     if (
-      doc.schemaName === ModelNameEnum.PurchaseReceipt &&
+      doc.schemaName === (ModelNameEnum.PurchaseReceipt as string) &&
       status !== 'Inactive'
     ) {
       throw new ValidationError(
@@ -681,7 +681,7 @@ async function validateSerialNumberStatus(doc: StockTransfer) {
       );
     }
 
-    if (doc.schemaName === ModelNameEnum.Shipment && status !== 'Active') {
+    if (doc.schemaName === (ModelNameEnum.Shipment as string) && status !== 'Active') {
       throw new ValidationError(
         t`Serial Number ${serialNumber} is not Active.`
       );

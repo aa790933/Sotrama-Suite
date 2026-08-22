@@ -10,7 +10,7 @@ export const schemaTranslateables = [
   'tab',
 ];
 
-export function getIndexFormat(inp: string | string[] | unknown) {
+export function getIndexFormat(inp: unknown) {
   /**
    * converts:
    * ['This is an ', ,' interpolated ',' string.'] and
@@ -38,7 +38,7 @@ export function getIndexFormat(inp: string | string[] | unknown) {
   }
 
   let str = '';
-  const safeSnippets = snippets as string[];
+  const safeSnippets = snippets;
   safeSnippets.forEach((s, i) => {
     if (i === safeSnippets.length - 1) {
       str += s;

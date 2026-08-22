@@ -113,8 +113,12 @@ function getFormattedItem(item: unknown): string {
     return '';
   }
 
+  if (item instanceof Date) {
+    return formatStringToCSV(item.toISOString());
+  }
+
   if (typeof item === 'object') {
-    return item.toString();
+    return JSON.stringify(item);
   }
 
   return String(item);

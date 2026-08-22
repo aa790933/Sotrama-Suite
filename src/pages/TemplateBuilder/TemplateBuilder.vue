@@ -584,7 +584,7 @@ export default defineComponent({
         return fallback;
       }
 
-      return this.view.state.doc.toString();
+      return this.view.state.sliceDoc(0, this.view.state.doc.length);
     },
     async setTemplate(value?: string) {
       this.templateChanged = false;

@@ -13,7 +13,7 @@ async function execute(dm: DatabaseManager) {
 
   let isSet = false;
   for (const { parent, value } of accounts) {
-    if (parent !== ModelNameEnum.AccountingSettings) {
+    if (parent !== (ModelNameEnum.AccountingSettings as string)) {
       continue;
     }
 

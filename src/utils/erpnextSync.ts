@@ -192,7 +192,7 @@ export async function syncDocumentsFromERPNext(fyo: Fyo, shouldThrow = false) {
     }
 
     const docName = (doc.fbooksDocName || doc.name) as string;
-    if (getDocTypeName(doc) === ModelNameEnum.Item) {
+    if (getDocTypeName(doc) === (ModelNameEnum.Item as string)) {
       doc.datafromErp = true;
     }
 
@@ -282,7 +282,7 @@ async function createNewDocument(
   token: string,
   deviceID: string
 ) {
-  if (getDocTypeName(doc) === ModelNameEnum.Item) {
+  if (getDocTypeName(doc) === (ModelNameEnum.Item as string)) {
     doc.datafromErp = true;
   }
 

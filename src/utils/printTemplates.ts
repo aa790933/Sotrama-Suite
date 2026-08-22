@@ -102,7 +102,7 @@ export async function getPrintTemplatePropValues(
     totalTax = await ((sinvDoc as Invoice) ?? (doc as Payment))?.getTotalTax();
   }
 
-  if (doc.schema.name == ModelNameEnum.Payment) {
+  if (doc.schema.name == (ModelNameEnum.Payment as string)) {
     (values.doc as PrintTemplateData).amountPaidInWords = getGrandTotalInWords(
       (doc.amountPaid as Money)?.float
     );

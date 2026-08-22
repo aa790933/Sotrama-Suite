@@ -4,10 +4,10 @@ enum EventType {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Listener = (...args: any[]) => unknown | Promise<unknown>;
+type Listener = (...args: any[]) => unknown;
 
 export default class Observable<T> {
-  [key: string]: unknown | T;
+  [key: string]: unknown;
   _isHot: Map<string, boolean>;
   _eventQueue: Map<string, unknown[]>;
   _map: Map<string, unknown>;

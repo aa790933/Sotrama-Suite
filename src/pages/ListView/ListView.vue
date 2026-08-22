@@ -122,12 +122,15 @@ export default defineComponent({
     pageTitle: { type: String, default: '' },
   },
   setup() {
+    type ClickableRef = { $el: { click(): void } } | null;
+    type ListRef = { updateData(filters?: QueryFilter): void } | null;
+    type FilterDropdownRef = Record<string, unknown> | null;
     return {
       shortcuts: inject(shortcutsKey),
-      list: ref<InstanceType<typeof List> | null>(null),
-      makeNewDocButton: ref<InstanceType<typeof Button> | null>(null),
-      exportButton: ref<InstanceType<typeof Button> | null>(null),
-      filterDropdown: ref<InstanceType<typeof FilterDropdown> | null>(null),
+      list: ref<ListRef>(null),
+      makeNewDocButton: ref<ClickableRef>(null),
+      exportButton: ref<ClickableRef>(null),
+      filterDropdown: ref<FilterDropdownRef>(null),
     };
   },
   data() {
@@ -236,9 +239,9 @@ export default defineComponent({
     },
     async createInvoice(value: string) {
       if (
-        value === ModelNameEnum.SalesQuote ||
-        value === ModelNameEnum.SalesInvoice ||
-        value === ModelNameEnum.PurchaseInvoice
+        value === (ModelNameEnum.SalesQuote as string) ||
+        value === (ModelNameEnum.SalesInvoice as string) ||
+        value === (ModelNameEnum.PurchaseInvoice as string)
       ) {
         const doc = fyo.doc.getNewDoc(value);
 

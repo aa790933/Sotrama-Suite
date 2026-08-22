@@ -347,6 +347,8 @@ try {
   }
 } catch (error) {
   // Last resort: attempt direct window assignment and log
+  // no-console: preload bootstrap failure must be visible in the main process logs
+  // eslint-disable-next-line no-console
   console.error('[preload] contextBridge.exposeInMainWorld failed:', error);
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -356,9 +358,13 @@ try {
 
 // Ensure unhandled preload errors are visible in main logs
 window.addEventListener('error', (event) => {
+  // no-console: preload has no access to electron-log; forward to devtools console
+  // eslint-disable-next-line no-console
   console.error('[preload] window.onerror:', event.error ?? event.message);
 });
 window.addEventListener('unhandledrejection', (event) => {
+  // no-console: preload has no access to electron-log; forward to devtools console
+  // eslint-disable-next-line no-console
   console.error('[preload] unhandledrejection:', event.reason);
 });
 

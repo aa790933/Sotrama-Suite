@@ -328,7 +328,7 @@ export abstract class Invoice extends Transactional {
       await this._createLoyaltyPointEntry();
     }
 
-    if (this.schemaName === ModelNameEnum.SalesInvoice) {
+    if (this.schemaName === (ModelNameEnum.SalesInvoice as string)) {
       this.updateUsedCountOfCoupons();
     }
 
@@ -970,7 +970,7 @@ export abstract class Invoice extends Transactional {
   }
 
   async updateIsItemsFullyReturned(doc?: Invoice) {
-    if (!doc?.returnAgainst || doc.schemaName !== ModelNameEnum.SalesInvoice) {
+    if (!doc?.returnAgainst || doc.schemaName !== (ModelNameEnum.SalesInvoice as string)) {
       return;
     }
 
@@ -1391,7 +1391,7 @@ export abstract class Invoice extends Transactional {
     numberSeries: (doc) => getNumberSeries(doc.schemaName, doc.fyo),
     terms: (doc) => {
       const defaults = doc.fyo.singles.Defaults;
-      if (doc.schemaName === ModelNameEnum.SalesInvoice) {
+      if (doc.schemaName === (ModelNameEnum.SalesInvoice as string)) {
         return defaults?.salesInvoiceTerms ?? '';
       }
 

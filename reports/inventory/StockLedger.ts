@@ -135,7 +135,7 @@ export class StockLedger extends Report {
 
       if (
         this.referenceType !== 'All' &&
-        row.referenceType !== this.referenceType
+        row.referenceType !== (this.referenceType as string)
       ) {
         continue;
       }

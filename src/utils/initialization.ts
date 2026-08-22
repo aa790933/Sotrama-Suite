@@ -45,7 +45,7 @@ async function closeDbIfConnected(fyo: Fyo) {
 
 async function setSingles(fyo: Fyo) {
   for (const schema of Object.values(fyo.schemaMap)) {
-    if (!schema?.isSingle || schema.name === ModelNameEnum.SetupWizard) {
+    if (!schema?.isSingle || schema.name === (ModelNameEnum.SetupWizard as string)) {
       continue;
     }
 
