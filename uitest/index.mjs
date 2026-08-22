@@ -30,32 +30,33 @@ if (!fs.existsSync(appSourcePath)) {
     t.ok(true, 'window has loaded');
   });
 
-  test('navigate to database selector', async (t) => {
+  test('host setup: connect to existing MariaDB', async (t) => {
     /**
-     * When running on local, Sotrama Suite will open
-     * the last selected database.
+     * A fresh instance boots into the HostSetup screen (MariaDB bootstrap).
+     * The CI job runs a real MariaDB service on 127.0.0.1:3306, so drive the
+     * "advanced" connect flow instead of the local MSI installer.
      */
-    const changeDb = window.getByTestId('change-db');
-    const createNew = window.getByTestId('create-new-file');
+    const advancedRadio = window.locator(
+      'input[type="radio"][value="advanced"]'
+    );
+    await advancedRadio.waitFor({ state: 'visible', timeout: 60_000 });
+    await advancedRadio.check();
 
-    const changeDbPromise = changeDb
-      .waitFor({ state: 'visible' })
-      .then(() => 'change-db');
-    const createNewPromise = createNew
-      .waitFor({ state: 'visible' })
-      .then(() => 'create-new-file');
+    await window.getByLabel(/Host/).fill('127.0.0.1');
+    await window.getByLabel(/Port/).fill('3306');
+    await window.getByLabel(/Database name/).fill('sotrama_uitest');
+    await window.getByLabel(/User/).fill('sotra');
+    await window.getByLabel(/Password/).fill('password');
 
-    const el = await Promise.race([changeDbPromise, createNewPromise]);
-    if (el === 'change-db') {
-      await changeDb.click();
-      await createNewPromise;
-    }
+    await window.getByRole('button', { name: /Test connection/i }).click();
+    await window
+      .getByRole('button', { name: /Continue to company setup/i })
+      .click({ timeout: 60_000 });
 
-    t.ok(await createNew.isVisible(), 'create new is visible');
+    t.ok(true, 'host configured, company setup shown');
   });
 
   test('fill setup form', async (t) => {
-    await window.getByTestId('create-new-file').click();
     await window.getByTestId('submit-button').waitFor();
 
     t.equal(
@@ -81,6 +82,7 @@ if (!fs.existsSync(appSourcePath)) {
 
   test('create new instance', async (t) => {
     await window.getByTestId('submit-button').click();
+    await window.getByTestId('company-name').waitFor({ timeout: 60_000 });
     t.equal(
       await window.getByTestId('company-name').innerText(),
       'Test Company',

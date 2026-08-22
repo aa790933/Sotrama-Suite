@@ -227,7 +227,7 @@ jobs:
         with:
           max_attempts: 3
           retry_wait_seconds: 60
-          timeout_seconds: 300
+          timeout_seconds: 1800
           retry_on: any
           shell: bash
           command: |
