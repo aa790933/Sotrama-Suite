@@ -7,10 +7,10 @@ jobs:
     runs-on: macos-15-intel
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js LTS (22.x)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: 'yarn'
@@ -59,7 +59,7 @@ jobs:
         run: tar -cvf dist-macOS.tar dist_electron
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist-macOS
           path: dist-macOS.tar
@@ -68,10 +68,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js LTS (22.x)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: 'yarn'
@@ -120,7 +120,7 @@ jobs:
         run: tar -cvf dist-macOS-arm.tar dist_electron
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist-macOS-arm
           path: dist-macOS-arm.tar
@@ -129,10 +129,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js LTS (22.x)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: 'yarn'
@@ -165,7 +165,7 @@ jobs:
         run: tar -cvf dist-linux.tar dist_electron
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist-linux
           path: dist-linux.tar
@@ -177,10 +177,10 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js LTS (22.x)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: 'yarn'
@@ -220,7 +220,7 @@ jobs:
           fi
 
       - name: Run build (retry on Windows publish timeout)
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v4
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -237,7 +237,7 @@ jobs:
         run: tar -cvf dist-windows.tar dist_electron
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist-windows
           path: dist-windows.tar

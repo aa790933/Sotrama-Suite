@@ -920,7 +920,7 @@ function changeDocDataType(
   for (const field of fields) {
     if (field in updatedDoc) {
       switch (type) {
-        case ModelNameEnum.Currency:
+        case ModelNameEnum.Currency as string:
           updatedDoc[field] = fyo.pesa(updatedDoc[field] as number);
           break;
         default:

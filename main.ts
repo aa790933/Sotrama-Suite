@@ -1,6 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const sourceMapSupport =
-  require('source-map-support') as typeof import('source-map-support');
+const sourceMapSupport = require('source-map-support') as {
+  install: (options?: {
+    handleUncaughtExceptions?: boolean;
+    environment?: string;
+  }) => void;
+};
 sourceMapSupport.install({
   handleUncaughtExceptions: false,
   environment: 'node',

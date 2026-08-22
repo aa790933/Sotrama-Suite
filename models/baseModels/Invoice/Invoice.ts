@@ -888,7 +888,7 @@ export abstract class Invoice extends Transactional {
   }
 
   updateUsedCountOfCoupons() {
-    this.coupons?.map(async (coupon) => {
+    void this.coupons?.map(async (coupon) => {
       const couponDoc = await this.fyo.doc.getDoc(
         ModelNameEnum.CouponCode,
         coupon.coupons
@@ -902,7 +902,7 @@ export abstract class Invoice extends Transactional {
       return;
     }
 
-    this.coupons?.map(async (coupon) => {
+    void this.coupons?.map(async (coupon) => {
       const couponDoc = await this.fyo.doc.getDoc(
         ModelNameEnum.CouponCode,
         coupon.coupons

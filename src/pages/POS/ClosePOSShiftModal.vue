@@ -148,7 +148,7 @@ export default defineComponent({
 
       this.posClosingShiftDoc.closingCash = [];
 
-      this.posOpeningShiftDoc?.openingCash?.map(async (row) => {
+      void this.posOpeningShiftDoc?.openingCash?.map(async (row) => {
         await this.posClosingShiftDoc?.append('closingCash', {
           count: row.count,
           denomination: row.denomination as Money,
