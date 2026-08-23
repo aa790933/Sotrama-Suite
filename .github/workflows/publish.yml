@@ -219,19 +219,35 @@ jobs:
             done
           fi
 
-      - name: Run build (retry on Windows publish timeout)
+      - name: Run build (no publish; upload handled separately)
         uses: nick-fields/retry@v4
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           max_attempts: 3
           retry_wait_seconds: 60
-          timeout_seconds: 1800
+          timeout_seconds: 1200
           retry_on: any
           shell: bash
           command: |
-            yarn build --win --publish always
+            yarn build --win --publish never
+
+      - name: Upload installers to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          # electron-builder's in-process GitHub publisher flakes on Windows
+          # ("Request timed out" during cleanup) even when every asset was
+          # uploaded successfully. Uploading via gh CLI is resumable and
+          # idempotent (--clobber).
+          gh release view "$TAG" > /dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release upload "$TAG" \
+            dist_electron/bundled/*windows*.exe \
+            dist_electron/bundled/*windows*.exe.blockmap \
+            --clobber
 
       - name: Tar files
         run: tar -cvf dist-windows.tar dist_electron

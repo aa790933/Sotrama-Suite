@@ -47,6 +47,7 @@
               v-model="mode"
               type="radio"
               value="advanced"
+              data-testid="advanced-mode-radio"
               :disabled="installing"
               class="text-blue-600 focus:ring-blue-500"
             />
@@ -134,6 +135,7 @@
               <input
                 v-model="host"
                 placeholder="127.0.0.1"
+                data-testid="host-input"
                 class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -144,6 +146,7 @@
               >
               <input
                 v-model.number="port"
+                data-testid="port-input"
                 type="number"
                 class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
@@ -156,6 +159,7 @@
               <input
                 v-model="database"
                 placeholder="sotrama"
+                data-testid="database-input"
                 class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -166,6 +170,7 @@
               >
               <input
                 v-model="user"
+                data-testid="user-input"
                 class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -177,6 +182,7 @@
               <input
                 v-model="password"
                 type="password"
+                data-testid="password-input"
                 class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -185,6 +191,7 @@
               :disabled="testing || !host || !port || !database || !user"
               class="w-full mt-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               @click="advancedTest"
+              data-testid="test-connection-button"
             >
               {{ testing ? t`Testing…` : t`Test connection` }}
             </button>
@@ -292,6 +299,7 @@
           v-if="canContinue"
           class="w-full mt-6 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all"
           @click="finish"
+          data-testid="continue-button"
         >
           {{ t`Continue to company setup` }}
         </button>

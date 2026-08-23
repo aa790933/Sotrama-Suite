@@ -33,25 +33,21 @@ if (!fs.existsSync(appSourcePath)) {
   test('host setup: connect to existing MariaDB', async (t) => {
     /**
      * A fresh instance boots into the HostSetup screen (MariaDB bootstrap).
-     * The CI job runs a real MariaDB service on 127.0.0.1:3306, so drive the
-     * "advanced" connect flow instead of the local MSI installer.
+     * The CI job runs a real MariaDB service mapped to host port 3307, so
+     * drive the "advanced" connect flow instead of the local MSI installer.
      */
-    const advancedRadio = window.locator(
-      'input[type="radio"][value="advanced"]'
-    );
+    const advancedRadio = window.getByTestId('advanced-mode-radio');
     await advancedRadio.waitFor({ state: 'visible', timeout: 60_000 });
     await advancedRadio.check();
 
-    await window.getByLabel(/Host/).fill('127.0.0.1');
-    await window.getByLabel(/Port/).fill('3306');
-    await window.getByLabel(/Database name/).fill('sotrama_uitest');
-    await window.getByLabel(/User/).fill('sotra');
-    await window.getByLabel(/Password/).fill('password');
+    await window.getByTestId('host-input').fill('127.0.0.1');
+    await window.getByTestId('port-input').fill('3307');
+    await window.getByTestId('database-input').fill('sotrama_uitest');
+    await window.getByTestId('user-input').fill('sotra');
+    await window.getByTestId('password-input').fill('password');
 
-    await window.getByRole('button', { name: /Test connection/i }).click();
-    await window
-      .getByRole('button', { name: /Continue to company setup/i })
-      .click({ timeout: 60_000 });
+    await window.getByTestId('test-connection-button').click();
+    await window.getByTestId('continue-button').click({ timeout: 60_000 });
 
     t.ok(true, 'host configured, company setup shown');
   });
