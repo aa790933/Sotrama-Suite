@@ -562,8 +562,8 @@ export default defineComponent({
               database: this.database.trim(),
             };
 
-      // Emit typed configuration object directly
-      this.$emit('host-ready', config);
+      // IPC/main expects a JSON string (see App.vue hostReady + main/registerIpcMainActionListeners)
+      this.$emit('host-ready', JSON.stringify(config));
     },
   },
 });

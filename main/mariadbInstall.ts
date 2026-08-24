@@ -797,6 +797,12 @@ export async function pingMariaDB(opts: PingOptions): Promise<PingResult> {
     'ping',
   ]);
   if (cli.code !== 0) {
+    // The mariadb-admin CLI ships with the server package and is absent on
+    // machines that only run a remote/containersed server. Verify with the
+    // bundled Node driver instead of failing outright.
+    if (/ENOENT/i.test(cli.stderr)) {
+      return await pingViaDriver(host, port, opts.user, opts.password);
+    }
     return {
       ok: false,
       error: `Server reachable but authentication failed: ${
@@ -805,6 +811,30 @@ export async function pingMariaDB(opts: PingOptions): Promise<PingResult> {
     };
   }
   return { ok: true };
+}
+
+async function pingViaDriver(
+  host: string,
+  port: number,
+  user: string,
+  password: string
+): Promise<PingResult> {
+  const mariadb = await import('mariadb');
+  let conn;
+  try {
+    conn = await mariadb.createConnection({ host, port, user, password });
+    await conn.query('SELECT 1');
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: `Server reachable but authentication failed: ${
+        (err as Error).message
+      }`.trim(),
+    };
+  } finally {
+    await conn?.end().catch(() => undefined);
+  }
 }
 
 function tcpProbe(host: string, port: number): Promise<boolean> {

@@ -11,12 +11,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import { SelectFileOptions, SelectFileReturn } from 'utils/types';
 import databaseManager from '../backend/database/manager';
-import type { MariaDBConfig } from '../backend/database/core';
 import { emitMainProcessError } from '../backend/helpers';
 import { Main } from '../main';
 import { DatabaseMethod } from '../utils/db/types';
 import { IPC_ACTIONS } from '../utils/messages';
 import type { Platform, PingOptions } from '../utils/mariadb-types';
+import { parseMariaDBConfigString } from '../utils/mariadb-types';
 import { getUrlAndTokenString, sendError } from './contactMothership';
 import { getLanguageMap } from './getLanguageMap';
 import { getTemplates } from './getPrintTemplates';
@@ -35,7 +35,7 @@ import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
 export default function registerIpcMainActionListeners(main: Main) {
   ipcMain.handle(IPC_ACTIONS.CHECK_DB_ACCESS, async (_, dbPath: string) => {
     try {
-      const config = JSON.parse(dbPath) as MariaDBConfig;
+      const config = parseMariaDBConfigString(dbPath);
       const { createPool } = await import('mariadb');
       const pool = createPool({
         host: config.host,
@@ -290,7 +290,7 @@ export default function registerIpcMainActionListeners(main: Main) {
     IPC_ACTIONS.DB_CREATE,
     async (_, dbPath: string, countryCode: string) => {
       return await getErrorHandledReponse(async () => {
-        const config = JSON.parse(dbPath) as MariaDBConfig;
+        const config = parseMariaDBConfigString(dbPath);
         databaseManager.setDbConfig(config);
         return await databaseManager.createNewDatabase(dbPath, countryCode);
       });
@@ -301,7 +301,7 @@ export default function registerIpcMainActionListeners(main: Main) {
     IPC_ACTIONS.DB_CONNECT,
     async (_, dbPath: string, countryCode?: string) => {
       return await getErrorHandledReponse(async () => {
-        const config = JSON.parse(dbPath) as MariaDBConfig;
+        const config = parseMariaDBConfigString(dbPath);
         databaseManager.setDbConfig(config);
         return await databaseManager.connectToDatabase(dbPath, countryCode);
       });

@@ -14,6 +14,11 @@ jobs:
   unit-test:
     runs-on: ubuntu-latest
 
+    # Job-level so every spawned process (tape, ts-node, workers) inherits them
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: 3307
+
     services:
       mariadb:
         image: mariadb:11.8
@@ -50,19 +55,20 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Provision MariaDB privileges
+      - name: Provision MariaDB privileges and databases
         run: |
           docker exec ${{ job.services.mariadb.id }} mariadb -uroot -proot -e \
-            "GRANT ALL PRIVILEGES ON *.* TO 'sotra'@'%'; FLUSH PRIVILEGES;"
+            "GRANT ALL PRIVILEGES ON *.* TO 'sotra'@'%'; \
+             CREATE USER IF NOT EXISTS 'sotrama_app'@'%' IDENTIFIED BY 'password'; \
+             GRANT ALL PRIVILEGES ON *.* TO 'sotrama_app'@'%'; \
+             CREATE DATABASE IF NOT EXISTS test_books_core; \
+             FLUSH PRIVILEGES;"
 
       - name: Verify database connectivity
         run: |
           node -e "const m=require('mariadb');(async()=>{const c=await m.createConnection({host:'127.0.0.1',port:3307,user:'sotra',password:'password'});await c.query('SELECT 1');console.log('MariaDB reachable on 127.0.0.1:3307');await c.end();})().catch(e=>{console.error(e);process.exit(1);})"
 
       - name: Run tests
-        env:
-          TEST_DB_HOST: 127.0.0.1
-          TEST_DB_PORT: 3307
         run: yarn test
 
   uitest:

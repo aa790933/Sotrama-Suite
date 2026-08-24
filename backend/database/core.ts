@@ -35,18 +35,12 @@ import {
   SingleValue,
   UpdateSinglesConfig,
 } from './types';
+import type { MariaDBConfig } from '../../utils/mariadb-types';
+export type { MariaDBConfig } from '../../utils/mariadb-types';
 
 // Ensure standard environment timezone
 if (process.env.TZ === undefined || process.env.TZ === '') {
   process.env.TZ = 'UTC';
-}
-
-export interface MariaDBConfig {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database: string;
 }
 
 type QueryResult = RowsWithMeta<unknown> | UpsertResult;

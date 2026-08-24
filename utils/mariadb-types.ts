@@ -42,3 +42,37 @@ export interface DownloadProgressEvent {
   downloaded: number;
   total: number;
 }
+
+export interface MariaDBConfig {
+  host: string;
+  port: number;
+  user: string;
+  password: string;
+  database: string;
+}
+
+/**
+ * Strictly parse and minimally validate a serialized MariaDBConfig.
+ * HostSetup.vue is the canonical producer (JSON.stringify). All main-process
+ * IPC handlers must go through this helper — do not accept raw objects.
+ */
+export function parseMariaDBConfigString(json: string): MariaDBConfig {
+  if (typeof json !== 'string') {
+    throw new TypeError('MariaDBConfig must be a JSON string');
+  }
+  const parsed = JSON.parse(json) as MariaDBConfig;
+  if (
+    typeof parsed.host !== 'string' ||
+    !parsed.host ||
+    typeof parsed.port !== 'number' ||
+    !Number.isFinite(parsed.port) ||
+    typeof parsed.user !== 'string' ||
+    !parsed.user ||
+    typeof parsed.password !== 'string' ||
+    typeof parsed.database !== 'string' ||
+    !parsed.database
+  ) {
+    throw new Error('Invalid MariaDBConfig: missing required fields');
+  }
+  return parsed;
+}
