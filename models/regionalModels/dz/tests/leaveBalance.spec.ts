@@ -33,7 +33,7 @@ const cfg: MariaDBConfig = getTestDbConfig('test_leavbal');
 
 /**
  * DatabaseManager subclass that injects the test MariaDB config in its
- * constructor (mirroring main/registerIpcMainActionListeners setDbConfig flow),
+ * constructor (mirroring main/ipc/router setDbConfig flow),
  * and performs a lean createNewDatabase (connect + migrate) that skips patches.
  */
 class TestDemux extends DatabaseManager {
@@ -63,7 +63,7 @@ async function boot(): Promise<Fyo> {
     isTest: true,
     isElectron: false,
   });
-  await fyo.db.createNewDatabase(':memory:', 'dz');
+  await fyo.db.createNewDatabase('', 'dz');
   const regionalModels = await getRegionalModels('dz');
   await fyo.initializeAndRegister(models, regionalModels);
   return fyo;

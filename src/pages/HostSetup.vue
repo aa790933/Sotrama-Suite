@@ -25,41 +25,87 @@
           {{ errorMsg }}
         </div>
 
-        <!-- Mode Selection Tabs -->
-        <div
-          class="mt-5 flex gap-6 border-b border-gray-200 dark:border-gray-700 pb-3"
-        >
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input
-              v-model="mode"
-              type="radio"
-              value="express"
-              :disabled="installing"
-              class="text-blue-600 focus:ring-blue-500"
-            />
-            <span
-              class="text-sm font-medium text-gray-800 dark:text-gray-200"
-              >{{ t`Express setup (install locally)` }}</span
-            >
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input
-              v-model="mode"
-              type="radio"
-              value="advanced"
-              data-testid="advanced-mode-radio"
-              :disabled="installing"
-              class="text-blue-600 focus:ring-blue-500"
-            />
-            <span
-              class="text-sm font-medium text-gray-800 dark:text-gray-200"
-              >{{ t`Advanced (existing server)` }}</span
-            >
-          </label>
+        <!-- Step 1: Host vs Client -->
+        <div v-if="!role" class="mt-5 space-y-3">
+          <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            {{ t`How will this computer use Sotrama?` }}
+          </h2>
+          <div
+            data-testid="role-host"
+            class="p-4 rounded-lg border-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            :class="role === 'host' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'"
+            @click="selectRole('host')"
+          >
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t`This is the office/server computer (Host)` }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ t`MariaDB will be installed here. Other computers on the office network will connect to this machine.` }}</p>
+          </div>
+          <div
+            data-testid="role-client"
+            class="p-4 rounded-lg border-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            :class="role === 'client' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'"
+            @click="selectRole('client')"
+          >
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t`This computer is a client` }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ t`Do not install MariaDB here. Connect to the Sotrama host already running on the local network.` }}</p>
+          </div>
         </div>
 
-        <!-- Option A: Express install -->
-        <template v-if="mode === 'express' && !done">
+        <template v-else>
+          <div class="mt-3 flex items-center justify-between text-xs">
+            <span class="text-gray-500 dark:text-gray-400">
+              {{ role === 'host' ? t`Host mode` : t`Client mode` }}
+              <span v-if="lanIp && role === 'host'" class="ms-2 font-mono text-gray-700 dark:text-gray-300">({{ lanIp }})</span>
+            </span>
+            <button
+              type="button"
+              class="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              :disabled="installing"
+              @click="role = null"
+            >
+              {{ t`Change` }}
+            </button>
+          </div>
+
+          <!-- Mode Selection Tabs (host only: Express vs Advanced; client is always Advanced) -->
+          <div
+            v-if="role === 'host'"
+            class="mt-4 flex gap-6 border-b border-gray-200 dark:border-gray-700 pb-3"
+          >
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                v-model="mode"
+                type="radio"
+                value="express"
+                :disabled="installing"
+                class="text-blue-600 focus:ring-blue-500"
+              />
+              <span
+                class="text-sm font-medium text-gray-800 dark:text-gray-200"
+                >{{ t`Express setup (install locally)` }}</span
+              >
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                v-model="mode"
+                type="radio"
+                value="advanced"
+                data-testid="advanced-mode-radio"
+                :disabled="installing"
+                class="text-blue-600 focus:ring-blue-500"
+              />
+              <span
+                class="text-sm font-medium text-gray-800 dark:text-gray-200"
+                >{{ t`Advanced (existing server)` }}</span
+              >
+            </label>
+          </div>
+          <div v-else class="mt-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ t`Connect to office host` }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t`Enter the host address shown on the server computer.` }}</p>
+          </div>
+
+          <!-- Option A: Express install (host only) -->
+          <template v-if="role === 'host' && mode === 'express' && !done">
           <div class="mt-4 space-y-4">
             <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
               {{
@@ -197,10 +243,10 @@
             </button>
 
             <p
-              v-if="testOk"
+              v-if="testOk && dbExistsChecked && dbExists"
               class="text-sm font-medium text-green-600 dark:text-green-400"
             >
-              {{ t`Connection successful — press Continue below.` }}
+              {{ t`Connection successful — database ready. Press Continue below.` }}
             </p>
             <p
               v-else-if="testDone && !testOk"
@@ -208,6 +254,25 @@
             >
               {{ testError }}
             </p>
+            <div v-if="testDone && dbExistsChecked" class="mt-2 text-sm">
+              <p v-if="dbExists" class="text-green-600 dark:text-green-400">
+                {{ t`Database exists and is accessible.` }}
+              </p>
+              <div v-else class="flex items-center gap-3">
+                <p class="text-amber-600 dark:text-amber-400">
+                  {{ t`Database does not exist on this server.` }}
+                </p>
+                <button
+                  type="button"
+                  class="text-xs px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+                  :disabled="creatingDb"
+                  data-testid="create-db-button"
+                  @click="createTargetDatabase"
+                >
+                  {{ creatingDb ? t`Creating…` : t`Create database` }}
+                </button>
+              </div>
+            </div>
           </div>
         </template>
 
@@ -231,7 +296,7 @@
             <div class="flex justify-between pt-2">
               <dt class="text-gray-500 dark:text-gray-400">{{ t`Host` }}</dt>
               <dd class="font-medium text-gray-900 dark:text-gray-200">
-                127.0.0.1
+                {{ lanIp || '127.0.0.1' }}
               </dd>
             </div>
             <div class="flex justify-between pt-2">
@@ -303,6 +368,7 @@
         >
           {{ t`Continue to company setup` }}
         </button>
+        </template>
       </div>
     </div>
   </div>
@@ -312,7 +378,9 @@
 import { defineComponent } from 'vue';
 import { t } from 'fyo';
 import { IPC_ACTIONS } from 'utils/messages';
-import type { ConnectionConfig } from '../setup/types';
+import type { ConnectionConfig, HostType } from '../setup/types';
+import { canInstallMariaDB, normalizeHostRole } from '../utils/hostRole';
+import { fyo } from 'src/initFyo';
 
 import type { IPC } from 'main/preload';
 
@@ -332,6 +400,8 @@ export default defineComponent({
   emits: ['host-ready'],
   data() {
     return {
+      role: null as HostType | null,
+      lanIp: null as string | null,
       mode: 'express' as 'express' | 'advanced',
       port: 3306,
       database: 'sotrama',
@@ -353,6 +423,9 @@ export default defineComponent({
       testOk: false,
       testDone: false,
       testError: '',
+      dbExists: null as boolean | null,
+      dbExistsChecked: false,
+      creatingDb: false,
       errorMsg: '',
       copied: false,
       summary: null as null | {
@@ -381,16 +454,50 @@ export default defineComponent({
       return t`Install MariaDB`;
     },
     canContinue(): boolean {
-      return this.mode === 'express' ? this.done : this.testOk;
+      if (!this.role) return false;
+      if (this.role === 'host' && this.mode === 'express') return this.done;
+      if (!this.testOk) return false;
+      // For advanced (both host and client), require DB to exist or be creatable
+      if (this.dbExists === false) return false;
+      return true;
     },
   },
   async mounted() {
     await this.probeNextFreePort(3306);
+    try {
+      const ip = await ipc.getLanIp();
+      if (ip) this.lanIp = ip;
+    } catch {}
+    const saved = normalizeHostRole(fyo.config.get('hostRole'));
+    if (saved) {
+      this.role = saved;
+      this.applyRoleSideEffects(saved);
+    }
   },
   beforeUnmount() {
     this.cleanupListeners();
   },
   methods: {
+    selectRole(role: HostType) {
+      this.role = role;
+      fyo.config.set('hostRole', role);
+      this.applyRoleSideEffects(role);
+    },
+    applyRoleSideEffects(role: HostType) {
+      if (role === 'client') {
+        this.mode = 'advanced';
+        if (this.host === '127.0.0.1') this.host = '';
+      } else {
+        if (!this.host) this.host = '127.0.0.1';
+      }
+      this.testOk = false;
+      this.testDone = false;
+      this.testError = '';
+      this.dbExists = null;
+      this.dbExistsChecked = false;
+      this.done = false;
+      this.errorMsg = '';
+    },
     t(str: TemplateStringsArray | string) {
       return typeof str === 'string' ? t(str) : t(str);
     },
@@ -436,6 +543,8 @@ export default defineComponent({
       this.testOk = false;
       this.testDone = false;
       this.testError = '';
+      this.dbExists = null;
+      this.dbExistsChecked = false;
       try {
         const ping = await ipc.pingMariaDB({
           host: this.host,
@@ -443,8 +552,35 @@ export default defineComponent({
           user: this.user,
           password: this.password,
         });
-        this.testOk = ping.ok;
-        this.testError = ping.ok ? '' : ping.error || '';
+        if (!ping.ok) {
+          this.testOk = false;
+          this.testError = ping.error || '';
+          return;
+        }
+        // Ping succeeded — now check if target database exists
+        try {
+          const dbCheck = await ipc.checkDbExists({
+            host: this.host,
+            port: this.port,
+            user: this.user,
+            password: this.password,
+            database: this.database.trim(),
+          });
+          this.dbExists = dbCheck.exists;
+          this.dbExistsChecked = true;
+          if (dbCheck.exists) {
+            this.testOk = true;
+            this.testError = '';
+          } else {
+            this.testOk = false;
+            this.testError = dbCheck.error
+              ? `Database "${this.database.trim()}" not found: ${dbCheck.error}`
+              : `Database "${this.database.trim()}" does not exist on this server.`;
+          }
+        } catch (err) {
+          this.testOk = false;
+          this.testError = (err as Error).message || String(err);
+        }
       } catch (err) {
         this.testOk = false;
         this.testError = (err as Error).message || String(err);
@@ -454,7 +590,41 @@ export default defineComponent({
       }
     },
 
+    async createTargetDatabase() {
+      if (!this.database.trim()) return;
+      this.creatingDb = true;
+      this.errorMsg = '';
+      try {
+        const res = await ipc.createDatabase({
+          host: this.host,
+          port: this.port,
+          user: this.user,
+          password: this.password,
+          database: this.database.trim(),
+        });
+        if (res.ok) {
+          this.dbExists = true;
+          this.testOk = true;
+          this.testError = '';
+        } else {
+          this.testError = res.error || 'Failed to create database. Check that the user has CREATE privilege.';
+        }
+      } catch (err) {
+        this.testError = (err as Error).message || String(err);
+      } finally {
+        this.creatingDb = false;
+      }
+    },
+
     async expressInstall() {
+      // Hard gate: only a persisted/selected host role may run the local
+      // MariaDB installation path. Clients and legacy (null-role) installs
+      // must never provision a local server, even if the UI regresses.
+      if (!canInstallMariaDB(this.role)) {
+        this.errorMsg = t`MariaDB installation is only available on the host computer.`;
+        return;
+      }
+
       this.installing = true;
       this.isDownloading = false;
       this.installStage = t`Preparing installation…`;
@@ -545,24 +715,28 @@ export default defineComponent({
     },
 
     finish() {
-      const config: ConnectionConfig =
-        this.mode === 'express'
-          ? {
-              host: '127.0.0.1',
-              port: this.port,
-              user: 'sotrama_app',
-              password: this.appPassword,
-              database: this.database.trim() || 'sotrama',
-            }
-          : {
-              host: this.host,
-              port: this.port,
-              user: this.user,
-              password: this.password,
-              database: this.database.trim(),
-            };
+      // Persist role for restart (typed ConfigMap key — see fyo/core/types.ts)
+      if (this.role) {
+        fyo.config.set('hostRole', this.role);
+      }
+      const isExpressHost = this.role === 'host' && this.mode === 'express';
+      const config: ConnectionConfig = isExpressHost
+        ? {
+            host: '127.0.0.1',
+            port: this.port,
+            user: 'sotrama_app',
+            password: this.appPassword,
+            database: this.database.trim() || 'sotrama',
+          }
+        : {
+            host: this.host,
+            port: this.port,
+            user: this.user,
+            password: this.password,
+            database: this.database.trim(),
+          };
 
-      // IPC/main expects a JSON string (see App.vue hostReady + main/registerIpcMainActionListeners)
+      // IPC/main expects a JSON string (see App.vue hostReady + main/ipc/router)
       this.$emit('host-ready', JSON.stringify(config));
     },
   },

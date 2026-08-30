@@ -136,8 +136,7 @@ export default defineComponent({
         return;
       }
 
-      this.transactedAmount = await fyo.db.getPOSTransactedAmount(
-        fromDate,
+      this.transactedAmount = await getPOSTransactedAmount(fyo, fromDate,
         new Date()
       );
     },

@@ -46,6 +46,21 @@ export abstract class DatabaseBase {
   
   abstract deleteAll(schemaName:string, filters:QueryFilter): Promise<number>;
 
+  abstract count(schemaName: string, options?: GetAllOptions): Promise<number>;
+
+  abstract getNextAutoincrementId(schemaName: string): Promise<number>;
+  abstract getNextSeriesValue(prefix: string, schemaName: string): Promise<number>;
+  // StockQuery object preferred; separate args kept for backward compat during migration
+  abstract getStockQuantity(query: StockQuery): Promise<number | null>;
+  abstract getStockQuantity(
+    item: string,
+    location?: string,
+    fromDate?: string,
+    toDate?: string,
+    batch?: string,
+    serialNumbers?: string[]
+  ): Promise<number | null>;
+
   // Other
   abstract close(): Promise<void>;
 
@@ -68,6 +83,15 @@ export type QueryFilter = Record<
   string,
   boolean | string | null | (string | number | (string | number | null)[])[]
 >;
+
+export type StockQuery = {
+  item: string;
+  location?: string;
+  batch?: string;
+  serialNumbers?: string[];
+  fromDate?: string;
+  toDate?: string;
+};
 
 /**
  * DatabaseDemuxBase is an abstract class that ensures that the function signatures

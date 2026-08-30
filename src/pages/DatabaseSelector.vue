@@ -92,7 +92,7 @@
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
           "
-          :title="`${file.companyName} (${file.dbPath})`"
+          :title="`${file.companyName} (${(file as any).display || getSafeConfigDisplay(file.dbPath)})`"
           @click="selectFile(file)"
         >
           <div
@@ -116,7 +116,7 @@
             <p
               class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 font-mono"
             >
-              {{ truncate(file.dbPath) }}
+              {{ (file as any).display || getSafeConfigDisplay(file.dbPath) }}
             </p>
           </div>
           <button
@@ -219,6 +219,7 @@ import { updateConfigFiles } from 'src/utils/misc';
 import { deleteDb as performDeleteDb } from 'src/utils/ui';
 import type { ConnectionConfig } from 'src/setup/types';
 import type { ConfigFilesWithModified } from 'utils/types';
+import { getSafeConfigDisplay, getSafeConfigDetail } from 'utils/mariadb-types';
 
 import type { IPC } from 'main/preload';
 
@@ -260,6 +261,8 @@ export default defineComponent({
     }
   },
   methods: {
+    getSafeConfigDisplay,
+    getSafeConfigDetail,
     t(str: TemplateStringsArray | string) {
       return typeof str === 'string' ? t(str) : t(str);
     },
@@ -301,7 +304,7 @@ export default defineComponent({
 
       const confirmed = await showDialog({
         title: t`Delete ${file.companyName}?`,
-        detail: t`Database location: ${file.dbPath}`,
+        detail: getSafeConfigDetail(file.dbPath),
         type: 'warning',
         buttons: [
           {

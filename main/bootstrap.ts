@@ -13,9 +13,9 @@ import fs from 'fs';
 import path from 'path';
 import registerAppLifecycleListeners from './registerAppLifecycleListeners';
 import registerAutoUpdaterListeners from './registerAutoUpdaterListeners';
-import registerIpcMainActionListeners from './registerIpcMainActionListeners';
 import registerIpcMainMessageListeners from './registerIpcMainMessageListeners';
 import registerProcessListeners from './registerProcessListeners';
+import { createProdRouter } from './ipc/router';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const sourceMapSupport = require('source-map-support') as {
@@ -223,7 +223,7 @@ export class Main {
 
   registerListeners() {
     registerIpcMainMessageListeners(this);
-    registerIpcMainActionListeners(this);
+    createProdRouter(this).register();
     registerAutoUpdaterListeners(this);
     registerAppLifecycleListeners(this);
     registerProcessListeners(this);

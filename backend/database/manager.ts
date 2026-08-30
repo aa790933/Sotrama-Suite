@@ -131,6 +131,49 @@ export class DatabaseManager extends DatabaseDemuxBase {
     };
   }
 
+  // Typed CRUD — direct, no string dispatch (replaces call)
+  async insert(schemaName: string, fieldValueMap: import('./types').FieldValueMap): Promise<import('./types').FieldValueMap> {
+    if (!this.#isInitialized) throw new Error('Database not initialized');
+    return this.db!.insert(schemaName, fieldValueMap);
+  }
+  async get(schemaName: string, name: string, fields?: string | string[]): Promise<import('./types').FieldValueMap> {
+    if (!this.#isInitialized) throw new Error('Database not initialized');
+    return this.db!.get(schemaName, name, fields);
+  }
+  async getAll(schemaName: string, options: import('utils/db/types').GetAllOptions = {}): Promise<import('./types').FieldValueMap[]> {
+    if (!this.#isInitialized) return [];
+    return this.db!.getAll(schemaName, options);
+  }
+  async getSingleValues(...fieldnames: ({ fieldname: string; parent?: string } | string)[]): Promise<import('./types').SingleValue<import('schemas/types').RawValue>> {
+    if (!this.#isInitialized) return [];
+    return this.db!.getSingleValues(...fieldnames);
+  }
+  async rename(schemaName: string, oldName: string, newName: string): Promise<void> {
+    if (!this.#isInitialized) return;
+    return this.db!.rename(schemaName, oldName, newName);
+  }
+  async update(schemaName: string, fieldValueMap: import('./types').FieldValueMap): Promise<void> {
+    if (!this.#isInitialized) return;
+    return this.db!.update(schemaName, fieldValueMap);
+  }
+  async delete(schemaName: string, name: string): Promise<void> {
+    if (!this.#isInitialized) return;
+    return this.db!.delete(schemaName, name);
+  }
+  async deleteAll(schemaName: string, filters: import('utils/db/types').QueryFilter): Promise<number> {
+    if (!this.#isInitialized) return 0;
+    return this.db!.deleteAll(schemaName, filters);
+  }
+  async exists(schemaName: string, name?: string): Promise<boolean> {
+    if (!this.#isInitialized) return false;
+    return this.db!.exists(schemaName, name);
+  }
+  async close(): Promise<void> {
+    if (!this.#isInitialized) return;
+    await this.db!.close();
+    delete this.db;
+  }
+
   async call(method: DatabaseMethod, ...args: unknown[]) {
     if (!this.#isInitialized) {
       return;
@@ -147,6 +190,39 @@ export class DatabaseManager extends DatabaseDemuxBase {
     }
 
     return response;
+  }
+
+  async count(schemaName: string, options: import('utils/db/types').GetAllOptions = {}): Promise<number> {
+    if (!this.#isInitialized) return 0;
+    return this.db!.count(schemaName, options);
+  }
+
+  async getNextAutoincrementId(schemaName: string): Promise<number> {
+    if (!this.#isInitialized) return 0;
+    return this.db!.getNextAutoincrementId(schemaName);
+  }
+
+  async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
+    if (!this.#isInitialized) return 0;
+    return this.db!.getNextSeriesValue(prefix, schemaName);
+  }
+
+  async getStockQuantity(
+    query: import('utils/db/types').StockQuery | string,
+    location?: string,
+    fromDate?: string,
+    toDate?: string,
+    batch?: string,
+    serialNumbers?: string[]
+  ): Promise<number | null> {
+    if (!this.#isInitialized) return null;
+    let q: import('utils/db/types').StockQuery;
+    if (typeof query === 'string') {
+      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
+    } else {
+      q = query;
+    }
+    return this.db!.getStockQuantity(q);
   }
 
   async callBespoke(method: string, ...args: unknown[]): Promise<unknown> {
@@ -189,9 +265,36 @@ export class DatabaseManager extends DatabaseDemuxBase {
     if (mysqldumpPath) {
       try {
         await fs.ensureDir(path.dirname(backupPath));
-        const { execSync } = await import('child_process');
-        const cmd = `${mysqldumpPath} -h ${this.dbConfig.host} -P ${this.dbConfig.port} -u ${this.dbConfig.user} -p${this.dbConfig.password} ${this.dbConfig.database} > "${backupPath}"`;
-        execSync(cmd, { timeout: 60000 });
+        const { spawn } = await import('child_process');
+        const safeDb = this.dbConfig.database.replace(/`/g, '');
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn(
+            mysqldumpPath,
+            [
+              '-h',
+              this.dbConfig!.host,
+              '-P',
+              String(this.dbConfig!.port),
+              '-u',
+              this.dbConfig!.user,
+              safeDb,
+            ],
+            {
+              env: { ...process.env, MYSQL_PWD: this.dbConfig!.password },
+              timeout: 60000,
+            }
+          );
+          const out = fs.createWriteStream(backupPath);
+          child.stdout?.pipe(out);
+          let stderr = '';
+          child.stderr?.on('data', (d: Buffer) => (stderr += d.toString()));
+          child.on('error', reject);
+          child.on('close', (code) => {
+            out.close();
+            if (code === 0) resolve();
+            else reject(new Error(`mysqldump failed (code ${code}): ${stderr}`));
+          });
+        });
       } catch (err) {
         // eslint-disable-next-line no-console
         console.warn('Backup via mysqldump failed:', (err as Error).message);
@@ -237,13 +340,6 @@ export class DatabaseManager extends DatabaseDemuxBase {
     )) as { value: string }[];
     const value = query[0]?.value;
     return value || '0.0.0';
-  }
-
-  getDriver() {
-    // For MariaDB, backup is handled differently (mysqldump)
-    // This method is retained for compatibility but returns null
-    // since we no longer use BetterSQLite3
-    return null;
   }
 
   setDbConfig(config: MariaDBConfig) {

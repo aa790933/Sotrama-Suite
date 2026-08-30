@@ -88,49 +88,25 @@ test('batched item, create stock movement, material receipt', async (t) => {
 
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batchMap.batchOne.name
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, batch: batchMap.batchOne.name}),
     2,
     'batch one has quantity two'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batchMap.batchTwo.name
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, batch: batchMap.batchTwo.name}),
     1,
     'batch two has quantity one'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batchMap.batchThree.name
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, batch: batchMap.batchThree.name}),
     null,
     'batch three has no quantity'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Ink.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batchMap.batchOne.name
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Ink.name, location: locationMap.LocationOne, batch: batchMap.batchOne.name}),
     null,
     'non transacted item has no quantity'
   );
@@ -158,25 +134,13 @@ test('batched item, create stock movement, material issue', async (t) => {
 
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batch
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, batch: batch}),
     0,
     'batch one quantity transacted out'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batchMap.batchTwo.name
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, batch: batchMap.batchTwo.name}),
     1,
     'batch two quantity intact'
   );
@@ -205,25 +169,13 @@ test('batched item, create stock movement, material transfer', async (t) => {
 
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined,
-      batch
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, batch: batch}),
     0,
     'location one batch transacted out'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationTwo,
-      undefined,
-      undefined,
-      batch
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationTwo, batch: batch}),
     quantity,
     'location two batch transacted in'
   );
@@ -231,13 +183,7 @@ test('batched item, create stock movement, material transfer', async (t) => {
 
 test('batched item, create invalid stock movements', async (t) => {
   const { name, rate } = itemMap.Pen;
-  const quantity = await fyo.db.getStockQuantity(
-    itemMap.Pen.name,
-    locationMap.LocationTwo,
-    undefined,
-    undefined,
-    batchMap.batchTwo.name
-  );
+  const quantity = await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationTwo, batch: batchMap.batchTwo.name});
 
   t.equal(quantity, 1, 'location two, batch one has quantity');
   if (!quantity) {
@@ -282,7 +228,7 @@ test('batched item, create invalid stock movements', async (t) => {
     async () => (await stockMovement.sync()).submit(),
     'invalid stockMovement without batch did not throw'
   );
-  t.equal(await fyo.db.getStockQuantity(name), 1, 'item still has quantity');
+  t.equal(await fyo.db.getStockQuantity({item: name}), 1, 'item still has quantity');
 });
 
 closeTestFyo(fyo, __filename);

@@ -188,6 +188,9 @@ export default defineComponent({
         this.errors[fieldname] = getErrorMessage(err, this.doc);
       }
     },
+    setLoading(value: boolean) {
+      this.loading = value;
+    },
     async submit() {
       if (!this.hasDoc) {
         return;
@@ -203,9 +206,15 @@ export default defineComponent({
 
       this.loading = true;
       this.fyo.telemetry.log(Verb.Completed, ModelNameEnum.SetupWizard);
+      // The emit is synchronous and cannot observe the parent's async setup.
+      // App.vue owns the async setupInstance() lifecycle: it keeps this
+      // component mounted with loading=true while it runs and calls
+      // setLoading(false) on failure (retry/change-connection); success
+      // switches to Desk and unmounts this wizard.
       this.$emit('setup-complete', this.doc.getValidDict());
     },
     cancel() {
+      this.loading = false;
       this.fyo.telemetry.log(Verb.Cancelled, ModelNameEnum.SetupWizard);
       this.$emit('setup-canceled');
     },

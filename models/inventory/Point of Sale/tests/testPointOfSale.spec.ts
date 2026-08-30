@@ -4,6 +4,7 @@ import { SalesInvoice } from 'models/baseModels/SalesInvoice/SalesInvoice';
 import { Payment } from 'models/baseModels/Payment/Payment';
 import { Money } from 'pesa';
 import { ModelNameEnum } from 'models/types';
+import { getPOSTransactedAmount } from 'models/inventory/posTransacted';
 
 const fyo = getTestFyo();
 
@@ -30,8 +31,7 @@ test('insert test docs', async (t) => {
 let sinvDocOne: SalesInvoice | undefined;
 
 test('check pos transacted amount', async (t) => {
-  const transactedAmountBeforeTxn = await fyo.db.getPOSTransactedAmount(
-    new Date('2023-01-01'),
+  const transactedAmountBeforeTxn = await getPOSTransactedAmount(fyo, new Date('2023-01-01'),
     new Date('2023-01-02')
   );
 
@@ -80,8 +80,7 @@ test('check pos transacted amount', async (t) => {
   await paymentDocTwo.sync();
 
   const transactedAmountAfterTxn: Record<string, Money> | undefined =
-    await fyo.db.getPOSTransactedAmount(
-      new Date('2023-01-01'),
+    await getPOSTransactedAmount(fyo, new Date('2023-01-01'),
       new Date('2023-01-02')
     );
 

@@ -62,14 +62,34 @@ export function getBundledMsiPath(): string {
 
 /**
  * Auto-detect the host's primary LAN subnet from active, non-internal
- * IPv4 interfaces. Returns the /24 subnet prefix (e.g. "192.168.1") or
- * null if no suitable interface is found.
+ * IPv4 interfaces. Returns a host pattern prefix for MariaDB GRANT,
+ * e.g. "192.168.1" for /24 or "10.0" for /16, or null if none found.
+ * Uses the interface netmask to avoid hard-coded /24.
  */
 export function detectSubnet(): string | null {
   for (const iface of Object.values(os.networkInterfaces())) {
     if (!iface) continue;
     for (const addr of iface) {
       if (addr.family === 'IPv4' && !addr.internal) {
+        const netmask = (addr as { netmask?: string }).netmask;
+        if (netmask) {
+          const ipOctets = addr.address.split('.').map(Number);
+          const maskOctets = netmask.split('.').map(Number);
+          if (ipOctets.length === 4 && maskOctets.length === 4) {
+            const fixed: string[] = [];
+            for (let i = 0; i < 4; i++) {
+              if (maskOctets[i] === 255) {
+                fixed.push(String(ipOctets[i]));
+              } else {
+                break;
+              }
+            }
+            if (fixed.length > 0) {
+              return fixed.join('.');
+            }
+          }
+        }
+        // Fallback to /24 if netmask unavailable
         const octets = addr.address.split('.');
         if (octets.length === 4) {
           return `${octets[0]}.${octets[1]}.${octets[2]}`;
@@ -82,8 +102,10 @@ export function detectSubnet(): string | null {
 
 /**
  * Return the first non-loopback IPv4 LAN address of this machine.
+ * Prefers the same interface used for subnet detection for consistency.
  */
 export function detectLanIp(): string | null {
+  // Prefer the first interface that also yields a subnet
   for (const iface of Object.values(os.networkInterfaces())) {
     if (!iface) continue;
     for (const addr of iface) {
@@ -107,7 +129,7 @@ export async function resolveMsiPath(
 
   const cache = ensureCacheDir();
   const dest = path.join(cache, WINDOWS_MSI_FILENAME);
-  if (!fs.pathExistsSync(dest)) {
+  const doDownload = async () => {
     await downloadFile(WINDOWS_MSI_URL, dest, (p) =>
       onProgress?.({
         percent: p.percent,
@@ -115,8 +137,30 @@ export async function resolveMsiPath(
         total: p.total,
       })
     );
+  };
+  // If no cached file, download with one retry on transient failure
+  if (!fs.pathExistsSync(dest)) {
+    try {
+      await doDownload();
+    } catch (err) {
+      // Bounded retry once for transient network/timeout
+      await fs.remove(dest).catch(() => undefined);
+      await doDownload();
+    }
   }
-  await verifyMsi(dest);
+  try {
+    await verifyMsi(dest);
+  } catch (err) {
+    const msg = (err as Error).message || '';
+    // Checksum mismatch => stale/corrupt cache: remove and retry once
+    if (/checksum mismatch/i.test(msg)) {
+      await fs.remove(dest).catch(() => undefined);
+      await doDownload();
+      await verifyMsi(dest);
+    } else {
+      throw err;
+    }
+  }
   return dest;
 }
 
@@ -164,18 +208,16 @@ function runCommand(cmd: string, args: string[]): Promise<RunResult> {
 /**
  * Run a command with admin/root privileges across Windows, macOS, and Linux.
  */
+function escapePowerShellArg(arg: string): string {
+  // PowerShell single-quoted string: escape ' by doubling ''
+  return `'${arg.replace(/'/g, "''")}'`;
+}
+
 function runElevated(cmd: string, args: string[]): Promise<RunResult> {
   if (process.platform === 'win32') {
-    const joinedArgs = args
-      .map((a) => (a.includes(' ') ? `\\"${a}\\"` : a))
-      .join(' ');
-    const psArgs = [
-      '-NoProfile',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-Command',
-      `Start-Process -FilePath "${cmd}" -ArgumentList "${joinedArgs}" -Verb RunAs -Wait -PassThru`,
-    ];
+    const escapedArgs = args.map(escapePowerShellArg).join(', ');
+    const psCommand = `Start-Process -FilePath ${escapePowerShellArg(cmd)} -ArgumentList @(${escapedArgs}) -Verb RunAs -Wait -PassThru`;
+    const psArgs = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psCommand];
     return runCommand('powershell.exe', psArgs);
   }
 
@@ -545,16 +587,22 @@ async function createAppUser(
   platform: Platform,
   hostMode = false
 ): Promise<{ ok: boolean; error?: string }> {
-  const safeDb = database.replace(/`/g, '');
-  const safeAppPw = appPassword
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/\r|\n/g, '');
+  const safeDb = database.replace(/[^a-zA-Z0-9_\-]/g, '').replace(/`/g, '');
+  if (!safeDb) {
+    return { ok: false, error: 'Invalid database name' };
+  }
+  const safeAppPw = appPassword.replace(/'/g, "''").replace(/\r|\n/g, '');
 
   let sotramaAppHost: string;
   if (hostMode) {
     const subnet = detectSubnet();
-    sotramaAppHost = subnet ? `${subnet}.%` : '%';
+    if (!subnet) {
+      return {
+        ok: false,
+        error: 'Could not detect LAN subnet. Cannot create host-mode user without a valid network. Ensure the machine has an active LAN interface.',
+      };
+    }
+    sotramaAppHost = `${subnet}.%`;
   } else {
     sotramaAppHost = 'localhost';
   }
@@ -700,11 +748,12 @@ async function installMac(rootPassword: string): Promise<InstallResult> {
     rootPassword,
   ]);
   if (setPw.code !== 0) {
+    const safeRootPw2 = rootPassword.replace(/'/g, "''").replace(/\r|\n/g, '');
     const sql = await runCommand('mariadb', [
       '-u',
       'root',
       '-e',
-      `ALTER USER 'root'@'localhost' IDENTIFIED BY '${rootPassword}'; FLUSH PRIVILEGES;`,
+      `ALTER USER 'root'@'localhost' IDENTIFIED BY '${safeRootPw2}'; FLUSH PRIVILEGES;`,
     ]);
     if (sql.code !== 0) {
       return {
@@ -754,11 +803,7 @@ async function installLinux(rootPassword: string): Promise<InstallResult> {
     };
   }
 
-  // Standard syntax for modern MariaDB (10.4+ / 11.x)
-  const safeRootPw = rootPassword
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/\r|\n/g, '');
+  const safeRootPw = rootPassword.replace(/'/g, "''").replace(/\r|\n/g, '');
 
   const alt = await runElevated('mariadb', [
     '-u',

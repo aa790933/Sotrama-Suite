@@ -198,10 +198,7 @@ export default defineComponent({
     async setData() {
       const { fromDate, toDate } = getDatesAndPeriodList(this.period);
 
-      const { total, outstanding } = await fyo.db.getTotalOutstanding(
-        this.schemaName,
-        fromDate.toISO(),
-        toDate.toISO()
+      const { total, outstanding } = await getTotalOutstanding(fyo, this.schemaName, fromDate.toISO(), toDate.toISO()
       );
 
       const { countTotal, countOutstanding } = await this.getCounts(

@@ -3,6 +3,7 @@ import type { Money } from 'pesa';
 import type { RawValue } from 'schemas/types';
 import type { AuthDemuxBase } from 'utils/auth/types';
 import type { DatabaseDemuxBase } from 'utils/db/types';
+import type { PersistedConnection } from 'utils/mariadb-types';
 
 export type Attachment = { name: string; type: string; data: string };
 export type DocValue =
@@ -36,6 +37,10 @@ export type ConfigMap = {
   lastSelectedFilePath: null | string;
   language: string 
   deviceId: string
+  hostRole: null | 'host' | 'client';
+  // New P1-A: main-owned credential custody
+  connections?: PersistedConnection[];
+  lastSelectedConnectionId?: string | null;
 };
 
 export interface ConfigFile {
@@ -47,6 +52,9 @@ export interface ConfigFile {
 
 export interface FyoConfig {
   DatabaseDemux?: DatabaseDemuxConstructor;
+  // Typed adapter at the Database seam — preferred over DatabaseDemux (Slice 1)
+  // When provided, DatabaseHandler uses composition over stringly-typed Demux.
+  database?: import('fyo/database/Database').Database;
   AuthDemux?: AuthDemuxConstructor;
   isElectron?: boolean;
   isTest?: boolean;

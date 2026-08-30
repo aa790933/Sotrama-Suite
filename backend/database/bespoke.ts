@@ -14,19 +14,60 @@ import { safeParseFloat } from 'utils/index';
 export class BespokeQueries {
   [key: string]: BespokeFunction;
 
-  static async getLastInserted(
+  static async getNextAutoincrementId(db: DatabaseCore, schemaName: string): Promise<number> {
+    return await db.transaction(async () => {
+      // Lock table to prevent concurrent inserts on empty table
+      await db.query(`SELECT 1 FROM \`${schemaName.toLowerCase()}\` LIMIT 1 FOR UPDATE`).catch(() => undefined);
+      const rows = (await db.query(
+        `SELECT MAX(CAST(name AS UNSIGNED)) as maxVal FROM \`${schemaName.toLowerCase()}\` FOR UPDATE`
+      )) as { maxVal: number | null | string }[];
+      const raw = rows?.[0]?.maxVal;
+      const max = raw == null ? 0 : Number(raw);
+      return max + 1;
+    });
+  }
+
+  static async getNextSeriesValue(
     db: DatabaseCore,
+    prefix: string,
     schemaName: string
   ): Promise<number> {
-    const rows = (await db.query(
-      `SELECT CAST(name AS UNSIGNED) as num FROM \`${schemaName.toLowerCase()}\` ORDER BY num DESC LIMIT 1`
-    )) as { num: number }[];
-
-    const num = rows?.[0]?.num;
-    if (num === undefined) {
-      return 0;
-    }
-    return num;
+    return await db.transaction(async () => {
+      // Lock NumberSeries row
+      const rows = (await db.query('SELECT current, start, padZeros FROM `numberseries` WHERE name = ? FOR UPDATE', [
+        prefix,
+      ])) as { current: number | null; start: number; padZeros: number }[];
+      let current: number | null | undefined = rows?.[0]?.current;
+      let start = rows?.[0]?.start ?? 0;
+      let padZeros = rows?.[0]?.padZeros ?? 4;
+      if (!rows.length) {
+        // Create series if missing (should have been created by createNumberSeries, but handle race)
+        await db.query('INSERT INTO `numberseries` (name, current, start, padZeros) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE current = current', [
+          prefix,
+          start,
+          start,
+          padZeros,
+        ]);
+        current = start;
+        // Re-read
+        const r2 = (await db.query('SELECT current FROM `numberseries` WHERE name = ? FOR UPDATE', [prefix])) as {
+          current: number | null;
+        }[];
+        current = r2?.[0]?.current ?? start;
+      }
+      let next = (current == null || current === 0 ? start : current + 1);
+      // Ensure next name does not already exist in target schema (handle manual inserts)
+      let attempts = 0;
+      while (attempts < 5) {
+        const padded = prefix + String(next).padStart(padZeros ?? 4, '0');
+        const exists = await db.exists(schemaName, padded);
+        if (!exists) break;
+        next += 1;
+        attempts += 1;
+      }
+      await db.query('UPDATE `numberseries` SET current = ? WHERE name = ?', [next, prefix]);
+      return next;
+    });
   }
 
   static async getTopExpenses(

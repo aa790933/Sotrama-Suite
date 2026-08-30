@@ -1,5 +1,6 @@
 import { Fyo, t } from 'fyo';
 import { DocValueMap } from 'fyo/core/types';
+import { getReturnBalanceItemsQty } from 'models/inventory/returnBalance';
 import { Doc } from 'fyo/model/doc';
 import {
   CurrenciesMap,
@@ -758,9 +759,10 @@ export abstract class Invoice extends Transactional {
       number | { quantity?: number; batches?: Record<string, number> }
     > = await getReturnQtyTotal(this);
 
-    const returnBalanceItemsQty = await this.fyo.db.getReturnBalanceItemsQty(
+    const returnBalanceItemsQty = await getReturnBalanceItemsQty(
+      this.fyo,
       this.schemaName,
-      this.name
+      this.name as string
     );
 
     for (const item of docItems) {
@@ -1612,12 +1614,7 @@ export abstract class Invoice extends Transactional {
 
       if (isAuto) {
         const stock =
-          (await this.fyo.db.getStockQuantity(
-            item,
-            location!,
-            undefined,
-            data.date
-          )) ?? 0;
+          (await this.fyo.db.getStockQuantity({item: item, location: location!, toDate: data.date})) ?? 0;
 
         if (stock < (quantity as number)) {
           continue;

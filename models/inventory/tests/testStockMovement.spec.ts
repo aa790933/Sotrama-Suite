@@ -57,17 +57,17 @@ test('Stock Movement, Material Receipt', async (t) => {
   await assertDoesNotThrow(async () => await sm.submit());
 
   t.equal(
-    await fyo.db.getStockQuantity('RawOne', 'Stores'),
+    await fyo.db.getStockQuantity({item: 'RawOne', location: 'Stores'}),
     1,
     'item RawOne added'
   );
   t.equal(
-    await fyo.db.getStockQuantity('RawTwo', 'Stores'),
+    await fyo.db.getStockQuantity({item: 'RawTwo', location: 'Stores'}),
     1,
     'item RawTwo added'
   );
   t.equal(
-    await fyo.db.getStockQuantity('Final', 'Stores'),
+    await fyo.db.getStockQuantity({item: 'Final', location: 'Stores'}),
     null,
     'item Final not yet added'
   );
@@ -115,19 +115,19 @@ test('Stock Movement, Manufacture', async (t) => {
   await assertDoesNotThrow(async () => await sm.submit());
 
   t.equal(
-    await fyo.db.getStockQuantity('RawOne', 'Stores'),
+    await fyo.db.getStockQuantity({item: 'RawOne', location: 'Stores'}),
     0,
     'item RawOne removed'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity('RawTwo', 'Stores'),
+    await fyo.db.getStockQuantity({item: 'RawTwo', location: 'Stores'}),
     0,
     'item RawTwo removed'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity('Final', 'Stores'),
+    await fyo.db.getStockQuantity({item: 'Final', location: 'Stores'}),
     1,
     'item Final added'
   );

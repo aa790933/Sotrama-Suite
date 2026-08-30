@@ -35,6 +35,7 @@ if (argv.nosign) {
 updatePaths();
 await buildMainProcessSource();
 await buildRendererProcessSource();
+await buildJobWorkers();
 copyPackageJson();
 
 if (!argv.nopackage) {
@@ -86,6 +87,32 @@ async function buildRendererProcessSource() {
     },
   });
   removeBaseLeadingSlash(outDir, base);
+}
+
+async function buildJobWorkers() {
+  const jobsSrc = path.join(root, 'jobs');
+  const jobsOut = path.join(buildDirPath, 'jobs');
+  if (!fs.existsSync(jobsSrc)) return;
+  fs.ensureDirSync(jobsOut);
+  const files = fs.readdirSync(jobsSrc).filter((f) => f.endsWith('.ts'));
+  for (const file of files) {
+    const srcPath = path.join(jobsSrc, file);
+    const outPath = path.join(jobsOut, file.replace(/\.ts$/, '.js'));
+    await esbuild.build({
+      entryPoints: [srcPath],
+      outfile: outPath,
+      bundle: false,
+      platform: 'node',
+      target: 'node20',
+      format: 'cjs',
+      sourcemap: false,
+    });
+    // Also copy compiled JS to source jobs folder so extraResources (which copies from `jobs/`) includes .js for packaged builds
+    // This ensures `process.resourcesPath/jobs/*.js` exists even though `jobs/*.ts` is the source
+    try {
+      fs.copySync(outPath, path.join(jobsSrc, file.replace(/\.ts$/, '.js')));
+    } catch {}
+  }
 }
 
 /**

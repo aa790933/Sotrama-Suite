@@ -339,13 +339,7 @@ export default defineComponent({
       }
 
       return (
-        (await fyo.db.getStockQuantity(
-          this.row.item as string,
-          undefined,
-          undefined,
-          undefined,
-          this.row.batch
-        )) ?? 0
+        (await fyo.db.getStockQuantity({item: this.row.item as string, batch: this.row.batch})) ?? 0
       );
     },
     async setBatch(batch: string) {

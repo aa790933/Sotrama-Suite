@@ -45,11 +45,17 @@ export default function registerIpcMainMessageListeners(main: Main) {
     main.mainWindow!.close();
   });
 
-  ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (_, link: string) => {
+  ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (event, link: string) => {
+    if (event.sender !== main.mainWindow?.webContents) return;
+    if (typeof link !== 'string' || !(link.startsWith('https://') || link.startsWith('http://'))) {
+      emitMainProcessError(new Error(`OPEN_EXTERNAL blocked: ${link}`));
+      return;
+    }
     shell.openExternal(link).catch((err) => emitMainProcessError(err));
   });
 
-  ipcMain.on(IPC_MESSAGES.SHOW_ITEM_IN_FOLDER, (_, filePath: string) => {
+  ipcMain.on(IPC_MESSAGES.SHOW_ITEM_IN_FOLDER, (event, filePath: string) => {
+    if (event.sender !== main.mainWindow?.webContents) return;
     return shell.showItemInFolder(filePath);
   });
 }

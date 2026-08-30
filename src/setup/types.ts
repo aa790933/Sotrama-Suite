@@ -11,7 +11,7 @@ export interface SetupWizardOptions {
   chartOfAccounts: string;
 }
 
-export type HostType = 'host' | 'connect';
+export type HostType = 'host' | 'client';
 
 export interface ConnectionConfig {
   host: string;

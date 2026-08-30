@@ -272,7 +272,7 @@ export default defineComponent({
       return `${fyo.format(balance, 'Currency')} ${suffix}`;
     },
     async setTotalDebitAndCredit() {
-      const totals = await this.fyo.db.getTotalCreditAndDebit();
+      const totals = await getTotalCreditAndDebit(this.fyo);
       this.totals = getMapFromList(totals, 'account');
     },
     async fetchAccounts() {

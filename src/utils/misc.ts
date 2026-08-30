@@ -79,25 +79,76 @@ export function getSetupWizardDoc(languageMap?: LanguageMap) {
 
 export function updateConfigFiles(fyo: Fyo): ConfigFile {
   const configFiles = fyo.config.get('files', []) as ConfigFile[];
-
   const companyName = fyo.singles.AccountingSettings!.companyName as string;
   const id = fyo.singles.SystemSettings!.instanceId as string;
-  const dbPath = fyo.db.dbPath!;
+  const rawDbPath = fyo.db.dbPath!;
   const openCount = fyo.singles.Misc!.openCount as number;
 
+  // P1-A: main-owned credential custody — store full config in connections, keep files for migration
+  // Try to handle as MariaDB JSON or as existing connection ID
+  let dbPathForFile: string = rawDbPath;
+  let isMariaDB = false;
+  try {
+    const { parseMariaDBConfigString } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
+    const cfg = parseMariaDBConfigString(rawDbPath);
+    isMariaDB = true;
+    // Upsert into connections store (main-owned)
+    const connections = (fyo.config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined) ?? [];
+    let conn = connections.find((c) => c.id === id) || connections.find((c) => c.host === cfg.host && c.port === cfg.port && c.database === cfg.database && c.user === cfg.user);
+    if (conn) {
+      conn.companyName = companyName;
+      conn.host = cfg.host;
+      conn.port = cfg.port;
+      conn.user = cfg.user;
+      conn.database = cfg.database;
+      conn.password = cfg.password;
+      conn.openCount = openCount;
+    } else {
+      const { fromMariaDBConfigToPersisted } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
+      conn = fromMariaDBConfigToPersisted(id, companyName, cfg, openCount);
+      connections.push(conn);
+    }
+    fyo.config.set('connections' as never, connections as never);
+    fyo.config.set('lastSelectedConnectionId' as never, conn.id as never);
+    // For files, store ID instead of JSON to avoid password in legacy list (keep JSON for migration fallback)
+    dbPathForFile = conn.id;
+    // Replace renderer’s in-memory dbPath with ID so password is not retained in Vue state
+    // Keep original JSON in a non-reactive holder for potential retry, but clear from reactive state
+    (fyo.db as unknown as { _rawDbPath?: string })._rawDbPath = rawDbPath;
+    fyo.db.dbPath = conn.id;
+  } catch {
+    // Check if rawDbPath is already a known connection ID (post-migration)
+    const connections = (fyo.config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined) ?? [];
+    const byId = connections.find((c) => c.id === rawDbPath);
+    if (byId) {
+      isMariaDB = true;
+      byId.companyName = companyName;
+      byId.openCount = openCount;
+      fyo.config.set('connections' as never, connections as never);
+      fyo.config.set('lastSelectedConnectionId' as never, byId.id as never);
+      dbPathForFile = byId.id;
+    }
+  }
+
   const fileIndex = configFiles.findIndex((f) => f.id === id);
-  let newFile = { id, companyName, dbPath, openCount } as ConfigFile;
+  let newFile = { id, companyName, dbPath: dbPathForFile, openCount } as ConfigFile;
 
   if (fileIndex === -1) {
     configFiles.push(newFile);
   } else {
     configFiles[fileIndex].companyName = companyName;
-    configFiles[fileIndex].dbPath = dbPath;
+    configFiles[fileIndex].dbPath = dbPathForFile;
     configFiles[fileIndex].openCount = openCount;
     newFile = configFiles[fileIndex];
   }
 
   fyo.config.set('files', configFiles);
+  // Also keep lastSelectedFilePath for backward compat, but prefer lastSelectedConnectionId
+  if (isMariaDB) {
+    fyo.config.set('lastSelectedFilePath', dbPathForFile);
+  } else {
+    fyo.config.set('lastSelectedFilePath', rawDbPath);
+  }
   return newFile;
 }
 

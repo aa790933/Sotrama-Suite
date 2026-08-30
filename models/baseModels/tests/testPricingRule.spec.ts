@@ -119,12 +119,7 @@ test('Pricing Rule: create dummy item, party, pricing rules, free items, locatio
   );
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity(
-      itemMap.Pen.name,
-      locationMap.LocationOne,
-      undefined,
-      undefined
-    ),
+    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne}),
     25,
     'Pen has quantity twenty five'
   );

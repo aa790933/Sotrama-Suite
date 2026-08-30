@@ -1,5 +1,6 @@
 import { t } from 'fyo';
 import { Attachment, DocValueMap } from 'fyo/core/types';
+import { getReturnBalanceItemsQty } from 'models/inventory/returnBalance';
 import { Doc } from 'fyo/model/doc';
 import {
   ChangeArg,
@@ -575,10 +576,7 @@ export abstract class StockTransfer extends Transfer {
 
     let returnDocItems: DocValueMap[] = [];
 
-    const returnBalanceItemsQty = await this.fyo.db.getReturnBalanceItemsQty(
-      this.schemaName,
-      this.name
-    );
+    const returnBalanceItemsQty = await getReturnBalanceItemsQty(this.fyo, this.schemaName, this.name);
     for (const item of docItems) {
       if (!returnBalanceItemsQty) {
         returnDocItems = docItems;
@@ -600,6 +598,7 @@ export abstract class StockTransfer extends Transfer {
 
       const returnedItem: ReturnDocItem | undefined =
         returnBalanceItemsQty[item.item as string];
+      if (!returnedItem) continue;
 
       let quantity = returnedItem.quantity;
       let serialNumber: string | undefined =
@@ -610,13 +609,11 @@ export abstract class StockTransfer extends Transfer {
         returnedItem.batches &&
         returnedItem.batches[item.batch as string]
       ) {
-        quantity = returnedItem.batches[item.batch as string].quantity;
+        const batchInfo = returnedItem.batches[item.batch as string]!;
+        quantity = batchInfo.quantity;
 
-        if (returnedItem.batches[item.batch as string].serialNumbers) {
-          serialNumber =
-            returnedItem.batches[item.batch as string].serialNumbers?.join(
-              '\n'
-            );
+        if (batchInfo.serialNumbers) {
+          serialNumber = batchInfo.serialNumbers?.join('\n');
         }
       }
 

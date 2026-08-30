@@ -149,14 +149,7 @@ export class StockManager {
     const serialNumbers = getSerialNumbers(details.serialNumber ?? '');
 
     let quantityBefore =
-      (await this.fyo.db.getStockQuantity(
-        details.item,
-        details.fromLocation,
-        undefined,
-        date,
-        batch,
-        serialNumbers
-      )) ?? 0;
+      (await this.fyo.db.getStockQuantity({item: details.item, location: details.fromLocation, toDate: date, batch: batch, serialNumbers: serialNumbers})) ?? 0;
 
     if (this.isCancelled) {
       quantityBefore += details.quantity;
@@ -177,14 +170,7 @@ export class StockManager {
       );
     }
 
-    const quantityAfter = await this.fyo.db.getStockQuantity(
-      details.item,
-      details.fromLocation,
-      details.date.toISOString(),
-      undefined,
-      batch,
-      serialNumbers
-    );
+    const quantityAfter = await this.fyo.db.getStockQuantity({item: details.item, location: details.fromLocation, fromDate: details.date.toISOString(), batch: batch, serialNumbers: serialNumbers});
 
     if (quantityAfter === null) {
       // No future transactions

@@ -1,12 +1,13 @@
-import { Fyo } from 'fyo';
 import { Doc } from 'fyo/model/doc';
 import { isPesa } from 'fyo/utils';
 import { ValueError } from 'fyo/utils/errors';
 import { DateTime } from 'luxon';
 import { Field, FieldTypeEnum, RawValue, TargetField } from 'schemas/types';
 import { getIsNullOrUndef, safeParseFloat, safeParseInt } from 'utils';
-import { DatabaseHandler } from './dbHandler';
 import { Attachment, DocValue, DocValueMap, RawValueMap } from './types';
+import type { MoneyMaker } from 'pesa';
+
+type FieldMap = Record<string, Record<string, Field>>;
 
 /**
  * # Converter
@@ -24,12 +25,29 @@ import { Attachment, DocValue, DocValueMap, RawValueMap } from './types';
  */
 
 export class Converter {
-  db: DatabaseHandler;
-  fyo: Fyo;
+  // Legacy fields kept for backward compat (Slice 3 will remove handler-owned converter)
+  db?: unknown;
+  fyo?: unknown;
+  fieldMapProvider: () => FieldMap;
+  pesaProvider: () => MoneyMaker;
 
-  constructor(db: DatabaseHandler, fyo: Fyo) {
-    this.db = db;
-    this.fyo = fyo;
+  constructor(
+    dbOrFieldMapProvider: unknown,
+    fyoOrPesaProvider?: unknown
+  ) {
+    // New provider-based construction: (fieldMapProvider, pesaProvider)
+    if (typeof dbOrFieldMapProvider === 'function') {
+      this.fieldMapProvider = dbOrFieldMapProvider as () => FieldMap;
+      this.pesaProvider = fyoOrPesaProvider as () => MoneyMaker;
+    } else {
+      // Legacy (DatabaseHandler, Fyo) — keep for handler until fully internalized
+      const db = dbOrFieldMapProvider as { fieldMap: FieldMap };
+      const fyo = fyoOrPesaProvider as { pesa: MoneyMaker };
+      this.db = db as never;
+      this.fyo = fyo as never;
+      this.fieldMapProvider = () => db.fieldMap;
+      this.pesaProvider = () => fyo.pesa;
+    }
   }
 
   toDocValueMap(
@@ -56,10 +74,11 @@ export class Converter {
     }
   }
 
-  static toDocValue(value: RawValue, field: Field, fyo: Fyo): DocValue {
+  static toDocValue(value: RawValue, field: Field, fyoOrPesa: unknown): DocValue {
+    const pesa = (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
     switch (field.fieldtype) {
       case FieldTypeEnum.Currency:
-        return toDocCurrency(value, field, fyo);
+        return toDocCurrency(value, field, pesa as MoneyMaker);
       case FieldTypeEnum.Date:
         return toDocDate(value, field);
       case FieldTypeEnum.Datetime:
@@ -77,10 +96,11 @@ export class Converter {
     }
   }
 
-  static toRawValue(value: DocValue, field: Field, fyo: Fyo): RawValue {
+  static toRawValue(value: DocValue, field: Field, fyoOrPesa: unknown): RawValue {
+    const pesa = (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
     switch (field.fieldtype) {
       case FieldTypeEnum.Currency:
-        return toRawCurrency(value, fyo, field);
+        return toRawCurrency(value, pesa as MoneyMaker, field);
       case FieldTypeEnum.Date:
         return toRawDate(value, field);
       case FieldTypeEnum.Datetime:
@@ -103,13 +123,14 @@ export class Converter {
   }
 
   #toDocValueMap(schemaName: string, rawValueMap: RawValueMap): DocValueMap {
-    const fieldValueMap = this.db.fieldMap[schemaName];
+    const fieldValueMap = this.fieldMapProvider()[schemaName] ?? {};
     const docValueMap: DocValueMap = {};
 
     for (const fieldname in rawValueMap) {
       const field = fieldValueMap[fieldname];
       const rawValue = rawValueMap[fieldname];
       if (!field) {
+        docValueMap[fieldname] = rawValue as DocValue;
         continue;
       }
 
@@ -122,7 +143,7 @@ export class Converter {
         docValueMap[fieldname] = Converter.toDocValue(
           rawValue,
           field,
-          this.fyo
+          this.pesaProvider()
         );
       }
     }
@@ -131,12 +152,17 @@ export class Converter {
   }
 
   #toRawValueMap(schemaName: string, docValueMap: DocValueMap): RawValueMap {
-    const fieldValueMap = this.db.fieldMap[schemaName];
+    const fieldValueMap = this.fieldMapProvider()[schemaName] ?? {};
     const rawValueMap: RawValueMap = {};
 
     for (const fieldname in docValueMap) {
       const field = fieldValueMap[fieldname];
       const docValue = docValueMap[fieldname];
+      if (!field) {
+        // Unknown field (e.g., test Party without schema) — pass through as Data
+        rawValueMap[fieldname] = docValue as RawValue;
+        continue;
+      }
 
       if (Array.isArray(docValue)) {
         const parentSchemaName = (field as TargetField).target;
@@ -152,7 +178,7 @@ export class Converter {
         rawValueMap[fieldname] = Converter.toRawValue(
           docValue,
           field,
-          this.fyo
+          this.pesaProvider()
         );
       }
     }
@@ -190,7 +216,7 @@ function toDocDate(value: RawValue, field: Field) {
     throwError(value, field, 'doc');
   }
 
-  const date = DateTime.fromISO(value.replace(' ', 'T')).toJSDate();
+  const date = DateTime.fromISO(value.replace(' ', 'T'), { zone: 'utc' }).toJSDate();
   if (date.toString() === 'Invalid Date') {
     throwError(value, field, 'doc');
   }
@@ -198,29 +224,29 @@ function toDocDate(value: RawValue, field: Field) {
   return date;
 }
 
-function toDocCurrency(value: RawValue, field: Field, fyo: Fyo) {
+function toDocCurrency(value: RawValue, field: Field, pesa: MoneyMaker) {
   if (isPesa(value)) {
     return value;
   }
 
   if (value === '') {
-    return fyo.pesa(0);
+    return pesa(0);
   }
 
   if (typeof value === 'string') {
-    return fyo.pesa(value);
+    return pesa(value);
   }
 
   if (typeof value === 'number') {
-    return fyo.pesa(value);
+    return pesa(value);
   }
 
   if (typeof value === 'boolean') {
-    return fyo.pesa(Number(value));
+    return pesa(Number(value));
   }
 
   if (value === null) {
-    return fyo.pesa(0);
+    return pesa(0);
   }
 
   throwError(value, field, 'doc');
@@ -294,21 +320,21 @@ function toDocAttachment(value: RawValue, field: Field): null | Attachment {
   }
 }
 
-function toRawCurrency(value: DocValue, fyo: Fyo, field: Field): string {
+function toRawCurrency(value: DocValue, pesa: MoneyMaker, field: Field): string {
   if (isPesa(value)) {
     return value.store;
   }
 
   if (getIsNullOrUndef(value)) {
-    return fyo.pesa(0).store;
+    return pesa(0).store;
   }
 
   if (typeof value === 'number') {
-    return fyo.pesa(value).store;
+    return pesa(value).store;
   }
 
   if (typeof value === 'string') {
-    return fyo.pesa(value).store;
+    return pesa(value).store;
   }
 
   throwError(value, field, 'raw');

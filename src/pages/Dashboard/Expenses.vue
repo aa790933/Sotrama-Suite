@@ -115,9 +115,7 @@ export default defineComponent({
   methods: {
     async setData() {
       const { fromDate, toDate } = getDatesAndPeriodList(this.period);
-      let topExpenses = await fyo.db.getTopExpenses(
-        fromDate.toISO(),
-        toDate.toISO()
+      let topExpenses = await getTopExpenses(fyo, fromDate.toISO(), toDate.toISO()
       );
       const shades = [
         { class: 'bg-pink-500', hex: uicolors.pink['500'] },

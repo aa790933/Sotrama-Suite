@@ -185,6 +185,24 @@ const ipc = {
     )) as PortCheckResult;
   },
 
+  async getLanIp() {
+    return (await ipcRenderer.invoke(IPC_ACTIONS.GET_LAN_IP)) as string | null;
+  },
+
+  async checkDbExists(options: { host: string; port: number; user: string; password: string; database: string }) {
+    return (await ipcRenderer.invoke(
+      IPC_ACTIONS.CHECK_DB_EXISTS,
+      options
+    )) as { exists: boolean; error?: string };
+  },
+
+  async createDatabase(options: { host: string; port: number; user: string; password: string; database: string }) {
+    return (await ipcRenderer.invoke(
+      IPC_ACTIONS.CREATE_DATABASE,
+      options
+    )) as { ok: boolean; error?: string };
+  },
+
   async downloadMariaDBInstaller(emitProgress: boolean) {
     return (await ipcRenderer.invoke(
       IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
@@ -319,10 +337,43 @@ const ipc = {
 
   store: {
     get<K extends keyof ConfigMap>(key: K) {
-      return config.get(key);
+      const value = config.get(key);
+      // Never expose raw connections with passwords to renderer; return safe metadata
+      if (key === 'connections' && Array.isArray(value)) {
+        return (value as unknown as import('utils/mariadb-types').PersistedConnection[]).map(
+          (c) => ({
+            id: c.id,
+            companyName: c.companyName,
+            host: c.host,
+            port: c.port,
+            user: c.user,
+            database: c.database,
+            openCount: c.openCount,
+            display: `${c.database} @ ${c.host}:${c.port} (${c.user})`,
+          })
+        ) as unknown as ConfigMap[K];
+      }
+      if (key === 'lastSelectedFilePath' && typeof value === 'string') {
+        // If it's a MariaDB JSON, don't expose raw password to renderer via store; return ID if available
+        try {
+          const { parseMariaDBConfigString } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
+          parseMariaDBConfigString(value);
+          // It's a MariaDB JSON — try to map to connection ID
+          const conns = config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined;
+          const found = conns?.find(
+            (c) => c.host === JSON.parse(value).host && c.port === JSON.parse(value).port && c.database === JSON.parse(value).database
+          );
+          if (found) return found.id as unknown as ConfigMap[K];
+        } catch {}
+      }
+      return value;
     },
 
     set<K extends keyof ConfigMap>(key: K, value: ConfigMap[K]) {
+      // Disallow renderer from directly writing connections with arbitrary passwords; must go via IPC
+      if (key === 'connections') {
+        throw new Error('connections must be set via main process');
+      }
       return config.set(key, value);
     },
 

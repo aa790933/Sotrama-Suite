@@ -105,9 +105,9 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "homepage": "https://frappe.io/books",
+  "homepage": "https://github.com/aa790933/Sotrama-Suite",
   "repository": {
-    "url": "https://github.com/aa790933/books"
+    "url": "https://github.com/aa790933/Sotrama-Suite"
   },
   "license": "AGPL-3.0-only"
 }

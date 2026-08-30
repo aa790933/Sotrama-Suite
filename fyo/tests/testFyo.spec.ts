@@ -7,7 +7,7 @@ test('Fyo Init', async (t) => {
   const fyo = getTestFyo();
   t.equal(Object.keys(fyo.schemaMap).length, 0, 'zero schemas');
 
-  await fyo.db.createNewDatabase(':memory:', 'in');
+  await fyo.db.createNewDatabase('', 'in');
   await fyo.initializeAndRegister({}, {});
 
   t.equal(Object.keys(fyo.schemaMap).length > 0, true, 'non zero schemas');
@@ -19,7 +19,7 @@ test('Fyo Docs', async (t) => {
   const fyo = getTestFyo();
   const schemaMap = getSchemas(countryCode, []);
   const regionalModels = await getRegionalModels(countryCode);
-  await fyo.db.createNewDatabase(':memory:', countryCode);
+  await fyo.db.createNewDatabase('', countryCode);
   await fyo.initializeAndRegister(models, regionalModels);
 
   for (const schemaName in schemaMap) {

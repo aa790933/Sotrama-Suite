@@ -224,9 +224,14 @@ export default class DatabaseCore extends DatabaseBase {
       for (const alterConf of alter) {
         await this.#alterTable(alterConf);
       }
-
-      await this.query('SET FOREIGN_KEY_CHECKS=1');
     } finally {
+      // Critical safety: FOREIGN_KEY_CHECKS must be restored even if migration fails,
+      // otherwise LAN peers inherit a connection with FK disabled (silent corruption).
+      try {
+        await this.query('SET FOREIGN_KEY_CHECKS=1');
+      } catch {
+        // SET itself can fail if connection is already broken; do not mask original error
+      }
       this.#txConn = null;
       void conn.release();
     }
@@ -386,6 +391,129 @@ export default class DatabaseCore extends DatabaseBase {
         order,
       }
     );
+  }
+
+  async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
+    const schema = this.schemaMap[schemaName] as Schema;
+    if (schema === undefined) {
+      throw new NotFoundError(`schema ${schemaName} not found`);
+    }
+    const { filters = {} } = options;
+    const filterParts = this.#getFiltersArray(filters);
+    let sql = `SELECT COUNT(*) as count FROM ${this.#qn(schemaName)}`;
+    const params: unknown[] = [];
+    if (filterParts.length > 0) {
+      const whereParts: string[] = [];
+      filterParts.forEach((p) => {
+        if (p[1] === 'in' && Array.isArray(p[2])) {
+          if (p[2].length === 0) {
+            whereParts.push('1 = 0');
+          } else {
+            const placeholders = p[2].map(() => '?').join(', ');
+            whereParts.push(`\`${p[0]}\` IN (${placeholders})`);
+            params.push(...(p[2] as unknown[]));
+          }
+        } else {
+          whereParts.push(`\`${p[0]}\` ${p[1]} ?`);
+          params.push(p[2]);
+        }
+      });
+      sql += ' WHERE ' + whereParts.join(' AND ');
+    }
+    const result = (await this.query(sql, params)) as { count: number | string | bigint }[];
+    const raw = result[0]?.count;
+    if (typeof raw === 'bigint') return Number(raw);
+    if (typeof raw === 'string') return Number(raw);
+    return (raw as number) ?? 0;
+  }
+
+  async getNextAutoincrementId(schemaName: string): Promise<number> {
+    return await this.transaction(async () => {
+      await this.query(`SELECT 1 FROM \`${schemaName.toLowerCase()}\` LIMIT 1 FOR UPDATE`).catch(() => undefined);
+      const rows = (await this.query(
+        `SELECT MAX(CAST(name AS UNSIGNED)) as maxVal FROM \`${schemaName.toLowerCase()}\` FOR UPDATE`
+      )) as { maxVal: number | null | string }[];
+      const raw = rows?.[0]?.maxVal;
+      const max = raw == null ? 0 : Number(raw);
+      return max + 1;
+    });
+  }
+
+  async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
+    return await this.transaction(async () => {
+      const rows = (await this.query('SELECT current, start, padZeros FROM `numberseries` WHERE name = ? FOR UPDATE', [
+        prefix,
+      ])) as { current: number | null; start: number; padZeros: number }[];
+      let current: number | null | undefined = rows?.[0]?.current;
+      let start = rows?.[0]?.start ?? 0;
+      let padZeros = rows?.[0]?.padZeros ?? 4;
+      if (!rows.length) {
+        await this.query('INSERT INTO `numberseries` (name, current, start, padZeros) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE current = current', [
+          prefix,
+          start,
+          start,
+          padZeros,
+        ]);
+        current = start;
+        const r2 = (await this.query('SELECT current FROM `numberseries` WHERE name = ? FOR UPDATE', [prefix])) as {
+          current: number | null;
+        }[];
+        current = r2?.[0]?.current ?? start;
+      }
+      let next = current == null || current === 0 ? start : current + 1;
+      let attempts = 0;
+      while (attempts < 5) {
+        const padded = prefix + String(next).padStart(padZeros ?? 4, '0');
+        const exists = await this.exists(schemaName, padded);
+        if (!exists) break;
+        next += 1;
+        attempts += 1;
+      }
+      await this.query('UPDATE `numberseries` SET current = ? WHERE name = ?', [next, prefix]);
+      return next;
+    });
+  }
+
+  async getStockQuantity(
+    query: import('utils/db/types').StockQuery | string,
+    location?: string,
+    fromDate?: string,
+    toDate?: string,
+    batch?: string,
+    serialNumbers?: string[]
+  ): Promise<number | null> {
+    let q: import('utils/db/types').StockQuery;
+    if (typeof query === 'string') {
+      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
+    } else {
+      q = query;
+    }
+    let sql = `SELECT SUM(CAST(quantity AS DECIMAL(18,6))) as total FROM \`stockledgerentry\` WHERE item = ?`;
+    const params: unknown[] = [q.item];
+    if (q.location) {
+      sql += ` AND location = ?`;
+      params.push(q.location);
+    }
+    if (q.batch) {
+      sql += ` AND batch = ?`;
+      params.push(q.batch);
+    }
+    if (q.serialNumbers?.length) {
+      const placeholders = q.serialNumbers.map(() => '?').join(', ');
+      sql += ` AND serialNumber IN (${placeholders})`;
+      params.push(...q.serialNumbers);
+    }
+    if (q.fromDate) {
+      sql += ` AND date > ?`;
+      params.push(q.fromDate);
+    }
+    if (q.toDate) {
+      sql += ` AND date < ?`;
+      params.push(q.toDate);
+    }
+    const value = (await this.query(sql, params)) as Record<string, number | null>[];
+    if (!value.length) return null;
+    return value[0][Object.keys(value[0])[0]];
   }
 
   async deleteAll(schemaName: string, filters: QueryFilter): Promise<number> {

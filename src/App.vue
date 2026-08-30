@@ -26,6 +26,7 @@
     <HostSetup v-if="activeScreen === 'HostSetup'" @host-ready="hostReady" />
     <SetupWizard
       v-if="activeScreen === 'SetupWizard'"
+      ref="setupWizard"
       @setup-complete="setupComplete"
       @setup-canceled="showDbSelector"
     />
@@ -51,7 +52,9 @@ import Desk from './pages/Desk.vue';
 import HostSetup from './pages/HostSetup.vue';
 import SetupWizard from './pages/SetupWizard/SetupWizard.vue';
 import setupInstance from './setup/setupInstance';
+import type { HostType } from './setup/types';
 import { SetupWizardOptions } from './setup/types';
+import { normalizeHostRole } from './utils/hostRole';
 import './styles/index.css';
 import { connectToDatabase, dbErrorActionSymbols } from './utils/db';
 import { initializeInstance } from './utils/initialization';
@@ -60,6 +63,7 @@ import { showDialog, showToast } from './utils/interactive';
 import { setLanguageMap } from './utils/language';
 import { updateConfigFiles } from './utils/misc';
 import { updatePrintTemplates } from './utils/printTemplates';
+import { getSafeConfigDetail } from 'utils/mariadb-types';
 import { Search } from './utils/search';
 import { Shortcuts } from './utils/shortcuts';
 import { routeTo } from './utils/ui';
@@ -120,11 +124,13 @@ export default defineComponent({
       dbPath: '',
       companyName: '',
       darkMode: false,
+      hostRole: null,
     } as {
       activeScreen: null | Screen;
       dbPath: string;
       companyName: string;
       darkMode: boolean | undefined;
+      hostRole: HostType | null;
     };
   },
   computed: {
@@ -145,17 +151,18 @@ export default defineComponent({
   },
   methods: {
     async setInitialScreen(): Promise<void> {
-      const lastSelectedFilePath = fyo.config.get('lastSelectedFilePath', null);
+      this.hostRole = normalizeHostRole(fyo.config.get('hostRole'));
+      // P1-A: prefer lastSelectedConnectionId (safe, main-owned), fallback to legacy lastSelectedFilePath
+      const lastId = fyo.config.get('lastSelectedConnectionId' as never) as string | null | undefined;
+      const lastPath = fyo.config.get('lastSelectedFilePath', null) as string | null;
+      const toUse = (typeof lastId === 'string' && lastId.length ? lastId : null) || lastPath;
 
-      if (
-        typeof lastSelectedFilePath !== 'string' ||
-        !lastSelectedFilePath.length
-      ) {
+      if (typeof toUse !== 'string' || !toUse.length) {
         this.activeScreen = Screen.HostSetup;
         return;
       }
 
-      await this.fileSelected(lastSelectedFilePath);
+      await this.fileSelected(toUse);
     },
     async setSearcher(): Promise<void> {
       this.searcher = new Search(fyo);
@@ -176,9 +183,17 @@ export default defineComponent({
       updateConfigFiles(fyo);
     },
     newDatabase() {
-      const hasHost = fyo.config.get('lastSelectedFilePath', null) as
-        string | null;
-      this.activeScreen = hasHost ? Screen.SetupWizard : Screen.HostSetup;
+      this.hostRole = normalizeHostRole(fyo.config.get('hostRole'));
+      const lastId = fyo.config.get('lastSelectedConnectionId' as never) as string | null | undefined;
+      const lastPath = fyo.config.get('lastSelectedFilePath', null) as string | null;
+      const hasHost = (typeof lastId === 'string' && lastId.length > 0) || (typeof lastPath === 'string' && lastPath.length > 0);
+
+      if (!hasHost) {
+        this.activeScreen = Screen.HostSetup;
+        return;
+      }
+
+      this.activeScreen = Screen.SetupWizard;
     },
     hostReady(configJson: string): void {
       fyo.config.set('lastSelectedFilePath', configJson);
@@ -186,16 +201,28 @@ export default defineComponent({
       this.activeScreen = Screen.SetupWizard;
     },
     async fileSelected(filePath: string): Promise<void> {
+      // P1-A: support both legacy JSON and new connection ID; persist both for migration
       fyo.config.set('lastSelectedFilePath', filePath);
+      try {
+        const conns = fyo.config.get('connections' as never) as { id: string }[] | undefined;
+        if (conns?.some((c) => c.id === filePath)) {
+          fyo.config.set('lastSelectedConnectionId' as never, filePath as never);
+        } else {
+          // Try to find ID for this JSON config
+          const { parseMariaDBConfigString } = await import('utils/mariadb-types');
+          const cfg = parseMariaDBConfigString(filePath);
+          const found = conns?.find(
+            (c: any) => c.host === cfg.host && c.port === cfg.port && c.database === cfg.database && c.user === cfg.user
+          );
+          if (found) fyo.config.set('lastSelectedConnectionId' as never, found.id as never);
+        }
+      } catch {}
       if (!(await ipc.checkDbAccess(filePath))) {
         await showDialog({
           title: this.t`Cannot open file`,
           type: 'error',
-          detail: this
-            .t`Sotrama Suite does not have access to the selected file: ${filePath}`,
+          detail: getSafeConfigDetail(filePath),
         });
-
-        fyo.config.set('lastSelectedFilePath', null);
         return;
       }
 
@@ -203,7 +230,6 @@ export default defineComponent({
         await this.showSetupWizardOrDesk(filePath);
       } catch (error) {
         await handleErrorWithDialog(error, undefined, true, true);
-        await this.showDbSelector();
       }
     },
     async setupComplete(setupWizardOptions: SetupWizardOptions): Promise<void> {
@@ -215,8 +241,43 @@ export default defineComponent({
       }
       const filePath = base;
       fyo.config.set('lastSelectedFilePath', filePath);
-      await setupInstance(filePath, setupWizardOptions, fyo);
-      await this.setDesk(filePath);
+      const wizard = (this.$refs as { setupWizard?: { setLoading: (v: boolean) => void } }).setupWizard;
+      try {
+        await setupInstance(filePath, setupWizardOptions, fyo);
+        await this.setDesk(filePath);
+      } catch (error) {
+        const rawMessage = error instanceof Error ? error.message : String(error);
+        const safeMessage = rawMessage.replace(/password[^,\n}]*/gi, 'password: <redacted>');
+        const safeDetail = getSafeConfigDetail(filePath);
+        const shouldRetry = await showDialog({
+          title: this.t`Setup failed`,
+          detail: `${safeMessage}\n\n${safeDetail}`,
+          type: 'error',
+          buttons: [
+            {
+              label: this.t`Retry`,
+              action: () => true,
+              isPrimary: true,
+            },
+            {
+              label: this.t`Change connection`,
+              action: () => false,
+              isEscape: true,
+            },
+          ],
+        });
+        wizard?.setLoading(false);
+        if (!shouldRetry) {
+          await this.showDbSelector();
+        } else {
+          this.activeScreen = Screen.SetupWizard;
+        }
+        return;
+      } finally {
+        if (this.activeScreen === Screen.SetupWizard) {
+          wizard?.setLoading(false);
+        }
+      }
     },
     async showSetupWizardOrDesk(filePath: string): Promise<void> {
       const { countryCode, error, actionSymbol } = await connectToDatabase(
@@ -322,6 +383,7 @@ export default defineComponent({
     async showDbSelector(): Promise<void> {
       localStorage.clear();
       fyo.config.set('lastSelectedFilePath', null);
+      fyo.config.set('lastSelectedConnectionId' as never, null as never);
       fyo.telemetry.stop();
       await fyo.purgeCache();
       this.activeScreen = Screen.DatabaseSelector;

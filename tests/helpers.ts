@@ -30,7 +30,9 @@ export function getTestSetupWizardOptions(): SetupWizardOptions {
 
 export function getTestDbPath(dbPath?: string) {
   config();
-  return dbPath ?? process.env.TEST_DB_PATH ?? ':memory:';
+  // SQLite ':memory:' is no longer a supported backend; MariaDB uses MariaDBConfig via DatabaseManager.
+  // dbPath is retained for API compatibility but ignored for MariaDB (see DatabaseManager.createNewDatabase).
+  return dbPath ?? process.env.TEST_DB_PATH ?? '';
 }
 
 /**

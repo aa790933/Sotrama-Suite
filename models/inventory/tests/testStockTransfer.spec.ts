@@ -90,7 +90,7 @@ test('PurchaseReceipt, create inward stock movement', async (t) => {
     'sle created'
   );
   t.equal(
-    await fyo.db.getStockQuantity(item, location),
+    await fyo.db.getStockQuantity({item: item, location: location}),
     quantity,
     'stock purchased'
   );
@@ -145,7 +145,7 @@ test('Shipment, create outward stock movement', async (t) => {
     'sle created'
   );
   t.equal(
-    await fyo.db.getStockQuantity(item, location),
+    await fyo.db.getStockQuantity({item: item, location: location}),
     10 - quantity,
     'stock purchased'
   );
@@ -186,7 +186,7 @@ test('Shipment, invalid', async (t) => {
   await doc.sync();
   const grandTotal = quantity * rate;
 
-  t.equal(await fyo.db.getStockQuantity(item, location), 5, 'stock unchanged');
+  t.equal(await fyo.db.getStockQuantity({item: item, location: location}), 5, 'stock unchanged');
   t.equal(doc.grandTotal?.float, grandTotal);
   await assertThrows(async () => await doc.submit());
 
@@ -213,7 +213,7 @@ test('Stock Transfer, invalid cancellation', async (t) => {
   t.ok(name?.startsWith('PREC-'));
   const doc = await fyo.doc.getDoc(ModelNameEnum.PurchaseReceipt, name);
   await assertThrows(async () => await doc.cancel());
-  t.equal(await fyo.db.getStockQuantity(item, location), 5, 'stock unchanged');
+  t.equal(await fyo.db.getStockQuantity({item: item, location: location}), 5, 'stock unchanged');
   t.equal(
     (await getSLEs(name, doc.schemaName, fyo)).length,
     1,
@@ -237,7 +237,7 @@ test('Shipment, cancel and delete', async (t) => {
   await assertDoesNotThrow(async () => await doc.cancel());
   (t.ok(doc.isCancelled), `doc is cancelled`);
 
-  t.equal(await fyo.db.getStockQuantity(item, location), 10, 'stock changed');
+  t.equal(await fyo.db.getStockQuantity({item: item, location: location}), 10, 'stock changed');
   t.equal((await getSLEs(name, doc.schemaName, fyo)).length, 0, 'sle deleted');
   const ales = await getALEs(name, doc.schemaName, fyo);
   t.ok(ales.every((i) => !!i.reverted) && ales.length === 4, 'ale reverted');
@@ -271,7 +271,7 @@ test('Purchase Receipt, cancel and delete', async (t) => {
   await assertDoesNotThrow(async () => await doc.cancel());
   (t.ok(doc.isCancelled), `doc is cancelled`);
 
-  t.equal(await fyo.db.getStockQuantity(item, location), null, 'stock changed');
+  t.equal(await fyo.db.getStockQuantity({item: item, location: location}), null, 'stock changed');
   t.equal((await getSLEs(name, doc.schemaName, fyo)).length, 0, 'sle deleted');
   const ales = await getALEs(name, doc.schemaName, fyo);
   t.ok(ales.every((i) => !!i.reverted) && ales.length === 4, 'ale reverted');
@@ -577,7 +577,7 @@ test('Create Shipment from manually set Back Ref', async (t) => {
 
   await (await shpm.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity(item, location),
+    await fyo.db.getStockQuantity({item: item, location: location}),
     totalQuantity - quantity,
     'quantity shipped'
   );

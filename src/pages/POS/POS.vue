@@ -935,13 +935,7 @@ export default defineComponent({
 
           if (existingItems.length > 0) {
             for (let existingItem of existingItems) {
-              const availableQty = await this.fyo.db.getStockQuantity(
-                existingItem.item as string,
-                undefined,
-                undefined,
-                undefined,
-                existingItem.batch
-              );
+              const availableQty = await this.fyo.db.getStockQuantity({item: existingItem.item as string, batch: existingItem.batch});
               if (
                 existingItem.batch != null &&
                 availableQty != null &&
@@ -1118,13 +1112,7 @@ export default defineComponent({
         let availableQty = 0;
         if (itemDoc.trackItem) {
           availableQty =
-            (await fyo.db.getStockQuantity(
-              item.name,
-              undefined,
-              undefined,
-              undefined,
-              batchName
-            )) ?? 0;
+            (await fyo.db.getStockQuantity({item: item.name, batch: batchName})) ?? 0;
 
           const itemIndex = this.items.findIndex((i) => i.name === item.name);
           if (itemIndex !== -1) {

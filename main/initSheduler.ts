@@ -6,9 +6,8 @@ import type { Main } from 'main';
 let bree: Bree;
 
 export async function initScheduler(main: Main, interval: string) {
-  // Worker files live outside the bundler graph; in packaged builds they are
-  // shipped via extraResources instead of the asar.
-  const jobsRoot = app.isPackaged
+  const isPackaged = app.isPackaged;
+  const jobsRoot = isPackaged
     ? path.join(process.resourcesPath, 'jobs')
     : path.join(__dirname, '..', '..', 'jobs');
 
@@ -18,30 +17,32 @@ export async function initScheduler(main: Main, interval: string) {
 
   bree = new Bree({
     root: jobsRoot,
-    defaultExtension: 'ts',
+    defaultExtension: isPackaged ? 'js' : 'ts',
     jobs: [
       {
         name: 'triggerErpNextSync',
         interval: interval,
-        worker: {
-          workerData: {
-            useTsNode: true,
-          },
-        },
+        worker: isPackaged
+          ? {}
+          : {
+              workerData: {
+                useTsNode: true,
+              },
+            },
       },
       {
         name: 'checkLoyaltyProgramExpiry',
         interval: '24 hours',
-        worker: {
-          workerData: {
-            useTsNode: true,
-          },
-        },
+        worker: isPackaged
+          ? {}
+          : {
+              workerData: {
+                useTsNode: true,
+              },
+            },
       },
     ],
-    worker: {
-      argv: ['--require', 'ts-node/register'],
-    },
+    worker: isPackaged ? {} : { argv: ['--require', 'ts-node/register'] },
   });
 
   bree.on('worker created', () => {

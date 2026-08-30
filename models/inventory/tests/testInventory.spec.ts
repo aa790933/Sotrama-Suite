@@ -87,7 +87,7 @@ test('create stock movement, material receipt', async (t) => {
   t.equal(parseFloat(sle.rate), rate);
   t.equal(sle.quantity, quantity);
   t.equal(sle.location, locationMap.LocationOne);
-  t.equal(await fyo.db.getStockQuantity(itemMap.Ink.name), quantity);
+  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), quantity);
 });
 
 test('create stock movement, material transfer', async (t) => {
@@ -130,10 +130,10 @@ test('create stock movement, material transfer', async (t) => {
   }
 
   t.equal(
-    await fyo.db.getStockQuantity(itemMap.Ink.name, locationMap.LocationOne),
+    await fyo.db.getStockQuantity({item: itemMap.Ink.name, location: locationMap.LocationOne}),
     0
   );
-  t.equal(await fyo.db.getStockQuantity(itemMap.Ink.name), quantity);
+  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), quantity);
 });
 
 test('create stock movement, material issue', async (t) => {
@@ -166,7 +166,7 @@ test('create stock movement, material issue', async (t) => {
   t.equal(parseFloat(sle.rate), rate);
   t.equal(sle.quantity, -quantity);
   t.equal(sle.location, locationMap.LocationTwo);
-  t.equal(await fyo.db.getStockQuantity(itemMap.Ink.name), 0);
+  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), 0);
 });
 
 /**
@@ -196,7 +196,7 @@ test('cancel stock movement', async (t) => {
     t.equal(slesAfter.length, 0);
   }
 
-  t.equal(await fyo.db.getStockQuantity(itemMap.Ink.name), null);
+  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), null);
 });
 
 /**
@@ -230,7 +230,7 @@ async function runEntries(
       await assertThrows(async () => await stockMovement.submit());
     }
 
-    t.equal(await fyo.db.getStockQuantity(item), postQuantity);
+    t.equal(await fyo.db.getStockQuantity({item: item}), postQuantity);
   }
 }
 

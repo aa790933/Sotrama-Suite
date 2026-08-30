@@ -3,9 +3,9 @@
     class="relative window-drag flex items-center border-b dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-100 dark:border-gray-800"
     style="height: 28px"
   >
-    <Fb class="ms-2" />
-    <p v-if="companyName && dbPath" class="mx-auto text-sm">
-      {{ companyName }} - {{ dbPath }}
+    <img src="../../build/icon.png" alt="Sotrama" class="ms-2 h-5 w-5 object-contain" />
+    <p v-if="companyName" class="mx-auto text-sm">
+      {{ companyName }}
     </p>
     <div
       v-if="!isFullscreen"
@@ -39,11 +39,9 @@
 </template>
 
 <script>
-import Fb from './Icons/18/fb.vue';
-
 export default {
   name: 'WindowsTitleBar',
-  components: { Fb },
+  components: {},
   props: {
     dbPath: String,
     companyName: String,

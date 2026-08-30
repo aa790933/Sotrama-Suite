@@ -10,6 +10,7 @@ import { Config } from './demux/config';
 import { Doc } from './model/doc';
 import { ModelMap } from './model/types';
 import { TelemetryManager } from './telemetry/telemetry';
+import { IpcDatabaseAdapter } from './database/IpcDatabaseAdapter';
 import {
   DEFAULT_CURRENCY,
   DEFAULT_DISPLAY_PRECISION,
@@ -52,7 +53,22 @@ export class Fyo {
     this.isElectron = conf.isElectron ?? true;
 
     this.auth = new AuthHandler(this, conf.AuthDemux);
-    this.db = new DatabaseHandler(this, conf.DatabaseDemux);
+    // Slice 2: typed transport for CRUD subset (insert/get/getAll/exists/update/delete)
+    // Production (Electron renderer) uses IpcDatabaseAdapter via typed seam;
+    // legacy DatabaseDemux path retained for explicit test injection (DatabaseManager).
+    if (conf.database) {
+      this.db = new DatabaseHandler(this, undefined, conf.database);
+    } else if (conf.DatabaseDemux) {
+      // Explicit injection (tests/helpers.ts: DatabaseManager) — keep legacy stringly path
+      this.db = new DatabaseHandler(this, conf.DatabaseDemux);
+    } else if (this.isElectron && !this.isTest) {
+      // Normal production renderer path — typed Ipc adapter (Slice 2)
+      this.db = new DatabaseHandler(this, undefined, new IpcDatabaseAdapter());
+    } else {
+      // Non-Electron non-test fallback (e.g., pure unit tests without DB) — typed memory not needed,
+      // use legacy demux which will throw NotImplemented until init (preserves old behavior)
+      this.db = new DatabaseHandler(this, conf.DatabaseDemux);
+    }
     this.doc = new DocHandler(this);
 
     this.pesa = getMoneyMaker({

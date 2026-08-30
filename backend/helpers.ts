@@ -51,6 +51,10 @@ export const databaseMethodSet: Set<DatabaseMethod> = new Set([
   'deleteAll',
   'close',
   'exists',
+  'count',
+  'getNextAutoincrementId',
+  'getNextSeriesValue',
+  'getStockQuantity',
 ]);
 
 export function emitMainProcessError(

@@ -42,15 +42,10 @@ export default class NumberSeries extends Doc {
   }
 
   async next(schemaName: string) {
-    this.setCurrent();
-    const exists = await this.checkIfCurrentExists(schemaName);
-
-    if (exists) {
-      this.current = (this.current as number) + 1;
-    }
-
-    await this.sync();
-    return this.getPaddedName(this.current as number);
+    const prefix = this.name as string;
+    const nextVal = await this.fyo.db.getNextSeriesValue(prefix, schemaName);
+    this.current = nextVal;
+    return this.getPaddedName(nextVal);
   }
 
   async checkIfCurrentExists(schemaName: string) {

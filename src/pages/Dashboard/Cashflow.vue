@@ -132,7 +132,7 @@ export default defineComponent({
         this.period as PeriodKey
       );
 
-      const data = await fyo.db.getCashflow(fromDate.toISO(), toDate.toISO());
+      const data = await getCashflow(fyo, fromDate.toISO(), toDate.toISO());
       const dataMap = getMapFromList(data, 'yearmonth');
       this.data = periodList.map((p) => {
         const key = p.toFormat('yyyy-MM');
