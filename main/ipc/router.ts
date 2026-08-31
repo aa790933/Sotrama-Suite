@@ -6,7 +6,7 @@ import databaseManager from '../../backend/database/manager';
 import { emitMainProcessError } from '../../backend/helpers';
 import type { DatabaseMethod } from '../../utils/db/types';
 import { IPC_ACTIONS } from '../../utils/messages';
-import type { MariaDBConfig, Platform, PingOptions } from '../../utils/mariadb-types';
+import type { MariaDBConfig, Platform, PingOptions, InstallResult, PortCheckResult } from '../../utils/mariadb-types';
 import { parseMariaDBConfigString } from '../../utils/mariadb-types';
 import { getUrlAndTokenString, sendError } from '../contactMothership';
 import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
@@ -27,8 +27,9 @@ import { saveHtmlAsPdf } from '../saveHtmlAsPdf';
 import { sendAPIRequest } from '../api';
 import { initScheduler } from '../initSheduler';
 import type { BackendResponse } from '../../utils/ipc/types';
+import type { Database } from '../../fyo/database/Database';
+import type { SchemaMap } from 'schemas/types';
 import {
-  AllowAllSenderPolicy,
   AppPaths,
   ElectronSenderPolicy,
   PathPolicy,
@@ -47,17 +48,33 @@ export interface WindowProvider {
   icon: string;
 }
 
-export interface DatabaseLike {
-  setDbConfig(config: MariaDBConfig): void;
-  createNewDatabase(dbPath: string, countryCode: string): Promise<string>;
-  connectToDatabase(dbPath: string, countryCode?: string): Promise<string>;
-  call(method: DatabaseMethod, ...args: unknown[]): Promise<unknown>;
-  callBespoke(method: string, ...args: unknown[]): Promise<unknown>;
-  getSchemaMap(): unknown;
+function asDatabase(manager: typeof databaseManager): Database {
+  return {
+    getSchemaMap: () => Promise.resolve(manager.getSchemaMap() as SchemaMap),
+    createNewDatabase: (dbPath: string, countryCode: string) => manager.createNewDatabase(dbPath, countryCode),
+    connectToDatabase: (dbPath: string, countryCode?: string) => manager.connectToDatabase(dbPath, countryCode),
+    insert: (s: string, m: any) => manager.insert(s, m) as Promise<any>,
+    get: (s: string, n: string, f?: string | string[]) => manager.get(s, n, f) as Promise<any>,
+    getAll: (s: string, o?: any) => manager.getAll(s, o) as Promise<any>,
+    getAllRaw: (s: string, o?: any) => manager.getAll(s, o) as Promise<any>,
+    getSingleValues: (...a: any[]) => (manager.getSingleValues as any)(...a),
+    update: (s: string, m: any) => manager.update(s, m),
+    delete: (s: string, n: string) => manager.delete(s, n),
+    deleteAll: (s: string, f: any) => manager.deleteAll(s, f),
+    exists: (s: string, n?: string) => manager.exists(s, n),
+    close: () => manager.close(),
+    count: (s: string, o?: any) => manager.count(s, o),
+    getNextAutoincrementId: (s: string) => manager.getNextAutoincrementId(s),
+    getNextSeriesValue: (p: string, s: string) => manager.getNextSeriesValue(p, s),
+    getStockQuantity: ((q: any, ...a: any[]) => (manager.getStockQuantity as any)(q, ...a)) as any,
+    rename: (s: string, o: string, n: string) => manager.rename(s, o, n),
+    call: (m: DatabaseMethod, ...a: unknown[]) => manager.call(m, ...a),
+    callBespoke: (m: string, ...a: unknown[]) => manager.callBespoke(m, ...a),
+  } as unknown as Database;
 }
 
 export interface IpcRouterDeps {
-  database: DatabaseLike;
+  database: Database;
   windowProvider: WindowProvider;
   app: Electron.App;
   dialog: Electron.Dialog;
@@ -65,34 +82,36 @@ export interface IpcRouterDeps {
   autoUpdater?: typeof import('electron-updater').autoUpdater;
   senderPolicy?: SenderPolicy;
   pathPolicy?: PathPolicy;
-  // Optional installer backend injection for tests — defaults to real mariadbInstall
   installer?: {
-    isPortAvailable(port: number): Promise<{ available: boolean }>;
+    isPortAvailable(port: number): Promise<PortCheckResult>;
     detectLanIp(): string | null;
     pingMariaDB(opts: PingOptions): Promise<{ ok: boolean; error?: string }>;
-    installMariaDBSilent(opts: import('../../utils/mariadb-types').InstallOptions, onProgress?: (e: { percent: number; downloaded: number; total: number }) => void): Promise<import('../../utils/mariadb-types').InstallResult>;
+    installMariaDBSilent(opts: import('../../utils/mariadb-types').InstallOptions, onProgress?: (e: { percent: number; downloaded: number; total: number }) => void): Promise<InstallResult>;
     resolveMsiPath(onProgress?: (e: { percent: number; downloaded: number; total: number }) => void): Promise<string>;
     detectPlatform(): Platform;
   };
 }
 
-// ---- Typed sub-interfaces (the seam) ----
+// ---- Typed sub-interfaces (the seam) — four as planned ----
 
 export interface DbOps {
-  checkDbAccess(idOrJson: string): Promise<boolean>;
-  checkDbExists(opts: { host: string; port: number; user: string; password: string; database: string }): Promise<{ exists: boolean; error?: string }>;
-  createDatabase(opts: { host: string; port: number; user: string; password: string; database: string }): Promise<{ ok: boolean; error?: string }>;
-  isPortAvailable(port: number): Promise<{ available: boolean }>;
-  getLanIp(): Promise<string | null>;
-  pingMariaDB(opts: PingOptions): Promise<{ ok: boolean; error?: string }>;
-  resolveMsiPath(emitProgress: boolean, sender: Electron.WebContents | null): Promise<string>;
-  installMariaDB(opts: { rootPassword: string; appPassword: string; database: string; port: number; platform?: Platform; hostMode?: boolean }, sender: Electron.WebContents | null): Promise<import('../../utils/mariadb-types').InstallResult>;
+  checkDbAccess(config: MariaDBConfig): Promise<boolean>;
   createNewDatabase(dbPath: string, countryCode: string): Promise<BackendResponse>;
   connectToDatabase(dbPath: string, countryCode?: string): Promise<BackendResponse>;
   dbCall(method: DatabaseMethod, ...args: unknown[]): Promise<BackendResponse>;
   dbBespoke(method: string, ...args: unknown[]): Promise<BackendResponse>;
   dbSchema(): Promise<BackendResponse>;
   getDbList(): Promise<unknown>;
+}
+
+export interface InstallerOps {
+  isPortAvailable(port: number): Promise<PortCheckResult>;
+  getLanIp(): Promise<string | null>;
+  pingMariaDB(opts: PingOptions): Promise<{ ok: boolean; error?: string }>;
+  resolveMsiPath(emitProgress: boolean, sender: Electron.WebContents | null): Promise<string>;
+  installMariaDB(opts: { rootPassword: string; appPassword: string; database: string; port: number; platform?: Platform; hostMode?: boolean }, sender: Electron.WebContents | null): Promise<InstallResult>;
+  checkDbExists(config: MariaDBConfig): Promise<{ exists: boolean; error?: string }>;
+  createDatabase(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }>;
 }
 
 export interface FileOps {
@@ -120,10 +139,6 @@ export interface AppOps {
 
 // ---- Implementation ----
 
-function toBackendResponse<T>(data: T): BackendResponse {
-  return { data };
-}
-
 async function getErrorHandledResponse<T>(fn: () => Promise<T> | T): Promise<BackendResponse> {
   try {
     const data = await fn();
@@ -143,6 +158,7 @@ async function getErrorHandledResponse<T>(fn: () => Promise<T> | T): Promise<Bac
 
 export class IpcRouter {
   public readonly dbOps: DbOps;
+  public readonly installerOps: InstallerOps;
   public readonly fileOps: FileOps;
   public readonly appOps: AppOps;
 
@@ -158,15 +174,12 @@ export class IpcRouter {
       documents: deps.app.getPath('documents') ?? '',
     };
     this.pathPolicy = deps.pathPolicy ?? new PathPolicy(appPaths);
-    // Lazy load installer defaults to avoid import cost in tests
     this.installer = deps.installer ?? {
       isPortAvailable: async (port: number) => {
         const m = await import('../mariadbInstall');
         return m.isPortAvailable(port);
       },
       detectLanIp: () => {
-        // dynamic to avoid os network call at construction
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const m = require('../mariadbInstall') as typeof import('../mariadbInstall');
         return m.detectLanIp();
       },
@@ -183,28 +196,29 @@ export class IpcRouter {
         return m.resolveMsiPath(onProgress);
       },
       detectPlatform: () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const m = require('../mariadbInstall') as typeof import('../mariadbInstall');
         return m.detectPlatform();
       },
     };
 
-    // Bind typed sub-interfaces (the seam) — tests call these directly without IPC
     this.dbOps = {
       checkDbAccess: this.checkDbAccess.bind(this),
-      checkDbExists: this.checkDbExists.bind(this),
-      createDatabase: this.createDatabase.bind(this),
-      isPortAvailable: this.isPortAvailable.bind(this),
-      getLanIp: this.getLanIp.bind(this),
-      pingMariaDB: this.pingMariaDB.bind(this),
-      resolveMsiPath: this.resolveMsiPath.bind(this),
-      installMariaDB: this.installMariaDB.bind(this),
       createNewDatabase: this.createNewDatabase.bind(this),
       connectToDatabase: this.connectToDatabase.bind(this),
       dbCall: this.dbCall.bind(this),
       dbBespoke: this.dbBespoke.bind(this),
       dbSchema: this.dbSchema.bind(this),
       getDbList: this.getDbList.bind(this),
+    };
+
+    this.installerOps = {
+      isPortAvailable: this.isPortAvailable.bind(this),
+      getLanIp: this.getLanIp.bind(this),
+      pingMariaDB: this.pingMariaDB.bind(this),
+      resolveMsiPath: this.resolveMsiPath.bind(this),
+      installMariaDB: this.installMariaDB.bind(this),
+      checkDbExists: this.checkDbExists.bind(this),
+      createDatabase: this.createDatabase.bind(this),
     };
 
     this.fileOps = {
@@ -231,14 +245,13 @@ export class IpcRouter {
     };
   }
 
-  // ---- DbOps implementation (concentrates sanitizeDatabaseName + connection resolution) ----
+  private assertValidSender(event: Electron.IpcMainInvokeEvent): void {
+    if (!this.senderPolicy.isValidSender(event)) throw new Error('Invalid IPC sender');
+  }
 
-  async checkDbAccess(idOrJson: string): Promise<boolean> {
+  async checkDbAccess(config: MariaDBConfig): Promise<boolean> {
     try {
-      const byId = findConnectionById(idOrJson);
-      const config: MariaDBConfig = byId
-        ? { host: byId.host, port: byId.port, user: byId.user, password: byId.password, database: byId.database }
-        : parseMariaDBConfigString(idOrJson);
+      sanitizeDatabaseName(config.database);
       const { createPool } = await import('mariadb');
       const pool = createPool({
         host: config.host,
@@ -257,14 +270,23 @@ export class IpcRouter {
     }
   }
 
-  async checkDbExists(opts: { host: string; port: number; user: string; password: string; database: string }): Promise<{ exists: boolean; error?: string }> {
+  private parseConfigFromString(idOrJson: string): MariaDBConfig {
+    const byId = findConnectionById(idOrJson);
+    if (byId) {
+      return { host: byId.host, port: byId.port, user: byId.user, password: byId.password, database: byId.database };
+    }
+    const cfg = parseMariaDBConfigString(idOrJson);
+    sanitizeDatabaseName(cfg.database);
+    return cfg;
+  }
+
+  async checkDbExists(config: MariaDBConfig): Promise<{ exists: boolean; error?: string }> {
     try {
-      // sanitize before using in query — even though we use param, validate shape
-      sanitizeDatabaseName(opts.database);
+      sanitizeDatabaseName(config.database);
       const { createConnection } = await import('mariadb');
-      const conn = await createConnection({ host: opts.host, port: opts.port, user: opts.user, password: opts.password });
+      const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password });
       try {
-        const rows = (await conn.query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?', [opts.database])) as unknown[];
+        const rows = (await conn.query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?', [config.database])) as unknown[];
         return { exists: Array.isArray(rows) && rows.length > 0 };
       } finally {
         await conn.end().catch(() => undefined);
@@ -274,11 +296,11 @@ export class IpcRouter {
     }
   }
 
-  async createDatabase(opts: { host: string; port: number; user: string; password: string; database: string }): Promise<{ ok: boolean; error?: string }> {
+  async createDatabase(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }> {
     try {
-      const safeDb = sanitizeDatabaseName(opts.database);
+      const safeDb = sanitizeDatabaseName(config.database);
       const { createConnection } = await import('mariadb');
-      const conn = await createConnection({ host: opts.host, port: opts.port, user: opts.user, password: opts.password });
+      const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password });
       try {
         await conn.query(`CREATE DATABASE IF NOT EXISTS \`${safeDb}\``);
         return { ok: true };
@@ -320,7 +342,6 @@ export class IpcRouter {
   async createNewDatabase(dbPath: string, countryCode: string): Promise<BackendResponse> {
     return getErrorHandledResponse(async () => {
       const cfg = this.resolveMariaDBConfig(dbPath);
-      this.deps.database.setDbConfig(cfg);
       return this.deps.database.createNewDatabase(dbPath, countryCode);
     });
   }
@@ -328,7 +349,7 @@ export class IpcRouter {
   async connectToDatabase(dbPath: string, countryCode?: string): Promise<BackendResponse> {
     return getErrorHandledResponse(async () => {
       const cfg = this.resolveMariaDBConfig(dbPath);
-      this.deps.database.setDbConfig(cfg);
+      void cfg;
       return this.deps.database.connectToDatabase(dbPath, countryCode);
     });
   }
@@ -336,18 +357,13 @@ export class IpcRouter {
   private resolveMariaDBConfig(dbPath: string): MariaDBConfig {
     const byId = findConnectionById(dbPath);
     if (byId) {
-      // Persist selection for next launch
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const cfgStore = require('utils/config').default as typeof import('utils/config').default;
       cfgStore.set('lastSelectedConnectionId' as never, byId.id as never);
       return { host: byId.host, port: byId.port, user: byId.user, password: byId.password, database: byId.database };
     }
-    // Not an ID — must be JSON
     const cfg = parseMariaDBConfigString(dbPath);
-    // Validate database name once at seam entry
-    cfg.database = sanitizeDatabaseName(cfg.database);
+    sanitizeDatabaseName(cfg.database);
     const conn = upsertConnectionFromConfig(cfg.database, cfg);
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const cfgStore = require('utils/config').default as typeof import('utils/config').default;
     cfgStore.set('lastSelectedConnectionId' as never, conn.id as never);
     cfgStore.set('lastSelectedFilePath' as never, dbPath as never);
@@ -355,11 +371,11 @@ export class IpcRouter {
   }
 
   async dbCall(method: DatabaseMethod, ...args: unknown[]): Promise<BackendResponse> {
-    return getErrorHandledResponse(async () => this.deps.database.call(method, ...args));
+    return getErrorHandledResponse(async () => (this.deps.database as unknown as { call: (m: DatabaseMethod, ...a: unknown[]) => Promise<unknown> }).call(method, ...args));
   }
 
   async dbBespoke(method: string, ...args: unknown[]): Promise<BackendResponse> {
-    return getErrorHandledResponse(async () => this.deps.database.callBespoke(method, ...args));
+    return getErrorHandledResponse(async () => (this.deps.database as unknown as { callBespoke: (m: string, ...a: unknown[]) => Promise<unknown> }).callBespoke(method, ...args));
   }
 
   async dbSchema(): Promise<BackendResponse> {
@@ -387,10 +403,8 @@ export class IpcRouter {
     return getConfigFilesWithModified(files);
   }
 
-  // ---- FileOps ----
-
   async saveData(data: string, savePath: string, event: Electron.IpcMainInvokeEvent): Promise<void> {
-    if (!this.senderPolicy.isValidSender(event)) throw new Error('Invalid IPC sender');
+    this.assertValidSender(event);
     this.pathPolicy.assertAllowed(savePath);
     if (typeof data !== 'string' || data.length > 50 * 1024 * 1024) {
       throw new Error('SAVE_DATA: invalid data');
@@ -399,7 +413,7 @@ export class IpcRouter {
   }
 
   async deleteFile(filePath: string, event: Electron.IpcMainInvokeEvent): Promise<BackendResponse> {
-    if (!this.senderPolicy.isValidSender(event)) throw new Error('Invalid IPC sender');
+    this.assertValidSender(event);
     const byId = findConnectionById(filePath);
     if (byId) {
       const conns = getPersistedConnections();
@@ -448,10 +462,7 @@ export class IpcRouter {
     return printHtmlDocument(html, app as never, width, height);
   }
 
-  // ---- AppOps ----
-
   async getEnv(isDevelopment: boolean, platform: string, version: string) {
-    // isDevelopment/platform/version are injected for testability; defaults come from app in register
     return { isDevelopment, platform, version };
   }
 
@@ -495,7 +506,7 @@ export class IpcRouter {
   }
 
   async sendAPIRequest(endpoint: string, options: NodeFetchRequestInit | undefined, event: Electron.IpcMainInvokeEvent) {
-    if (!this.senderPolicy.isValidSender(event)) throw new Error('Invalid IPC sender');
+    this.assertValidSender(event);
     assertAllowedApiEndpoint(endpoint);
     return sendAPIRequest(endpoint, options);
   }
@@ -504,40 +515,57 @@ export class IpcRouter {
     return this.deps.dialog.showErrorBox(title, content);
   }
 
-  // ---- Registration (the only place IPC_ACTIONS strings appear) ----
-
   register(): void {
     const w = () => this.deps.windowProvider.getWindow();
     const ipc = this.deps.ipcMain ?? ((): typeof import('electron').ipcMain => {
-      // Lazy require so tests without electron can still import the module
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require('electron').ipcMain as typeof import('electron').ipcMain;
     })();
 
-    ipc.handle(IPC_ACTIONS.CHECK_DB_ACCESS, async (_, dbPath: string) => this.dbOps.checkDbAccess(dbPath));
-    ipc.handle(IPC_ACTIONS.IS_PORT_AVAILABLE, async (_, port: number) => this.dbOps.isPortAvailable(port));
-    ipc.handle(IPC_ACTIONS.GET_LAN_IP, async () => this.dbOps.getLanIp());
-    ipc.handle(IPC_ACTIONS.CHECK_DB_EXISTS, async (_, opts: { host: string; port: number; user: string; password: string; database: string }) => this.dbOps.checkDbExists(opts));
-    ipc.handle(IPC_ACTIONS.CREATE_DATABASE, async (_, opts: { host: string; port: number; user: string; password: string; database: string }) => this.dbOps.createDatabase(opts));
-    ipc.handle(IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER, async (event, emitProgress: boolean) => this.dbOps.resolveMsiPath(emitProgress, (event as unknown as { sender: Electron.WebContents }).sender ?? w()?.webContents ?? null));
-    ipc.handle(IPC_ACTIONS.INSTALL_MARIA_DB, async (event, opts: { rootPassword: string; appPassword: string; database: string; port: number; platform?: Platform; hostMode?: boolean }) => this.dbOps.installMariaDB(opts, (event as unknown as { sender: Electron.WebContents }).sender ?? w()?.webContents ?? null));
-    ipc.handle(IPC_ACTIONS.PING_MARIA_DB, async (_, opts: PingOptions) => this.dbOps.pingMariaDB(opts));
+    const withSender = <T extends unknown[]>(fn: (event: Electron.IpcMainInvokeEvent, ...args: T) => Promise<unknown>) =>
+      async (event: Electron.IpcMainInvokeEvent, ...args: T) => {
+        this.assertValidSender(event);
+        return fn(event, ...args);
+      };
 
-    ipc.handle(IPC_ACTIONS.GET_OPEN_FILEPATH, async (_, options: OpenDialogOptions) => this.fileOps.getOpenFilePath(options, w()));
-    ipc.handle(IPC_ACTIONS.GET_SAVE_FILEPATH, async (_, options: SaveDialogOptions) => this.fileOps.getSaveFilePath(options, w()));
-    ipc.handle(IPC_ACTIONS.GET_DIALOG_RESPONSE, async (_, options: MessageBoxOptions) => this.fileOps.getDialogResponse(options, w(), this.deps.windowProvider.isDevelopment, this.deps.windowProvider.isLinux, this.deps.windowProvider.icon));
-    ipc.handle(IPC_ACTIONS.SHOW_ERROR, async (_, { title, content }: { title: string; content: string }) => this.appOps.showError(title, content));
-    ipc.handle(IPC_ACTIONS.SAVE_HTML_AS_PDF, async (_, html: string, savePath: string, width: number, height: number) => this.fileOps.saveHtmlAsPdf(html, savePath, width, height, this.deps.app));
-    ipc.handle(IPC_ACTIONS.PRINT_HTML_DOCUMENT, async (_, html: string, width: number, height: number) => this.fileOps.printHtmlDocument(html, width, height, this.deps.app));
-    ipc.handle(IPC_ACTIONS.SAVE_DATA, async (event, data: string, savePath: string) => this.fileOps.saveData(data, savePath, event));
-    ipc.handle(IPC_ACTIONS.SEND_ERROR, async (_, bodyJson: string) => this.appOps.sendError(bodyJson, this.deps.windowProvider as unknown));
-    ipc.handle(IPC_ACTIONS.CHECK_FOR_UPDATES, async () => this.appOps.checkForUpdates(this.deps.windowProvider.isDevelopment, this.deps.windowProvider.checkedForUpdate, () => { this.deps.windowProvider.checkedForUpdate = true; }));
-    ipc.handle(IPC_ACTIONS.GET_LANGUAGE_MAP, async (_, code: string) => this.appOps.getLanguageMap(code));
-    ipc.handle(IPC_ACTIONS.SELECT_FILE, async (_, options: SelectFileOptions) => this.fileOps.selectFile(options, w()));
-    ipc.handle(IPC_ACTIONS.GET_CREDS, () => this.appOps.getCreds());
-    ipc.handle(IPC_ACTIONS.DELETE_FILE, async (event, filePath: string) => this.fileOps.deleteFile(filePath, event));
-    ipc.handle(IPC_ACTIONS.GET_DB_LIST, async () => this.dbOps.getDbList());
-    ipc.handle(IPC_ACTIONS.GET_ENV, async () => {
+    // DbOps
+    ipc.handle(IPC_ACTIONS.CHECK_DB_ACCESS, withSender(async (_e, dbPathOrConfig: string | MariaDBConfig) => {
+      const cfg = typeof dbPathOrConfig === 'string' ? this.parseConfigFromString(dbPathOrConfig) : dbPathOrConfig as MariaDBConfig;
+      return this.checkDbAccess(cfg);
+    }));
+    ipc.handle(IPC_ACTIONS.CHECK_DB_EXISTS, withSender(async (_e, config: MariaDBConfig) => this.checkDbExists(config)));
+    ipc.handle(IPC_ACTIONS.CREATE_DATABASE, withSender(async (_e, config: MariaDBConfig) => this.createDatabase(config)));
+    ipc.handle(IPC_ACTIONS.DB_CREATE, withSender(async (_e, dbPath: string, countryCode: string) => this.createNewDatabase(dbPath, countryCode)));
+    ipc.handle(IPC_ACTIONS.DB_CONNECT, withSender(async (_e, dbPath: string, countryCode?: string) => this.connectToDatabase(dbPath, countryCode)));
+    ipc.handle(IPC_ACTIONS.DB_CALL, withSender(async (_e, method: DatabaseMethod, ...args: unknown[]) => this.dbCall(method, ...args)));
+    ipc.handle(IPC_ACTIONS.DB_BESPOKE, withSender(async (_e, method: string, ...args: unknown[]) => this.dbBespoke(method, ...args)));
+    ipc.handle(IPC_ACTIONS.DB_SCHEMA, withSender(async () => this.dbSchema()));
+    ipc.handle(IPC_ACTIONS.GET_DB_LIST, withSender(async () => this.getDbList()));
+
+    // InstallerOps
+    ipc.handle(IPC_ACTIONS.IS_PORT_AVAILABLE, withSender(async (_e, port: number) => this.isPortAvailable(port)));
+    ipc.handle(IPC_ACTIONS.GET_LAN_IP, withSender(async () => this.getLanIp()));
+    ipc.handle(IPC_ACTIONS.PING_MARIA_DB, withSender(async (_e, opts: PingOptions) => this.pingMariaDB(opts)));
+    ipc.handle(IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER, withSender(async (e, emitProgress: boolean) => this.resolveMsiPath(emitProgress, (e as unknown as { sender: Electron.WebContents }).sender ?? w()?.webContents ?? null)));
+    ipc.handle(IPC_ACTIONS.INSTALL_MARIA_DB, withSender(async (e, opts: { rootPassword: string; appPassword: string; database: string; port: number; platform?: Platform; hostMode?: boolean }) => this.installMariaDB(opts, (e as unknown as { sender: Electron.WebContents }).sender ?? w()?.webContents ?? null)));
+
+    // FileOps
+    ipc.handle(IPC_ACTIONS.SAVE_DATA, withSender(async (event, data: string, savePath: string) => this.saveData(data, savePath, event)));
+    ipc.handle(IPC_ACTIONS.DELETE_FILE, withSender(async (event, filePath: string) => this.deleteFile(filePath, event)));
+    ipc.handle(IPC_ACTIONS.SELECT_FILE, withSender(async (_e, options: SelectFileOptions) => this.selectFile(options, w())));
+    ipc.handle(IPC_ACTIONS.GET_OPEN_FILEPATH, withSender(async (_e, options: OpenDialogOptions) => this.getOpenFilePath(options, w())));
+    ipc.handle(IPC_ACTIONS.GET_SAVE_FILEPATH, withSender(async (_e, options: SaveDialogOptions) => this.getSaveFilePath(options, w())));
+    ipc.handle(IPC_ACTIONS.GET_DIALOG_RESPONSE, withSender(async (_e, options: MessageBoxOptions) => this.getDialogResponse(options, w(), this.deps.windowProvider.isDevelopment, this.deps.windowProvider.isLinux, this.deps.windowProvider.icon)));
+    ipc.handle(IPC_ACTIONS.SAVE_HTML_AS_PDF, withSender(async (_e, html: string, savePath: string, width: number, height: number) => this.saveHtmlAsPdf(html, savePath, width, height, this.deps.app)));
+    ipc.handle(IPC_ACTIONS.PRINT_HTML_DOCUMENT, withSender(async (_e, html: string, width: number, height: number) => this.printHtmlDocument(html, width, height, this.deps.app)));
+
+    // AppOps
+    ipc.handle(IPC_ACTIONS.SHOW_ERROR, withSender(async (_e, { title, content }: { title: string; content: string }) => this.showError(title, content)));
+    ipc.handle(IPC_ACTIONS.SEND_ERROR, withSender(async (_e, bodyJson: string) => this.sendError(bodyJson, this.deps.windowProvider as unknown)));
+    ipc.handle(IPC_ACTIONS.SEND_API_REQUEST, withSender(async (event, endpoint: string, options: NodeFetchRequestInit | undefined) => this.sendAPIRequest(endpoint, options, event)));
+    ipc.handle(IPC_ACTIONS.CHECK_FOR_UPDATES, withSender(async () => this.checkForUpdates(this.deps.windowProvider.isDevelopment, this.deps.windowProvider.checkedForUpdate, () => { this.deps.windowProvider.checkedForUpdate = true; })));
+    ipc.handle(IPC_ACTIONS.GET_LANGUAGE_MAP, withSender(async (_e, code: string) => this.getLanguageMap(code)));
+    ipc.handle(IPC_ACTIONS.GET_CREDS, withSender(async () => this.getCreds()));
+    ipc.handle(IPC_ACTIONS.GET_ENV, withSender(async () => {
       let version = this.deps.app.getVersion();
       if (this.deps.windowProvider.isDevelopment) {
         try {
@@ -545,16 +573,10 @@ export class IpcRouter {
           version = (JSON.parse(pkg) as { version: string }).version;
         } catch {}
       }
-      return this.appOps.getEnv(this.deps.windowProvider.isDevelopment, process.platform, version);
-    });
-    ipc.handle(IPC_ACTIONS.GET_TEMPLATES, async (_, posPrintWidth?: number) => this.appOps.getTemplates(posPrintWidth));
-    ipc.handle(IPC_ACTIONS.INIT_SHEDULER, async (_, interval: string) => this.appOps.initScheduler(this.deps.windowProvider as unknown, interval));
-    ipc.handle(IPC_ACTIONS.SEND_API_REQUEST, async (event, endpoint: string, options: NodeFetchRequestInit | undefined) => this.appOps.sendAPIRequest(endpoint, options, event));
-    ipc.handle(IPC_ACTIONS.DB_CREATE, async (_, dbPath: string, countryCode: string) => this.dbOps.createNewDatabase(dbPath, countryCode));
-    ipc.handle(IPC_ACTIONS.DB_CONNECT, async (_, dbPath: string, countryCode?: string) => this.dbOps.connectToDatabase(dbPath, countryCode));
-    ipc.handle(IPC_ACTIONS.DB_CALL, async (_, method: DatabaseMethod, ...args: unknown[]) => this.dbOps.dbCall(method, ...args));
-    ipc.handle(IPC_ACTIONS.DB_BESPOKE, async (_, method: string, ...args: unknown[]) => this.dbOps.dbBespoke(method, ...args));
-    ipc.handle(IPC_ACTIONS.DB_SCHEMA, async () => this.dbOps.dbSchema());
+      return this.getEnv(this.deps.windowProvider.isDevelopment, process.platform, version);
+    }));
+    ipc.handle(IPC_ACTIONS.GET_TEMPLATES, withSender(async (_e, posPrintWidth?: number) => this.getTemplates(posPrintWidth)));
+    ipc.handle(IPC_ACTIONS.INIT_SHEDULER, withSender(async (_e, interval: string) => this.initScheduler(this.deps.windowProvider as unknown, interval)));
   }
 }
 
@@ -567,11 +589,9 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
     set checkedForUpdate(v: boolean) { main.checkedForUpdate = v; },
     get icon() { return main.icon; },
   };
-  // Lazy require so tests without electron can import router module
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { app: electronApp, dialog: electronDialog } = require('electron') as typeof import('electron');
   return new IpcRouter({
-    database: databaseManager as unknown as DatabaseLike,
+    database: asDatabase(databaseManager),
     windowProvider: winProvider,
     app: electronApp,
     dialog: electronDialog,

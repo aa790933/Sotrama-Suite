@@ -7,14 +7,12 @@ import path from 'path';
  */
 
 export function sanitizeDatabaseName(name: string): string {
-  if (typeof name !== 'string') throw new Error('Invalid database name');
-  const safe = name.replace(/`/g, '').replace(/[^a-zA-Z0-9_\-]/g, '');
-  if (!safe) throw new Error('Invalid database name');
-  return safe;
-}
-
-export function sanitizePasswordForStatement(password: string): string {
-  return password.replace(/'/g, "''").replace(/\r|\n/g, '');
+  if (typeof name !== 'string' || !name) throw new Error('Invalid database name');
+  if (name.includes('`')) throw new Error('Invalid database name: must not contain backticks');
+  if (!/^[a-zA-Z0-9_\-]+$/.test(name)) {
+    throw new Error('Invalid database name: must match [a-zA-Z0-9_-]');
+  }
+  return name;
 }
 
 // PathPolicy — single place for SAVE_DATA / DELETE_FILE traversal guards.
@@ -74,8 +72,4 @@ export function assertAllowedApiEndpoint(endpoint: string): void {
   if (!allowed) {
     throw new Error('SEND_API_REQUEST: endpoint not allowed');
   }
-}
-
-export function getSafeDatabaseNameForQuery(database: string): string {
-  return sanitizeDatabaseName(database);
 }

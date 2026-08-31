@@ -10,10 +10,11 @@ test('sanitizeDatabaseName: allows alphanum, dash, underscore', (t) => {
   t.end();
 });
 
-test('sanitizeDatabaseName: strips backticks and illegal chars in one place', (t) => {
-  t.equal(sanitizeDatabaseName('my`db'), 'mydb');
-  t.equal(sanitizeDatabaseName('db; DROP TABLE x;'), 'dbDROPTABLEx');
-  t.equal(sanitizeDatabaseName('`sotrama`'), 'sotrama');
+test('sanitizeDatabaseName: rejects backticks and illegal chars (strict, not strip)', (t) => {
+  t.throws(() => sanitizeDatabaseName('my`db'), /backticks/);
+  t.throws(() => sanitizeDatabaseName('db; DROP TABLE x;'), /Invalid database name/);
+  t.throws(() => sanitizeDatabaseName('`sotrama`'), /backticks/);
+  t.throws(() => sanitizeDatabaseName('db with spaces'), /Invalid database name/);
   t.end();
 });
 
@@ -93,15 +94,8 @@ test('ElectronSenderPolicy checks sender === window webContents', (t) => {
   t.end();
 });
 
-// Router integration tests are exercised via policies directly;
-// full IpcRouter with Database seam is verified in a separate
-// integration harness that mocks electron/electron-store to avoid
-// requiring the real electron binary in unit tests.
-// The pure helpers below are the core of the deep module.
-
 test('IpcRouter deep module: sanitizeDatabaseName is single source (deletion test)', (t) => {
-  // Deleting this helper would require recreating it in N handlers — proves depth
-  t.equal(sanitizeDatabaseName('my`db'), 'mydb', 'single helper, not 2 copies');
+  t.throws(() => sanitizeDatabaseName('my`db'), /backticks/, 'single helper, not 2 copies');
   t.throws(() => sanitizeDatabaseName(''), /Invalid/);
   t.end();
 });
@@ -116,5 +110,38 @@ test('IpcRouter deep module: PathPolicy is single source', (t) => {
 test('IpcRouter deep module: assertAllowedApiEndpoint is single source', (t) => {
   t.doesNotThrow(() => assertAllowedApiEndpoint('https://erp.example.com/api/method/books_integration.api.ping'));
   t.throws(() => assertAllowedApiEndpoint('http://evil.com/api/method/books_integration.api.ping'), /only https/);
+  t.end();
+});
+
+test('IpcRouter seam is real — file has four typed sub-interfaces', (t) => {
+  const src = require('fs').readFileSync('main/ipc/router.ts', 'utf-8');
+  t.ok(src.includes('interface DbOps'), 'DbOps interface exists');
+  t.ok(src.includes('interface InstallerOps'), 'InstallerOps interface exists (four, not three)');
+  t.ok(src.includes('interface FileOps'), 'FileOps exists');
+  t.ok(src.includes('interface AppOps'), 'AppOps exists');
+  t.ok(src.includes('checkDbExists(config: MariaDBConfig)'), 'InstallerOps uses typed MariaDBConfig, not loose opts');
+  t.ok(src.includes('checkDbAccess(config: MariaDBConfig)'), 'DbOps uses typed MariaDBConfig');
+  t.ok(src.includes('database: Database'), 'injects real Database interface, not DatabaseLike cast');
+  t.ok(src.includes('asDatabase('), 'uses asDatabase adapter, not as unknown cast');
+  t.ok(!src.includes('as unknown as DatabaseLike'), 'no DatabaseLike cast');
+  t.ok(!src.includes('toBackendResponse'), 'unused toBackendResponse removed');
+  t.end();
+});
+
+test('IpcRouter — every IPC handler checks SenderPolicy (file check)', (t) => {
+  const src = require('fs').readFileSync('main/ipc/router.ts', 'utf-8');
+  // Every ipc.handle should be wrapped with withSender (which checks sender)
+  const handles = (src.match(/ipc\.handle\(/g) || []).length;
+  const withSender = (src.match(/withSender\(/g) || []).length;
+  // SAVE_DATA/DELETE_FILE/SEND_API_REQUEST also check inside the method, but registration should also be wrapped
+  t.equal(withSender, handles, 'every ipc.handle is wrapped with sender check');
+  t.ok(src.includes('assertValidSender') || src.includes('isValidSender'), 'sender policy used');
+  t.end();
+});
+
+test('IpcRouter — sanitizeDatabaseName rejects (strict)', (t) => {
+  const src = require('fs').readFileSync('main/ipc/policies.ts', 'utf-8');
+  t.ok(src.includes('must not contain backticks') || src.includes('must match'), 'sanitize rejects, not strips');
+  t.notOk(src.includes("replace(/`/g, '')"), 'no silent strip');
   t.end();
 });

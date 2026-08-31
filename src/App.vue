@@ -56,7 +56,7 @@ import type { HostType } from './setup/types';
 import { SetupWizardOptions } from './setup/types';
 import { normalizeHostRole } from './utils/hostRole';
 import './styles/index.css';
-import { connectToDatabase, dbErrorActionSymbols } from './utils/db';
+import { connectToDatabase } from './utils/db';
 import { initializeInstance } from './utils/initialization';
 import * as injectionKeys from './utils/injectionKeys';
 import { showDialog, showToast } from './utils/interactive';
@@ -280,14 +280,7 @@ export default defineComponent({
       }
     },
     async showSetupWizardOrDesk(filePath: string): Promise<void> {
-      const { countryCode, error, actionSymbol } = await connectToDatabase(
-        this.fyo,
-        filePath
-      );
-
-      if (!countryCode && error && actionSymbol) {
-        return await this.handleConnectionFailed(error, actionSymbol);
-      }
+      const { countryCode } = await connectToDatabase(this.fyo, filePath);
 
       const setupComplete = await fyo.getValue(
         ModelNameEnum.AccountingSettings,
@@ -354,20 +347,6 @@ export default defineComponent({
       }
 
       await this.setDesk(filePath);
-    },
-    async handleConnectionFailed(error: Error, actionSymbol: symbol) {
-      await this.showDbSelector();
-
-      if (actionSymbol === dbErrorActionSymbols.CancelSelection) {
-        return;
-      }
-
-      if (actionSymbol === dbErrorActionSymbols.SelectFile) {
-        await this.databaseSelector?.existingDatabase();
-        return;
-      }
-
-      throw error;
     },
     async setDeskRoute(): Promise<void> {
       const { onboardingComplete } = await fyo.doc.getDoc('GetStarted');
