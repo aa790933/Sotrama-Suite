@@ -2,30 +2,17 @@ import type { MessageBoxOptions, OpenDialogOptions, SaveDialogOptions } from 'el
 import fs from 'fs-extra';
 import path from 'path';
 import type { SelectFileOptions, SelectFileReturn } from 'utils/types';
-import databaseManager from '../../backend/database/manager';
 import { emitMainProcessError } from '../../backend/helpers';
 import type { DatabaseMethod } from '../../utils/db/types';
 import { IPC_ACTIONS } from '../../utils/messages';
 import type { MariaDBConfig, Platform, PingOptions, InstallResult, PortCheckResult } from '../../utils/mariadb-types';
 import { parseMariaDBConfigString } from '../../utils/mariadb-types';
-import { getUrlAndTokenString, sendError } from '../contactMothership';
+// getUrlAndTokenString / sendError are lazy-imported inside getCreds/sendError to avoid pulling electron at module load
 import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
 import { getLanguageMap } from '../getLanguageMap';
 import { getTemplates } from '../getPrintTemplates';
-import { printHtmlDocument } from '../printHtmlDocument';
-import {
-  findConnectionById,
-  getConfigFilesWithModified,
-  getConnectionsMetadata,
-  getPersistedConnections,
-  isExpectedUpdateError,
-  migrateLegacyConnections,
-  setAndGetCleanedConfigFiles,
-  upsertConnectionFromConfig,
-} from '../helpers';
-import { saveHtmlAsPdf } from '../saveHtmlAsPdf';
+// isExpectedUpdateError is lazy-imported inside checkForUpdates to avoid pulling electron-store at module load
 import { sendAPIRequest } from '../api';
-import { initScheduler } from '../initSheduler';
 import type { BackendResponse } from '../../utils/ipc/types';
 import type { Database } from '../../fyo/database/Database';
 import type { SchemaMap } from 'schemas/types';
@@ -37,6 +24,8 @@ import {
   assertAllowedApiEndpoint,
   sanitizeDatabaseName,
 } from './policies';
+import type { ConnectionStore } from './connectionStore';
+import { ElectronStoreConnectionStore } from './connectionStore';
 
 // ---- Dependency contracts ----
 
@@ -48,9 +37,9 @@ export interface WindowProvider {
   icon: string;
 }
 
-function asDatabase(manager: typeof databaseManager): Database {
+function asDatabase(manager: any): Database {
   return {
-    getSchemaMap: () => Promise.resolve(manager.getSchemaMap() as SchemaMap),
+    getSchemaMap: () => Promise.resolve(manager.getSchemaMap() as unknown as SchemaMap),
     createNewDatabase: (dbPath: string, countryCode: string) => manager.createNewDatabase(dbPath, countryCode),
     connectToDatabase: (dbPath: string, countryCode?: string) => manager.connectToDatabase(dbPath, countryCode),
     insert: (s: string, m: any) => manager.insert(s, m) as Promise<any>,
@@ -82,6 +71,7 @@ export interface IpcRouterDeps {
   autoUpdater?: typeof import('electron-updater').autoUpdater;
   senderPolicy?: SenderPolicy;
   pathPolicy?: PathPolicy;
+  connectionStore?: ConnectionStore;
   installer?: {
     isPortAvailable(port: number): Promise<PortCheckResult>;
     detectLanIp(): string | null;
@@ -164,6 +154,7 @@ export class IpcRouter {
 
   private readonly senderPolicy: SenderPolicy;
   private readonly pathPolicy: PathPolicy;
+  private readonly connectionStore: ConnectionStore;
   private readonly installer: NonNullable<IpcRouterDeps['installer']>;
 
   constructor(private readonly deps: IpcRouterDeps) {
@@ -174,6 +165,7 @@ export class IpcRouter {
       documents: deps.app.getPath('documents') ?? '',
     };
     this.pathPolicy = deps.pathPolicy ?? new PathPolicy(appPaths);
+    this.connectionStore = deps.connectionStore ?? new ElectronStoreConnectionStore();
     this.installer = deps.installer ?? {
       isPortAvailable: async (port: number) => {
         const m = await import('../mariadbInstall');
@@ -271,7 +263,7 @@ export class IpcRouter {
   }
 
   private parseConfigFromString(idOrJson: string): MariaDBConfig {
-    const byId = findConnectionById(idOrJson);
+    const byId = this.connectionStore.findById(idOrJson);
     if (byId) {
       return { host: byId.host, port: byId.port, user: byId.user, password: byId.password, database: byId.database };
     }
@@ -355,18 +347,15 @@ export class IpcRouter {
   }
 
   private resolveMariaDBConfig(dbPath: string): MariaDBConfig {
-    const byId = findConnectionById(dbPath);
+    const byId = this.connectionStore.findById(dbPath);
     if (byId) {
-      const cfgStore = require('utils/config').default as typeof import('utils/config').default;
-      cfgStore.set('lastSelectedConnectionId' as never, byId.id as never);
+      this.connectionStore.setLastSelected(byId.id);
       return { host: byId.host, port: byId.port, user: byId.user, password: byId.password, database: byId.database };
     }
     const cfg = parseMariaDBConfigString(dbPath);
     sanitizeDatabaseName(cfg.database);
-    const conn = upsertConnectionFromConfig(cfg.database, cfg);
-    const cfgStore = require('utils/config').default as typeof import('utils/config').default;
-    cfgStore.set('lastSelectedConnectionId' as never, conn.id as never);
-    cfgStore.set('lastSelectedFilePath' as never, dbPath as never);
+    const conn = this.connectionStore.upsert(cfg.database, cfg);
+    this.connectionStore.setLastSelected(conn.id, dbPath);
     return cfg;
   }
 
@@ -383,24 +372,7 @@ export class IpcRouter {
   }
 
   async getDbList(): Promise<unknown> {
-    migrateLegacyConnections();
-    const metas = getConnectionsMetadata();
-    if (metas.length > 0) {
-      return metas.map((m) => ({
-        id: m.id,
-        companyName: m.companyName,
-        dbPath: m.id,
-        openCount: m.openCount,
-        modified: m.modified ?? new Date().toISOString(),
-        display: m.display,
-        host: m.host,
-        port: m.port,
-        database: m.database,
-        user: m.user,
-      }));
-    }
-    const files = await setAndGetCleanedConfigFiles();
-    return getConfigFilesWithModified(files);
+    return this.connectionStore.getDbList();
   }
 
   async saveData(data: string, savePath: string, event: Electron.IpcMainInvokeEvent): Promise<void> {
@@ -414,14 +386,9 @@ export class IpcRouter {
 
   async deleteFile(filePath: string, event: Electron.IpcMainInvokeEvent): Promise<BackendResponse> {
     this.assertValidSender(event);
-    const byId = findConnectionById(filePath);
+    const byId = this.connectionStore.findById(filePath);
     if (byId) {
-      const conns = getPersistedConnections();
-      const filtered = conns.filter((c) => c.id !== filePath);
-      const cfg = (await import('utils/config')).default;
-      cfg.set('connections' as never, filtered as never);
-      const files = (cfg.get('files', []) as import('fyo/core/types').ConfigFile[]).filter((f) => f.id !== filePath);
-      cfg.set('files', files);
+      this.connectionStore.deleteById(filePath);
       return getErrorHandledResponse(async () => undefined);
     }
     this.pathPolicy.assertAllowed(filePath);
@@ -455,11 +422,13 @@ export class IpcRouter {
   }
 
   async saveHtmlAsPdf(html: string, savePath: string, width: number, height: number, app: Electron.App) {
-    return saveHtmlAsPdf(html, savePath, app as never, width, height);
+    const { saveHtmlAsPdf: fn } = await import('../saveHtmlAsPdf');
+    return fn(html, savePath, app as never, width, height);
   }
 
   async printHtmlDocument(html: string, width: number, height: number, app: Electron.App) {
-    return printHtmlDocument(html, app as never, width, height);
+    const { printHtmlDocument: fn } = await import('../printHtmlDocument');
+    return fn(html, app as never, width, height);
   }
 
   async getEnv(isDevelopment: boolean, platform: string, version: string) {
@@ -482,11 +451,14 @@ export class IpcRouter {
   }
 
   async initScheduler(main: unknown, interval: string) {
-    return initScheduler(main as never, interval);
+    const { initScheduler: fn } = await import('../initSheduler');
+    return fn(main as never, interval);
   }
 
   getCreds() {
-    return getUrlAndTokenString();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getUrlAndTokenString: getCredsFn } = require('../contactMothership') as typeof import('../contactMothership');
+    return getCredsFn();
   }
 
   async checkForUpdates(isDevelopment: boolean, checkedForUpdate: boolean, onChecked: () => void) {
@@ -495,14 +467,19 @@ export class IpcRouter {
       const updater = this.deps.autoUpdater ?? (await import('electron-updater')).autoUpdater;
       await updater.checkForUpdates();
     } catch (error) {
-      if (isExpectedUpdateError(error as Error)) return;
+      // Lazy to avoid pulling electron-store at module load
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { isExpectedUpdateError: isExpected } = require('../helpers') as typeof import('../helpers');
+      if (isExpected(error as Error)) return;
       emitMainProcessError(error);
     }
     onChecked();
   }
 
   async sendError(bodyJson: string, main: unknown) {
-    await sendError(bodyJson, main as never);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { sendError: sendErr } = require('../contactMothership') as typeof import('../contactMothership');
+    await sendErr(bodyJson, main as never);
   }
 
   async sendAPIRequest(endpoint: string, options: NodeFetchRequestInit | undefined, event: Electron.IpcMainInvokeEvent) {
@@ -590,10 +567,14 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
     get icon() { return main.icon; },
   };
   const { app: electronApp, dialog: electronDialog } = require('electron') as typeof import('electron');
+  // Lazy to avoid pulling electron-store at module load (see connectionStore seam)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { default: databaseManager } = require('../../backend/database/manager') as typeof import('../../backend/database/manager');
   return new IpcRouter({
     database: asDatabase(databaseManager),
     windowProvider: winProvider,
     app: electronApp,
     dialog: electronDialog,
+    connectionStore: new (require('./connectionStore').ElectronStoreConnectionStore as typeof import('./connectionStore').ElectronStoreConnectionStore)(),
   });
 }
