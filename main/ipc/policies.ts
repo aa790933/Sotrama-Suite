@@ -16,7 +16,6 @@ export function sanitizeDatabaseName(name: string): string {
 }
 
 // PathPolicy — single place for SAVE_DATA / DELETE_FILE traversal guards.
-// was duplicated in 2 handlers; now one module owns it.
 export interface AppPaths {
   userData: string;
   temp: string;
@@ -63,7 +62,7 @@ export class AllowAllSenderPolicy implements SenderPolicy {
   }
 }
 
-// Api endpoint guard — was inline in SEND_API_REQUEST handler.
+// Api endpoint guard.
 export function assertAllowedApiEndpoint(endpoint: string): void {
   if (typeof endpoint !== 'string' || !endpoint.startsWith('https://')) {
     throw new Error('SEND_API_REQUEST: only https allowed');

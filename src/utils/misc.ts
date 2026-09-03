@@ -84,7 +84,7 @@ export function updateConfigFiles(fyo: Fyo): ConfigFile {
   const rawDbPath = fyo.db.dbPath!;
   const openCount = fyo.singles.Misc!.openCount as number;
 
-  // P1-A: main-owned credential custody — store full config in connections, keep files for migration
+  // Main-owned credential custody — store full config in connections, keep files for migration
   // Try to handle as MariaDB JSON or as existing connection ID
   let dbPathForFile: string = rawDbPath;
   let isMariaDB = false;
@@ -94,7 +94,8 @@ export function updateConfigFiles(fyo: Fyo): ConfigFile {
     isMariaDB = true;
     // Upsert into connections store (main-owned)
     const connections = (fyo.config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined) ?? [];
-    let conn = connections.find((c) => c.id === id) || connections.find((c) => c.host === cfg.host && c.port === cfg.port && c.database === cfg.database && c.user === cfg.user);
+    const { equalsConnection } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
+    let conn = connections.find((c) => c.id === id) || connections.find((c) => equalsConnection(c, cfg));
     if (conn) {
       conn.companyName = companyName;
       conn.host = cfg.host;
@@ -110,14 +111,14 @@ export function updateConfigFiles(fyo: Fyo): ConfigFile {
     }
     fyo.config.set('connections' as never, connections as never);
     fyo.config.set('lastSelectedConnectionId' as never, conn.id as never);
-    // For files, store ID instead of JSON to avoid password in legacy list (keep JSON for migration fallback)
+    // For files, store ID instead of JSON to avoid password in the files list
     dbPathForFile = conn.id;
     // Replace renderer’s in-memory dbPath with ID so password is not retained in Vue state
     // Keep original JSON in a non-reactive holder for potential retry, but clear from reactive state
     (fyo.db as unknown as { _rawDbPath?: string })._rawDbPath = rawDbPath;
     fyo.db.dbPath = conn.id;
   } catch {
-    // Check if rawDbPath is already a known connection ID (post-migration)
+    // rawDbPath may already be a known connection ID
     const connections = (fyo.config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined) ?? [];
     const byId = connections.find((c) => c.id === rawDbPath);
     if (byId) {
@@ -143,7 +144,7 @@ export function updateConfigFiles(fyo: Fyo): ConfigFile {
   }
 
   fyo.config.set('files', configFiles);
-  // Also keep lastSelectedFilePath for backward compat, but prefer lastSelectedConnectionId
+  // Keep lastSelectedFilePath in sync, but prefer lastSelectedConnectionId
   if (isMariaDB) {
     fyo.config.set('lastSelectedFilePath', dbPathForFile);
   } else {

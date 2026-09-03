@@ -3,7 +3,7 @@ import { Fyo } from 'fyo';
 import { IpcDatabaseAdapter } from 'fyo/database/IpcDatabaseAdapter';
 import { DummyAuthDemux } from './helpers';
 
-test('IpcDatabaseAdapter — typed transport for CRUD subset (Slice 2)', async (t) => {
+test('IpcDatabaseAdapter — typed transport for CRUD subset', async (t) => {
   const calls: { method: string; args: unknown[] }[] = [];
   const mockIpc = {
     db: {
@@ -29,9 +29,6 @@ test('IpcDatabaseAdapter — typed transport for CRUD subset (Slice 2)', async (
         if (method === 'delete') return { data: undefined } as any;
         return { data: undefined } as any;
       },
-      async bespoke() {
-        return { data: null } as any;
-      },
     },
   };
   // @ts-ignore global
@@ -44,7 +41,7 @@ test('IpcDatabaseAdapter — typed transport for CRUD subset (Slice 2)', async (
     'production Fyo uses IpcDatabaseAdapter via typed seam'
   );
 
-  // Exercise the 6 migrated CRUD methods via typed adapter (not stringly call path)
+  // Exercise the 6 migrated CRUD methods via the typed adapter
   // We use a direct IpcDatabaseAdapter instance to isolate transport
   const ipcAdapter = new IpcDatabaseAdapter();
   const inserted = await ipcAdapter.insert('Party', { name: 'P1', email: 'a@b.com' } as any);

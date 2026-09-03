@@ -611,7 +611,6 @@ export async function getSuggestedBatchName(
 
       for (const batch of existingBatches) {
         const batchName = batch.name;
-        // Extract numeric part from batch name (handles names like "com-1001")
         const numericPart = batchName.replace(seriesName, '');
         const num = parseInt(numericPart, 10);
 

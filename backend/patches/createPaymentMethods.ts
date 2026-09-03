@@ -1,12 +1,12 @@
 import { ModelNameEnum } from 'models/types';
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 import { AccountTypeEnum } from 'models/baseModels/Account/types';
 import { getDefaultMetaFieldValueMap } from 'backend/helpers';
 
 type AccountTypeMap = Record<AccountTypeEnum, string[] | undefined>;
 
-async function execute(dm: DatabaseManager) {
-  const accounts = (await dm.db?.getAll(ModelNameEnum.Account, {
+async function execute(db: DatabaseCore) {
+  const accounts = (await db.getAll(ModelNameEnum.Account, {
     fields: ['name', 'accountType'],
     filters: {
       accountType: [
@@ -51,7 +51,7 @@ async function execute(dm: DatabaseManager) {
   ];
 
   for (const paymentMethod of paymentMethods) {
-    await dm.db?.insert(ModelNameEnum.PaymentMethod, paymentMethod);
+    await db.insert(ModelNameEnum.PaymentMethod, paymentMethod);
   }
 }
 export default { execute };

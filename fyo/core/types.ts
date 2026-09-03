@@ -38,7 +38,7 @@ export type ConfigMap = {
   language: string 
   deviceId: string
   hostRole: null | 'host' | 'client';
-  // New P1-A: main-owned credential custody
+  // Connections are persisted by the main process; the renderer must not write credentials directly.
   connections?: PersistedConnection[];
   lastSelectedConnectionId?: string | null;
 };
@@ -52,8 +52,8 @@ export interface ConfigFile {
 
 export interface FyoConfig {
   DatabaseDemux?: DatabaseDemuxConstructor;
-  // Typed adapter at the Database seam — preferred over DatabaseDemux (Slice 1)
-  // When provided, DatabaseHandler uses composition over stringly-typed Demux.
+  // Typed adapter at the Database seam. When provided, DatabaseHandler
+  // delegates to it instead of constructing a Demux backend.
   database?: import('fyo/database/Database').Database;
   AuthDemux?: AuthDemuxConstructor;
   isElectron?: boolean;

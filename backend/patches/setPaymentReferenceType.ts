@@ -1,10 +1,10 @@
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 
-async function execute(dm: DatabaseManager) {
-  await dm.db?.query(
+async function execute(db: DatabaseCore) {
+  await db.query(
     `UPDATE Payment SET referenceType = 'PurchaseInvoice' WHERE referenceType IS NULL AND paymentType = 'Pay'`
   );
-  await dm.db?.query(
+  await db.query(
     `UPDATE Payment SET referenceType = 'SalesInvoice' WHERE referenceType IS NULL AND paymentType = 'Receive'`
   );
 }

@@ -182,6 +182,7 @@ import {
 } from 'src/components/POS/types';
 import { ValidationError } from 'fyo/utils/errors';
 import { getExistingActiveSerialNumbersForItem } from 'models/inventory/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 
 const COMPONENT_NAME = 'POS';
 
@@ -935,7 +936,7 @@ export default defineComponent({
 
           if (existingItems.length > 0) {
             for (let existingItem of existingItems) {
-              const availableQty = await this.fyo.db.getStockQuantity({item: existingItem.item as string, batch: existingItem.batch});
+              const availableQty = await getQuantity(this.fyo, {item: existingItem.item as string, batch: existingItem.batch});
               if (
                 existingItem.batch != null &&
                 availableQty != null &&
@@ -1112,7 +1113,7 @@ export default defineComponent({
         let availableQty = 0;
         if (itemDoc.trackItem) {
           availableQty =
-            (await fyo.db.getStockQuantity({item: item.name, batch: batchName})) ?? 0;
+            (await getQuantity(fyo, {item: item.name, batch: batchName})) ?? 0;
 
           const itemIndex = this.items.findIndex((i) => i.name === item.name);
           if (itemIndex !== -1) {

@@ -1,4 +1,13 @@
-import type { PersistedConnection, ConnectionMetadata, MariaDBConfig } from '../../utils/mariadb-types';
+import {
+  equalsConnection,
+  fromMariaDBConfigToPersisted,
+  parseMariaDBConfigString,
+  toConnectionMetadata,
+  type ConnectionMetadata,
+  type MariaDBConfig,
+  type PersistedConnection,
+} from '../../utils/mariadb-types';
+import { sanitizeDatabaseName } from './policies';
 
 /**
  * Small ConnectionStore seam — abstracts PersistedConnection persistence.
@@ -12,9 +21,10 @@ export interface ConnectionStore {
   getMetadata(): ConnectionMetadata[];
   upsert(companyName: string, config: MariaDBConfig): PersistedConnection;
   deleteById(id: string): void;
-  migrateLegacy(): void;
   getDbList(): Promise<unknown>;
-  setLastSelected(id: string, rawJsonForLegacy?: string): void;
+  setLastSelected(id: string): void;
+  /** Resolve a connection id or JSON string to its config, persisting as needed. */
+  resolve(input: string): MariaDBConfig;
 }
 
 // Production adapter — wraps the existing helpers + config store
@@ -52,46 +62,48 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     const conns = getPersistedConnections();
     const filtered = conns.filter((c) => c.id !== id);
     config.set('connections' as never, filtered as never);
-    const files = (config.get('files', []) as import('fyo/core/types').ConfigFile[]).filter((f) => f.id !== id);
-    config.set('files', files);
-  }
-
-  migrateLegacy(): void {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { migrateLegacyConnections } = require('../helpers') as typeof import('../helpers');
-    migrateLegacyConnections();
   }
 
   async getDbList(): Promise<unknown> {
-    this.migrateLegacy();
-    const metas = this.getMetadata();
-    if (metas.length > 0) {
-      return metas.map((m) => ({
-        id: m.id,
-        companyName: m.companyName,
-        dbPath: m.id,
-        openCount: m.openCount,
-        modified: m.modified ?? new Date().toISOString(),
-        display: m.display,
-        host: m.host,
-        port: m.port,
-        database: m.database,
-        user: m.user,
-      }));
-    }
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { setAndGetCleanedConfigFiles, getConfigFilesWithModified } = require('../helpers') as typeof import('../helpers');
-    const files = await setAndGetCleanedConfigFiles();
-    return getConfigFilesWithModified(files);
+    return this.getMetadata().map((m) => ({
+      id: m.id,
+      companyName: m.companyName,
+      dbPath: m.id,
+      openCount: m.openCount,
+      modified: m.modified ?? new Date().toISOString(),
+      display: m.display,
+      host: m.host,
+      port: m.port,
+      database: m.database,
+      user: m.user,
+    }));
   }
 
-  setLastSelected(id: string, rawJsonForLegacy?: string): void {
+  setLastSelected(id: string): void {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const config = require('utils/config').default as typeof import('utils/config').default;
     config.set('lastSelectedConnectionId' as never, id as never);
-    if (rawJsonForLegacy) {
-      config.set('lastSelectedFilePath' as never, rawJsonForLegacy as never);
+  }
+
+  resolve(input: string): MariaDBConfig {
+    const byId = this.findById(input);
+    if (byId) {
+      this.setLastSelected(byId.id);
+      return {
+        host: byId.host,
+        port: byId.port,
+        user: byId.user,
+        password: byId.password,
+        database: byId.database,
+      };
     }
+    const cfg = parseMariaDBConfigString(input);
+    sanitizeDatabaseName(cfg.database);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { upsertConnectionFromConfig } = require('../helpers') as typeof import('../helpers');
+    const conn = upsertConnectionFromConfig(cfg.database, cfg);
+    this.setLastSelected(conn.id);
+    return cfg;
   }
 }
 
@@ -109,22 +121,12 @@ export class InMemoryConnectionStore implements ConnectionStore {
   }
 
   getMetadata(): ConnectionMetadata[] {
-    return this.getAll().map((c) => ({
-      id: c.id,
-      companyName: c.companyName,
-      host: c.host,
-      port: c.port,
-      user: c.user,
-      database: c.database,
-      openCount: c.openCount,
-      display: `${c.database} @ ${c.host}:${c.port} (${c.user})`,
-      modified: c.createdAt,
-    }));
+    return this.getAll().map(toConnectionMetadata);
   }
 
   upsert(companyName: string, config: MariaDBConfig): PersistedConnection {
-    const existing = Array.from(this.conns.values()).find(
-      (c) => c.host === config.host && c.port === config.port && c.database === config.database && c.user === config.user
+    const existing = Array.from(this.conns.values()).find((c) =>
+      equalsConnection(c, config)
     );
     if (existing) {
       existing.companyName = companyName || existing.companyName;
@@ -137,7 +139,6 @@ export class InMemoryConnectionStore implements ConnectionStore {
       return existing;
     }
     const id = `${companyName}-${config.host}-${config.port}-${config.database}-${Date.now()}`.replace(/\s+/g, '_');
-    const { fromMariaDBConfigToPersisted } = require('../../utils/mariadb-types') as typeof import('../../utils/mariadb-types');
     const created = fromMariaDBConfigToPersisted(id, companyName, config, 1);
     this.conns.set(id, created);
     return created;
@@ -145,10 +146,6 @@ export class InMemoryConnectionStore implements ConnectionStore {
 
   deleteById(id: string): void {
     this.conns.delete(id);
-  }
-
-  migrateLegacy(): void {
-    // no-op for in-memory
   }
 
   async getDbList(): Promise<unknown> {
@@ -168,5 +165,24 @@ export class InMemoryConnectionStore implements ConnectionStore {
 
   setLastSelected(id: string): void {
     this.lastSelected = id;
+  }
+
+  resolve(input: string): MariaDBConfig {
+    const byId = this.findById(input);
+    if (byId) {
+      this.setLastSelected(byId.id);
+      return {
+        host: byId.host,
+        port: byId.port,
+        user: byId.user,
+        password: byId.password,
+        database: byId.database,
+      };
+    }
+    const cfg = parseMariaDBConfigString(input);
+    sanitizeDatabaseName(cfg.database);
+    const conn = this.upsert(cfg.database, cfg);
+    this.setLastSelected(conn.id);
+    return cfg;
   }
 }

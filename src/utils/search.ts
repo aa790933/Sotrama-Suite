@@ -942,7 +942,6 @@ export class Search {
     searchable: Searchable,
     keyword: Keyword
   ) {
-    // Set individual field values
     for (const fn of searchable.fields) {
       let value = map[fn] as string | undefined;
       const field = this.fyo.getField(searchable.schemaName, fn);
@@ -957,7 +956,6 @@ export class Search {
   }
 
   _setMeta(map: RawValueMap, searchable: Searchable, keyword: Keyword) {
-    // Set the meta map
     for (const fn of searchable.meta) {
       const meta = map[fn];
       if (typeof meta === 'number') {

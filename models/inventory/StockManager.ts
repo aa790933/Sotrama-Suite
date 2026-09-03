@@ -6,6 +6,7 @@ import { StockLedgerEntry } from './StockLedgerEntry';
 import { SMDetails, SMIDetails, SMTransferDetails } from './types';
 import { getSerialNumbers } from './helpers';
 import { getItemVisibility } from 'models/helpers';
+import { validateAvailability } from './StockLedger';
 
 export class StockManager {
   /**
@@ -143,53 +144,16 @@ export class StockManager {
       return;
     }
 
-    const date = details.date.toISOString();
-    const formattedDate = this.fyo.format(details.date, 'Datetime');
-    const batch = details.batch || undefined;
-    const serialNumbers = getSerialNumbers(details.serialNumber ?? '');
-
-    let quantityBefore =
-      (await this.fyo.db.getStockQuantity({item: details.item, location: details.fromLocation, toDate: date, batch: batch, serialNumbers: serialNumbers})) ?? 0;
-
-    if (this.isCancelled) {
-      quantityBefore += details.quantity;
-    }
-
-    const batchMessage = !!batch ? t` in Batch ${batch}` : '';
-
-    if (!details.isReturn && quantityBefore < details.quantity) {
-      throw new ValidationError(
-        [
-          t`Insufficient Quantity.`,
-          t`Additional quantity (${
-            details.quantity - quantityBefore
-          }) required${batchMessage} to make outward transfer of item ${
-            details.item
-          } from ${details.fromLocation} on ${formattedDate}`,
-        ].join('\n')
-      );
-    }
-
-    const quantityAfter = await this.fyo.db.getStockQuantity({item: details.item, location: details.fromLocation, fromDate: details.date.toISOString(), batch: batch, serialNumbers: serialNumbers});
-
-    if (quantityAfter === null) {
-      // No future transactions
-      return;
-    }
-
-    const quantityRemaining = quantityBefore - details.quantity;
-    const futureQuantity = quantityRemaining + quantityAfter;
-    if (futureQuantity < 0) {
-      throw new ValidationError(
-        [
-          t`Insufficient Quantity.`,
-          t`Transfer will cause future entries to have negative stock.`,
-          t`Additional quantity (${-futureQuantity}) required${batchMessage} to make outward transfer of item ${
-            details.item
-          } from ${details.fromLocation} on ${formattedDate}`,
-        ].join('\n')
-      );
-    }
+    await validateAvailability(this.fyo, {
+      item: details.item,
+      location: details.fromLocation,
+      quantity: details.quantity,
+      date: details.date,
+      batch: details.batch || undefined,
+      serialNumbers: getSerialNumbers(details.serialNumber ?? ''),
+      isReturn: details.isReturn,
+      isCancelled: this.isCancelled,
+    });
   }
 }
 

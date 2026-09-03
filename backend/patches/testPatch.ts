@@ -1,11 +1,6 @@
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function execute(dm: DatabaseManager) {
-  /**
-   * Execute function will receive the DatabaseManager which is to be used
-   * to apply database patches.
-   */
-}
+async function execute(db: DatabaseCore) {}
 
 export default { execute, beforeMigrate: true };

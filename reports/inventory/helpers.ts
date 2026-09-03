@@ -261,7 +261,6 @@ export function getStockBalanceEntries(
     )
     .flat(3);
 
-  // Filter by serial number status
   if (serialNumberFilter === 'In stock') {
     entries = entries.filter((entry) => entry.balanceQuantity > 0);
   } else if (serialNumberFilter === 'Out stock') {

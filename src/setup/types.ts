@@ -11,15 +11,11 @@ export interface SetupWizardOptions {
   chartOfAccounts: string;
 }
 
+import type { MariaDBConfig } from 'utils/mariadb-types';
+
 export type HostType = 'host' | 'client';
 
-export interface ConnectionConfig {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database: string;
-}
+export type ConnectionConfig = MariaDBConfig;
 
 export interface HostSetupOptions {
   hostType: HostType;

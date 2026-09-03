@@ -1,6 +1,6 @@
 import { DatabaseError, NotImplemented } from 'fyo/utils/errors';
 import { SchemaMap } from 'schemas/types';
-import { DatabaseDemuxBase, DatabaseMethod } from 'utils/db/types';
+import { DatabaseDemuxBase } from 'utils/db/types';
 import { BackendResponse } from 'utils/ipc/types';
 
 export class DatabaseDemux extends DatabaseDemuxBase {
@@ -58,25 +58,5 @@ export class DatabaseDemux extends DatabaseDemuxBase {
     return (await this.#handleDBCall(async () => {
       return ipc.db.connect(dbPath, countryCode);
     })) as string;
-  }
-
-  async call(method: DatabaseMethod, ...args: unknown[]): Promise<unknown> {
-    if (!this.#isElectron) {
-      throw new NotImplemented();
-    }
-
-    return await this.#handleDBCall(async () => {
-      return await ipc.db.call(method, ...args);
-    });
-  }
-
-  async callBespoke(method: string, ...args: unknown[]): Promise<unknown> {
-    if (!this.#isElectron) {
-      throw new NotImplemented();
-    }
-
-    return await this.#handleDBCall(async () => {
-      return await ipc.db.bespoke(method, ...args);
-    });
   }
 }

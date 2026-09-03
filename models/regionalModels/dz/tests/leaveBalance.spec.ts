@@ -7,12 +7,11 @@
  *       remaining balance decreases afterward,
  *   (c) only `type === 'Annual'` is blocked (e.g. Sick leave submits freely).
  *
- * Boot: in-process DatabaseManager (setDbConfig via a subclass ctor, since
- * DatabaseHandler hides its #demux) over a fresh MariaDB `test_leavbal` db,
+ * Boot: in-process DatabaseCore (test MariaDB config via subclass ctor, since
+ * DatabaseHandler hides its backend) over a fresh MariaDB `test_leavbal` db,
  * with the real Algerian (dz) schema map + registered regional models.
  */
 import DatabaseCore, { MariaDBConfig } from 'backend/database/core';
-import { DatabaseManager } from 'backend/database/manager';
 import { config } from 'dotenv';
 import { Fyo } from 'fyo';
 import { DummyAuthDemux } from 'fyo/tests/helpers';
@@ -32,24 +31,22 @@ process.env.TZ = process.env.TZ || 'UTC';
 const cfg: MariaDBConfig = getTestDbConfig('test_leavbal');
 
 /**
- * DatabaseManager subclass that injects the test MariaDB config in its
- * constructor (mirroring main/ipc/router setDbConfig flow),
- * and performs a lean createNewDatabase (connect + migrate) that skips patches.
+ * DatabaseCore subclass that injects the test MariaDB config and performs a
+ * lean createNewDatabase (connect + migrate) that skips patches.
  */
-class TestDemux extends DatabaseManager {
+class TestDemux extends DatabaseCore {
   constructor() {
-    super();
-    this.setDbConfig(cfg);
+    super(undefined, cfg);
   }
   override async createNewDatabase(_dbPath: string, countryCode: string) {
-    countryCode = await this._connect(_dbPath, countryCode);
-    await this.db!.migrate();
+    countryCode = await this.connectInternal(_dbPath, countryCode);
+    await this.migrate();
     return countryCode;
   }
 }
 
 async function boot(): Promise<Fyo> {
-  // Pre-create a clean database (DatabaseManager.createNewDatabase for MariaDB
+  // Pre-create a clean database (DatabaseCore.createNewDatabase for MariaDB
   // is effectively a connect; it does not create the db itself).
   const admin = new DatabaseCore(undefined, { ...cfg, database: 'test' });
   await admin.connect();

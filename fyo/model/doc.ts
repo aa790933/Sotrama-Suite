@@ -308,7 +308,6 @@ export class Doc extends Observable<DocValue | Doc[]> {
     }
   }
 
-  // set value and trigger change
   async set(
     fieldname: string | DocValueMap,
     value?: DocValue | Doc[] | DocValueMap[],
@@ -337,7 +336,6 @@ export class Doc extends Observable<DocValue | Doc[]> {
       this[fieldname] = value;
     }
 
-    // always run applyChange from the parentdoc
     if (this.schema.isChild && this.parentdoc) {
       await this._applyChange(fieldname);
       await this.parentdoc._applyChange(this.parentFieldname as string);
@@ -479,7 +477,6 @@ export class Doc extends Observable<DocValue | Doc[]> {
 
     docValueMap.name ??= getRandomString();
 
-    // Child Meta Fields
     docValueMap.parent ??= this.name;
     docValueMap.parentSchemaName ??= this.schemaName;
     docValueMap.parentFieldname ??= fieldname;

@@ -3,7 +3,6 @@ import { Money } from 'pesa';
 
 /**
  * Domain-owned POS transacted amount — recomposed via getAll, N+1 eliminated.
- * Previously bespoke with per-Payment `SELECT referenceName` in loop.
  */
 export async function getPOSTransactedAmount(
   fyo: Fyo,
@@ -37,7 +36,7 @@ export async function getPOSTransactedAmount(
     filters: { name: ['in', paymentNames] },
     fields: ['name', 'paymentMethod', 'amount'],
   })) as { name: string; paymentMethod: string; amount: string | number }[];
-  // Map payment -> sign via its PaymentFors (all refs for that payment share same sign? Use first)
+  // First PaymentFor reference decides the payment sign.
   const paymentToSign = new Map<string, number>();
   for (const pf of paymentFors) {
     if (!paymentToSign.has(pf.parent)) paymentToSign.set(pf.parent, signMap.get(pf.referenceName) ?? 1);
@@ -46,7 +45,6 @@ export async function getPOSTransactedAmount(
   for (const pay of payments) {
     const sign = paymentToSign.get(pay.name) ?? 1;
     const amt = fyo.pesa(pay.amount) as unknown as Money;
-    // Money multiplication by sign
     const signed = sign === -1 ? (amt as unknown as { neg: () => Money }).neg?.() ?? amt : amt;
     const key = pay.paymentMethod;
     out[key] = out[key] ? (out[key] as unknown as { add: (m: Money) => Money }).add(signed) : signed;

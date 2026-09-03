@@ -49,7 +49,7 @@ test('db init, migrate, close', async (t) => {
   t.equal(schemaMap, db.schemaMap);
 
   await assertDoesNotThrow(async () => await db.connect());
-  t.notEqual(db.pool, null);
+  t.notEqual(db.isConnected, false);
 
   await assertDoesNotThrow(async () => await db.migrate());
 

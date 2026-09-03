@@ -2,7 +2,7 @@ import { Doc } from 'fyo/model/doc';
 import { isPesa } from 'fyo/utils';
 import { ValueError } from 'fyo/utils/errors';
 import { DateTime } from 'luxon';
-import { Field, FieldTypeEnum, RawValue, TargetField } from 'schemas/types';
+import { Field, FieldType, FieldTypeEnum, RawValue, TargetField } from 'schemas/types';
 import { getIsNullOrUndef, safeParseFloat, safeParseInt } from 'utils';
 import { Attachment, DocValue, DocValueMap, RawValueMap } from './types';
 import type { MoneyMaker } from 'pesa';
@@ -25,29 +25,15 @@ type FieldMap = Record<string, Record<string, Field>>;
  */
 
 export class Converter {
-  // Legacy fields kept for backward compat (Slice 3 will remove handler-owned converter)
-  db?: unknown;
-  fyo?: unknown;
   fieldMapProvider: () => FieldMap;
   pesaProvider: () => MoneyMaker;
 
   constructor(
-    dbOrFieldMapProvider: unknown,
-    fyoOrPesaProvider?: unknown
+    fieldMapProvider: () => FieldMap,
+    pesaProvider: () => MoneyMaker
   ) {
-    // New provider-based construction: (fieldMapProvider, pesaProvider)
-    if (typeof dbOrFieldMapProvider === 'function') {
-      this.fieldMapProvider = dbOrFieldMapProvider as () => FieldMap;
-      this.pesaProvider = fyoOrPesaProvider as () => MoneyMaker;
-    } else {
-      // Legacy (DatabaseHandler, Fyo) — keep for handler until fully internalized
-      const db = dbOrFieldMapProvider as { fieldMap: FieldMap };
-      const fyo = fyoOrPesaProvider as { pesa: MoneyMaker };
-      this.db = db as never;
-      this.fyo = fyo as never;
-      this.fieldMapProvider = () => db.fieldMap;
-      this.pesaProvider = () => fyo.pesa;
-    }
+    this.fieldMapProvider = fieldMapProvider;
+    this.pesaProvider = pesaProvider;
   }
 
   toDocValueMap(
@@ -76,50 +62,20 @@ export class Converter {
 
   static toDocValue(value: RawValue, field: Field, fyoOrPesa: unknown): DocValue {
     const pesa = (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
-    switch (field.fieldtype) {
-      case FieldTypeEnum.Currency:
-        return toDocCurrency(value, field, pesa as MoneyMaker);
-      case FieldTypeEnum.Date:
-        return toDocDate(value, field);
-      case FieldTypeEnum.Datetime:
-        return toDocDate(value, field);
-      case FieldTypeEnum.Int:
-        return toDocInt(value, field);
-      case FieldTypeEnum.Float:
-        return toDocFloat(value, field);
-      case FieldTypeEnum.Check:
-        return toDocCheck(value, field);
-      case FieldTypeEnum.Attachment:
-        return toDocAttachment(value, field);
-      default:
-        return toDocString(value, field);
+    const descriptor = fieldTypeRegistry[field.fieldtype];
+    if (descriptor) {
+      return descriptor.toDoc(value, field, pesa);
     }
+    return toDocString(value, field);
   }
 
   static toRawValue(value: DocValue, field: Field, fyoOrPesa: unknown): RawValue {
     const pesa = (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
-    switch (field.fieldtype) {
-      case FieldTypeEnum.Currency:
-        return toRawCurrency(value, pesa as MoneyMaker, field);
-      case FieldTypeEnum.Date:
-        return toRawDate(value, field);
-      case FieldTypeEnum.Datetime:
-        return toRawDateTime(value, field);
-      case FieldTypeEnum.Int:
-        return toRawInt(value, field);
-      case FieldTypeEnum.Float:
-        return toRawFloat(value, field);
-      case FieldTypeEnum.Check:
-        return toRawCheck(value, field);
-      case FieldTypeEnum.Link:
-        return toRawLink(value, field);
-      case FieldTypeEnum.Attachment:
-        return toRawAttachment(value, field);
-      case FieldTypeEnum.Button:
-        return null;
-      default:
-        return toRawString(value, field);
+    const descriptor = fieldTypeRegistry[field.fieldtype];
+    if (descriptor) {
+      return descriptor.toRaw(value, field, pesa);
     }
+    return toRawString(value, field);
   }
 
   #toDocValueMap(schemaName: string, rawValueMap: RawValueMap): DocValueMap {
@@ -186,6 +142,50 @@ export class Converter {
     return rawValueMap;
   }
 }
+
+export type FieldTypeDescriptor = {
+  toDoc: (value: RawValue, field: Field, pesa: MoneyMaker) => DocValue;
+  toRaw: (value: DocValue, field: Field, pesa: MoneyMaker) => RawValue;
+};
+
+const fieldTypeRegistry: Partial<Record<FieldType, FieldTypeDescriptor>> = {
+  [FieldTypeEnum.Currency]: {
+    toDoc: (value, field, pesa) => toDocCurrency(value, field, pesa),
+    toRaw: (value, field, pesa) => toRawCurrency(value, pesa, field),
+  },
+  [FieldTypeEnum.Date]: {
+    toDoc: (value, field) => toDocDate(value, field),
+    toRaw: (value, field) => toRawDate(value, field),
+  },
+  [FieldTypeEnum.Datetime]: {
+    toDoc: (value, field) => toDocDate(value, field),
+    toRaw: (value, field) => toRawDateTime(value, field),
+  },
+  [FieldTypeEnum.Int]: {
+    toDoc: (value, field) => toDocInt(value, field),
+    toRaw: (value, field) => toRawInt(value, field),
+  },
+  [FieldTypeEnum.Float]: {
+    toDoc: (value, field) => toDocFloat(value, field),
+    toRaw: (value, field) => toRawFloat(value, field),
+  },
+  [FieldTypeEnum.Check]: {
+    toDoc: (value, field) => toDocCheck(value, field),
+    toRaw: (value, field) => toRawCheck(value, field),
+  },
+  [FieldTypeEnum.Link]: {
+    toDoc: (value, field) => toDocString(value, field),
+    toRaw: (value, field) => toRawLink(value, field),
+  },
+  [FieldTypeEnum.Attachment]: {
+    toDoc: (value, field) => toDocAttachment(value, field),
+    toRaw: (value, field) => toRawAttachment(value, field),
+  },
+  [FieldTypeEnum.Button]: {
+    toDoc: (value, field) => toDocString(value, field),
+    toRaw: () => null,
+  },
+};
 
 function toDocString(value: RawValue, field: Field) {
   if (value === null) {

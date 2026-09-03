@@ -3,11 +3,12 @@ import path from 'path';
 import { PathPolicy, sanitizeDatabaseName, assertAllowedApiEndpoint, AllowAllSenderPolicy, ElectronSenderPolicy } from './policies';
 import { IpcRouter } from './router';
 import { InMemoryConnectionStore } from './connectionStore';
-import type { Database } from '../../fyo/database/Database';
+import type DatabaseCore from '../../backend/database/core';
 
-function makeFakeDatabase(): Database {
+function makeFakeDatabase(): DatabaseCore {
   return {
-    getSchemaMap: async () => ({} as never),
+    getSchemaMap: () => ({} as never),
+    setDbConfig: () => {},
     createNewDatabase: async () => 'in',
     connectToDatabase: async () => 'in',
     insert: async () => ({} as never),
@@ -23,11 +24,8 @@ function makeFakeDatabase(): Database {
     count: async () => 0,
     getNextAutoincrementId: async () => 1,
     getNextSeriesValue: async () => 1,
-    getStockQuantity: async () => null as never,
     rename: async () => {},
-    call: async () => ({}),
-    callBespoke: async () => ({}),
-  } as unknown as Database;
+  } as unknown as DatabaseCore;
 }
 
 // ——— sanitizeDatabaseName ———
@@ -141,7 +139,7 @@ test('IpcRouter deep module: assertAllowedApiEndpoint is single source', (t) => 
   t.end();
 });
 
-test('IpcRouter seam is real — file has four typed sub-interfaces', (t) => {
+test('IpcRouter seam is real — depends on DatabaseCore directly, no string dispatch', (t) => {
   const src = require('fs').readFileSync('main/ipc/router.ts', 'utf-8');
   t.ok(src.includes('interface DbOps'), 'DbOps interface exists');
   t.ok(src.includes('interface InstallerOps'), 'InstallerOps interface exists (four, not three)');
@@ -149,8 +147,18 @@ test('IpcRouter seam is real — file has four typed sub-interfaces', (t) => {
   t.ok(src.includes('interface AppOps'), 'AppOps exists');
   t.ok(src.includes('checkDbExists(config: MariaDBConfig)'), 'InstallerOps uses typed MariaDBConfig, not loose opts');
   t.ok(src.includes('checkDbAccess(config: MariaDBConfig)'), 'DbOps uses typed MariaDBConfig');
-  t.ok(src.includes('database: Database'), 'injects real Database interface, not DatabaseLike cast');
-  t.ok(src.includes('asDatabase('), 'uses asDatabase adapter, not as unknown cast');
+  t.ok(src.includes('database: DatabaseCore'), 'injects MainDatabase directly, not a shallow wrapper');
+  t.notOk(src.includes('asDatabase('), 'asDatabase literal deleted');
+  t.notOk(src.includes('callBespoke'), 'bespoke string dispatch deleted');
+  t.notOk(src.includes('DB_BESPOKE'), 'bespoke IPC channel deleted');
+  t.notOk(src.includes('databaseMethodSet'), 'string-dispatch set deleted');
+  t.ok(src.includes("case 'insert'"), 'dbCall dispatches through a typed switch');
+  t.ok(src.includes('setDbConfig'), 'router applies resolved Connection before connect');
+  t.ok(src.includes('provisionMariaDB'), 'single provisioning intent replaces split install flow');
+  t.notOk(src.includes('mariadbInstall'), 'monolith module deleted');
+  t.notOk(src.includes('DOWNLOAD_MARIADB_INSTALLER'), 'split download channel deleted');
+  t.notOk(src.includes('IS_PORT_AVAILABLE'), 'renderer port-probe channel deleted');
+  t.notOk(src.includes('resolveMsiPath'), 'resolve/install split deleted');
   t.ok(!src.includes('as unknown as DatabaseLike'), 'no DatabaseLike cast');
   t.ok(!src.includes('toBackendResponse'), 'unused toBackendResponse removed');
   t.end();
@@ -191,14 +199,6 @@ test('IpcRouter + InMemoryConnectionStore — real seam (DbOps via InMemory, no 
     connectionStore: new InMemoryConnectionStore(),
     senderPolicy: new AllowAllSenderPolicy(),
     pathPolicy: new PathPolicy({ userData: '/tmp/ud', temp: '/tmp/te', documents: '/tmp/do' }),
-    installer: {
-      isPortAvailable: async () => ({ available: true }),
-      detectLanIp: () => null,
-      pingMariaDB: async () => ({ ok: true }),
-      installMariaDBSilent: async () => ({ ok: true }),
-      resolveMsiPath: async () => '/tmp/x',
-      detectPlatform: () => 'linux' as const,
-    },
   });
 
   t.ok(typeof router.dbOps.dbCall === 'function', 'IpcRouter.dbOps.dbCall is function (real seam, no electron mock)');

@@ -6,6 +6,8 @@ import {
   createPool,
 } from 'mariadb';
 import { getDbError, NotFoundError, ValueError } from 'fyo/utils/errors';
+import fs from 'fs-extra';
+import path from 'path';
 import {
   Field,
   FieldTypeEnum,
@@ -14,17 +16,21 @@ import {
   SchemaMap,
   TargetField,
 } from '../../schemas/types';
+import { getSchemas } from '../../schemas';
 import {
   getIsNullOrUndef,
+  getMapFromList,
   getRandomString,
   getValueMapFromList,
 } from '../../utils';
+import { Version } from 'utils/version';
 import { DatabaseBase, GetAllOptions, QueryFilter } from '../../utils/db/types';
 import {
   getDefaultMetaFieldValueMap,
   mariadbTypeMap,
   SYSTEM,
 } from '../helpers';
+import patches from '../patches';
 import {
   AlterConfig,
   ColumnDiff,
@@ -32,9 +38,12 @@ import {
   GetQueryBuilderOptions,
   MigrationConfig,
   NonExtantConfig,
+  Patch,
+  RawCustomField,
   SingleValue,
   UpdateSinglesConfig,
 } from './types';
+import { runPatches } from './runPatch';
 import type { MariaDBConfig } from '../../utils/mariadb-types';
 export type { MariaDBConfig } from '../../utils/mariadb-types';
 
@@ -61,12 +70,18 @@ const ALLOWED_OPERATORS = new Set([
   'is not',
 ]);
 
+/**
+ * MainDatabase: MariaDB persistence plus connection lifecycle (connect,
+ * migrate, patches, backup). Pool and transactions stay private; callers use
+ * the typed surface. Lives in the main process only.
+ */
 export default class DatabaseCore extends DatabaseBase {
-  pool: Pool | null = null;
+  private pool: Pool | null = null;
   typeMap = mariadbTypeMap;
   dbPath: string;
   schemaMap: SchemaMap = {};
   connectionParams: MariaDBConfig;
+  rawCustomFields: RawCustomField[] = [];
   #txConn: PoolConnection | null = null;
 
   constructor(dbPath?: string, connectionParams?: MariaDBConfig) {
@@ -114,6 +129,230 @@ export default class DatabaseCore extends DatabaseBase {
 
   setSchemaMap(schemaMap: SchemaMap) {
     this.schemaMap = schemaMap;
+  }
+
+  get isConnected(): boolean {
+    return this.pool !== null;
+  }
+
+  get #isInitialized(): boolean {
+    return this.pool !== null;
+  }
+
+  getSchemaMap(): SchemaMap {
+    if (this.#isInitialized) {
+      return this.schemaMap;
+    }
+    return getSchemas('-', this.rawCustomFields);
+  }
+
+  /**
+   * Connection params for the next connect. Set by the IPC router from the
+   * resolved Company Connection before create/connect.
+   */
+  setDbConfig(config: MariaDBConfig) {
+    this.connectionParams = config;
+  }
+
+  async createNewDatabase(_dbPath: string, countryCode: string) {
+    return await this.connectToDatabase(_dbPath, countryCode);
+  }
+
+  async connectToDatabase(_dbPath: string, countryCode?: string) {
+    countryCode = await this.connectInternal(_dbPath, countryCode);
+    await this.#migrateLifecycle();
+    return countryCode;
+  }
+
+  protected async connectInternal(
+    _dbPath: string,
+    countryCode?: string
+  ): Promise<string> {
+    countryCode ??= await DatabaseCore.getCountryCode(this.connectionParams);
+    this.connect();
+    await this.setRawCustomFields();
+    this.setSchemaMap(getSchemas(countryCode, this.rawCustomFields));
+    return countryCode;
+  }
+
+  async setRawCustomFields() {
+    try {
+      this.rawCustomFields = (await this.query(
+        'SELECT * FROM customfield'
+      )) as RawCustomField[];
+    } catch {}
+  }
+
+  async #migrateLifecycle(): Promise<void> {
+    if (!this.#isInitialized) {
+      return;
+    }
+
+    const isFirstRun = await this.#getIsFirstRun();
+    if (isFirstRun) {
+      await this.migrate();
+    }
+
+    await this.#executeMigration();
+  }
+
+  async #executeMigration() {
+    const version = await this.#getAppVersion();
+    const pending = await this.#getPatchesToExecute(version);
+
+    const hasPatches = !!pending.pre.length || !!pending.post.length;
+    if (hasPatches) {
+      await this.#createBackup();
+    }
+
+    await runPatches(pending.pre, this, version);
+    await this.migrate({
+      pre: async () => {
+        if (hasPatches) {
+          return;
+        }
+
+        await this.#createBackup();
+      },
+    });
+    await runPatches(pending.post, this, version);
+  }
+
+  async #getPatchesToExecute(
+    version: string
+  ): Promise<{ pre: Patch[]; post: Patch[] }> {
+    if (!this.pool) {
+      return { pre: [], post: [] };
+    }
+
+    const query = (await this.query(
+      'SELECT name, version, failed FROM patchrun'
+    )) as {
+      name: string;
+      version?: string;
+      failed?: boolean;
+    }[];
+
+    const runPatchesMap = getMapFromList(query, 'name');
+    const filtered = patches
+      .filter((p) => {
+        const exec = runPatchesMap[p.name];
+        if (!exec && Version.lte(version, p.version)) {
+          return true;
+        }
+
+        if (exec?.failed && exec?.version !== version) {
+          return true;
+        }
+
+        return false;
+      })
+      .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+
+    return {
+      pre: filtered.filter((p) => p.patch.beforeMigrate),
+      post: filtered.filter((p) => !p.patch.beforeMigrate),
+    };
+  }
+
+  async #getIsFirstRun(): Promise<boolean> {
+    if (!this.pool) {
+      return true;
+    }
+
+    const query = (await this.query(
+      `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patchrun' LIMIT 1`
+    )) as unknown[];
+    return query.length === 0;
+  }
+
+  async #createBackup() {
+    if (process.env.IS_TEST) {
+      return;
+    }
+
+    const backupPath = await this.#getBackupFilePath();
+    if (!backupPath) {
+      return;
+    }
+
+    const mysqldumpPath = await this.#getMysqldumpPath();
+    if (mysqldumpPath) {
+      try {
+        await fs.ensureDir(path.dirname(backupPath));
+        const { spawn } = await import('child_process');
+        const safeDb = this.connectionParams.database.replace(/`/g, '');
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn(
+            mysqldumpPath,
+            [
+              '-h',
+              this.connectionParams.host,
+              '-P',
+              String(this.connectionParams.port),
+              '-u',
+              this.connectionParams.user,
+              safeDb,
+            ],
+            {
+              env: { ...process.env, MYSQL_PWD: this.connectionParams.password },
+              timeout: 60000,
+            }
+          );
+          const out = fs.createWriteStream(backupPath);
+          child.stdout?.pipe(out);
+          let stderr = '';
+          child.stderr?.on('data', (d: Buffer) => (stderr += d.toString()));
+          child.on('error', reject);
+          child.on('close', (code) => {
+            out.close();
+            if (code === 0) resolve();
+            else reject(new Error(`mysqldump failed (code ${code}): ${stderr}`));
+          });
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('Backup via mysqldump failed:', (err as Error).message);
+      }
+    }
+  }
+
+  async #getMysqldumpPath(): Promise<string | null> {
+    const { execSync } = await import('child_process');
+    try {
+      const result = execSync(
+        'which mysqldump 2>/dev/null || where mysqldump 2>nul',
+        {
+          encoding: 'utf8',
+          timeout: 5000,
+        }
+      );
+      return result.trim();
+    } catch {
+      return null;
+    }
+  }
+
+  async #getBackupFilePath() {
+    const fileName = this.connectionParams.database;
+    const backupFolder = path.join(process.cwd(), 'backups');
+    const date = new Date().toISOString().split('T')[0];
+    const version = await this.#getAppVersion();
+    const backupFile = `${fileName}_${version}_${date}.sql`;
+    fs.ensureDirSync(backupFolder);
+    return path.join(backupFolder, backupFile);
+  }
+
+  async #getAppVersion(): Promise<string> {
+    if (!this.pool) {
+      return '0.0.0';
+    }
+
+    const query = (await this.query(
+      `SELECT value FROM singlevalue WHERE fieldname = 'version' AND parent = 'systemsettings' LIMIT 1`
+    )) as { value: string }[];
+    const value = query[0]?.value;
+    return value || '0.0.0';
   }
 
   connect() {
@@ -393,6 +632,13 @@ export default class DatabaseCore extends DatabaseBase {
     );
   }
 
+  async getAllRaw(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<FieldValueMap[]> {
+    return await this.getAll(schemaName, options);
+  }
+
   async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
     const schema = this.schemaMap[schemaName] as Schema;
     if (schema === undefined) {
@@ -472,48 +718,6 @@ export default class DatabaseCore extends DatabaseBase {
       await this.query('UPDATE `numberseries` SET current = ? WHERE name = ?', [next, prefix]);
       return next;
     });
-  }
-
-  async getStockQuantity(
-    query: import('utils/db/types').StockQuery | string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null> {
-    let q: import('utils/db/types').StockQuery;
-    if (typeof query === 'string') {
-      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
-    } else {
-      q = query;
-    }
-    let sql = `SELECT SUM(CAST(quantity AS DECIMAL(18,6))) as total FROM \`stockledgerentry\` WHERE item = ?`;
-    const params: unknown[] = [q.item];
-    if (q.location) {
-      sql += ` AND location = ?`;
-      params.push(q.location);
-    }
-    if (q.batch) {
-      sql += ` AND batch = ?`;
-      params.push(q.batch);
-    }
-    if (q.serialNumbers?.length) {
-      const placeholders = q.serialNumbers.map(() => '?').join(', ');
-      sql += ` AND serialNumber IN (${placeholders})`;
-      params.push(...q.serialNumbers);
-    }
-    if (q.fromDate) {
-      sql += ` AND date > ?`;
-      params.push(q.fromDate);
-    }
-    if (q.toDate) {
-      sql += ` AND date < ?`;
-      params.push(q.toDate);
-    }
-    const value = (await this.query(sql, params)) as Record<string, number | null>[];
-    if (!value.length) return null;
-    return value[0][Object.keys(value[0])[0]];
   }
 
   async deleteAll(schemaName: string, filters: QueryFilter): Promise<number> {

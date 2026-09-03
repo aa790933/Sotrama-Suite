@@ -75,7 +75,7 @@ test('typed surface — close via Database seam', async (t) => {
   t.end();
 });
 
-// Converter internalization — prove Currency/Check/DATETIME preserved behind Database seam
+// Converter coverage — Currency/Check/DATETIME preserved behind Database seam
 test('converter — Currency via pesa behind Database seam', async (t) => {
   const pesa = getMoneyMaker({ currency: 'INR', precision: 2, display: 2, wrapper: (v) => v });
   const fieldMap = {

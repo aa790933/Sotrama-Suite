@@ -2,6 +2,7 @@ import { ModelNameEnum } from 'models/types';
 import test from 'tape';
 import { getItem } from './helpers';
 import { closeTestFyo, getTestFyo, setupTestFyo } from 'tests/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 import { MovementTypeEnum } from '../types';
 import {
   assertDoesNotThrow,
@@ -57,17 +58,17 @@ test('Stock Movement, Material Receipt', async (t) => {
   await assertDoesNotThrow(async () => await sm.submit());
 
   t.equal(
-    await fyo.db.getStockQuantity({item: 'RawOne', location: 'Stores'}),
+    await getQuantity(fyo, {item: 'RawOne', location: 'Stores'}),
     1,
     'item RawOne added'
   );
   t.equal(
-    await fyo.db.getStockQuantity({item: 'RawTwo', location: 'Stores'}),
+    await getQuantity(fyo, {item: 'RawTwo', location: 'Stores'}),
     1,
     'item RawTwo added'
   );
   t.equal(
-    await fyo.db.getStockQuantity({item: 'Final', location: 'Stores'}),
+    await getQuantity(fyo, {item: 'Final', location: 'Stores'}),
     null,
     'item Final not yet added'
   );
@@ -115,19 +116,19 @@ test('Stock Movement, Manufacture', async (t) => {
   await assertDoesNotThrow(async () => await sm.submit());
 
   t.equal(
-    await fyo.db.getStockQuantity({item: 'RawOne', location: 'Stores'}),
+    await getQuantity(fyo, {item: 'RawOne', location: 'Stores'}),
     0,
     'item RawOne removed'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: 'RawTwo', location: 'Stores'}),
+    await getQuantity(fyo, {item: 'RawTwo', location: 'Stores'}),
     0,
     'item RawTwo removed'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: 'Final', location: 'Stores'}),
+    await getQuantity(fyo, {item: 'Final', location: 'Stores'}),
     1,
     'item Final added'
   );

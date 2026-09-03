@@ -5,6 +5,7 @@ import {
 import { ModelNameEnum } from 'models/types';
 import test from 'tape';
 import { closeTestFyo, getTestFyo, setupTestFyo } from 'tests/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 import { getSerialNumbers } from '../helpers';
 import { MovementTypeEnum } from '../types';
 import { getItem, getStockMovement } from './helpers';
@@ -109,25 +110,25 @@ test('serialNumber enabled item, create stock movement, material receipt', async
   await (await stockMovement.sync()).submit();
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialOne.name]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialOne.name]}),
     1,
     'serialNumber one has quantity one'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialTwo.name]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialTwo.name]}),
     1,
     'serialNumber two has quantity one'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialThree.name]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialThree.name]}),
     null,
     'serialNumber three has no quantity'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Ink.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialOne.name]}),
+    await getQuantity(fyo, {item: itemMap.Ink.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialOne.name]}),
     null,
     'non transacted item has no quantity'
   );
@@ -169,13 +170,13 @@ test('serialNumber enabled item, create stock movement, material issue', async (
 
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialOne.name]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialOne.name]}),
     0,
     'serialNumber one quantity transacted out'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialTwo.name]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumberMap.serialTwo.name]}),
     1,
     'serialNumber two quantity intact'
   );
@@ -204,13 +205,13 @@ test('serialNumber enabled item, create stock movement, material transfer', asyn
 
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumber]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: [serialNumber]}),
     0,
     'location one serialNumberTwo transacted out'
   );
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationTwo, serialNumbers: [serialNumber]}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationTwo, serialNumbers: [serialNumber]}),
     quantity,
     'location two serialNumber transacted in'
   );
@@ -218,7 +219,7 @@ test('serialNumber enabled item, create stock movement, material transfer', asyn
 
 test('serialNumber enabled item, create invalid stock movements', async (t) => {
   const { name, rate } = itemMap.Pen;
-  const quantity = await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationTwo, serialNumbers: [serialNumberMap.serialTwo.name]});
+  const quantity = await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationTwo, serialNumbers: [serialNumberMap.serialTwo.name]});
 
   t.equal(quantity, 1, 'location two, serialNumber one has quantity');
   if (!quantity) {
@@ -263,7 +264,7 @@ test('serialNumber enabled item, create invalid stock movements', async (t) => {
     async () => (await stockMovement.sync()).submit(),
     'invalid stockMovement without serialNumber did not throw'
   );
-  t.equal(await fyo.db.getStockQuantity({item: name}), 1, 'item still has quantity');
+  t.equal(await getQuantity(fyo, {item: name}), 1, 'item still has quantity');
 });
 
 test('Material Receipt, auto creation of Serial Number', async (t) => {
@@ -301,7 +302,7 @@ test('Material Receipt, auto creation of Serial Number', async (t) => {
   }
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: serialNumbers}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: serialNumbers}),
     3,
     'location one has quantity 3 of incoming serialNumbers'
   );
@@ -340,7 +341,7 @@ test('Material Issue, status change of Serial Number', async (t) => {
   }
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: serialNumbers}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne, serialNumbers: serialNumbers}),
     0,
     'location one has quantity 0 of serialNumbers after issue'
   );

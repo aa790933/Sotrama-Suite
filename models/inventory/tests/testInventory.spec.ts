@@ -5,6 +5,7 @@ import {
 import { ModelNameEnum } from 'models/types';
 import { default as tape, default as test } from 'tape';
 import { closeTestFyo, getTestFyo, setupTestFyo } from 'tests/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 import { StockMovement } from '../StockMovement';
 import { MovementTypeEnum } from '../types';
 import { getItem, getSLEs, getStockMovement } from './helpers';
@@ -87,7 +88,7 @@ test('create stock movement, material receipt', async (t) => {
   t.equal(parseFloat(sle.rate), rate);
   t.equal(sle.quantity, quantity);
   t.equal(sle.location, locationMap.LocationOne);
-  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), quantity);
+  t.equal(await getQuantity(fyo, {item: itemMap.Ink.name}), quantity);
 });
 
 test('create stock movement, material transfer', async (t) => {
@@ -130,10 +131,10 @@ test('create stock movement, material transfer', async (t) => {
   }
 
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Ink.name, location: locationMap.LocationOne}),
+    await getQuantity(fyo, {item: itemMap.Ink.name, location: locationMap.LocationOne}),
     0
   );
-  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), quantity);
+  t.equal(await getQuantity(fyo, {item: itemMap.Ink.name}), quantity);
 });
 
 test('create stock movement, material issue', async (t) => {
@@ -166,7 +167,7 @@ test('create stock movement, material issue', async (t) => {
   t.equal(parseFloat(sle.rate), rate);
   t.equal(sle.quantity, -quantity);
   t.equal(sle.location, locationMap.LocationTwo);
-  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), 0);
+  t.equal(await getQuantity(fyo, {item: itemMap.Ink.name}), 0);
 });
 
 /**
@@ -196,7 +197,7 @@ test('cancel stock movement', async (t) => {
     t.equal(slesAfter.length, 0);
   }
 
-  t.equal(await fyo.db.getStockQuantity({item: itemMap.Ink.name}), null);
+  t.equal(await getQuantity(fyo, {item: itemMap.Ink.name}), null);
 });
 
 /**
@@ -230,7 +231,7 @@ async function runEntries(
       await assertThrows(async () => await stockMovement.submit());
     }
 
-    t.equal(await fyo.db.getStockQuantity({item: item}), postQuantity);
+    t.equal(await getQuantity(fyo, {item: item}), postQuantity);
   }
 }
 

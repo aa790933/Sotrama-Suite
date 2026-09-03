@@ -1,15 +1,15 @@
 import { ModelNameEnum } from '../../models/types';
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 
 const FIELDNAME = 'roundOffAccount';
 
-async function execute(dm: DatabaseManager) {
-  const accounts = await dm.db!.getSingleValues(FIELDNAME);
+async function execute(db: DatabaseCore) {
+  const accounts = await db.getSingleValues(FIELDNAME);
   if (!accounts.length) {
-    await testAndSetRoundOffAccount(dm);
+    await testAndSetRoundOffAccount(db);
   }
 
-  await dm.db!.delete(ModelNameEnum.AccountingSettings, FIELDNAME);
+  await db.delete(ModelNameEnum.AccountingSettings, FIELDNAME);
 
   let isSet = false;
   for (const { parent, value } of accounts) {
@@ -17,21 +17,21 @@ async function execute(dm: DatabaseManager) {
       continue;
     }
 
-    isSet = await setRoundOffAccountIfExists(value as string, dm);
+    isSet = await setRoundOffAccountIfExists(value as string, db);
     if (isSet) {
       break;
     }
   }
 
   if (!isSet) {
-    await testAndSetRoundOffAccount(dm);
+    await testAndSetRoundOffAccount(db);
   }
 }
 
-async function testAndSetRoundOffAccount(dm: DatabaseManager) {
-  const isSet = await setRoundOffAccountIfExists('Round Off', dm);
+async function testAndSetRoundOffAccount(db: DatabaseCore) {
+  const isSet = await setRoundOffAccountIfExists('Round Off', db);
   if (!isSet) {
-    await setRoundOffAccountIfExists('Rounded Off', dm);
+    await setRoundOffAccountIfExists('Rounded Off', db);
   }
 
   return;
@@ -39,14 +39,14 @@ async function testAndSetRoundOffAccount(dm: DatabaseManager) {
 
 async function setRoundOffAccountIfExists(
   roundOffAccount: string,
-  dm: DatabaseManager
+  db: DatabaseCore
 ) {
-  const exists = await dm.db!.exists(ModelNameEnum.Account, roundOffAccount);
+  const exists = await db.exists(ModelNameEnum.Account, roundOffAccount);
   if (!exists) {
     return false;
   }
 
-  await dm.db!.insert(ModelNameEnum.AccountingSettings, {
+  await db.insert(ModelNameEnum.AccountingSettings, {
     roundOffAccount,
   });
   return true;

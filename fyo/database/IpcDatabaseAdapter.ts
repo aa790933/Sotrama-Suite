@@ -163,35 +163,4 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
       return await ipc.db.call('getNextSeriesValue', prefix, schemaName);
     })) as number;
   }
-
-  async getStockQuantity(
-    query: import('./Database').StockQuery | string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null> {
-    let q: import('./Database').StockQuery;
-    if (typeof query === 'string') {
-      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
-    } else {
-      q = query;
-    }
-    return (await this.#handleDBCall(async () => {
-      return await ipc.db.call('getStockQuantity', q);
-    })) as number | null;
-  }
-
-  async call(method: keyof DatabaseBase, ...args: unknown[]): Promise<unknown> {
-    return await this.#handleDBCall(async () => {
-      return await ipc.db.call(method, ...args);
-    });
-  }
-
-  async callBespoke(method: string, ...args: unknown[]): Promise<unknown> {
-    return await this.#handleDBCall(async () => {
-      return await ipc.db.bespoke(method, ...args);
-    });
-  }
 }

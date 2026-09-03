@@ -2,7 +2,7 @@ import os from 'os';
 import test from 'tape';
 import { MariaDBConfig } from '../core';
 import DatabaseCore from '../core';
-import { detectLanIp, detectSubnet } from '../../../main/mariadbInstall';
+import { detectLanIp, detectSubnet } from '../../../main/provision/hostProvision';
 
 /**
  * LAN Connectivity Test

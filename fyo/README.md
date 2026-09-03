@@ -78,13 +78,13 @@ db needs to be set first else an error will be thrown_
 ## Testing
 
 For testing the `fyo` class, `mocha` is used (`node` side). So for this the
-demux classes are directly replaced by `node` side managers such as
-`DatabaseManager`.
+demux classes are directly replaced by `node` side subclasses such as
+`DatabaseCore` (`MariaDBTestDemux` in `tests/helpers.ts`).
 
-For this to work the class signatures of the demux class and the manager have to
+For this to work the class signatures of the demux class and the core have to
 be the same which is maintained by abstract demux classes.
 
-`DatabaseManager` is used as the `DatabaseDemux` for testing without API or IPC
+`DatabaseCore` is used as the `DatabaseDemux` for testing without API or IPC
 calls. For `AuthDemux` the `DummyAuthDemux` class is used.
 
 ## Translations

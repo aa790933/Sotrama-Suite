@@ -3,15 +3,6 @@ import { DatabaseBase, GetAllOptions, QueryFilter } from 'utils/db/types';
 import { FieldValueMap } from 'backend/database/types';
 import { DocValue, DocValueMap } from 'fyo/core/types';
 
-export type StockQuery = {
-  item: string;
-  location?: string;
-  batch?: string;
-  serialNumbers?: string[];
-  fromDate?: string;
-  toDate?: string;
-};
-
 /**
  * Typed Database interface at the external Fyo.db seam.
  *
@@ -23,7 +14,7 @@ export type StockQuery = {
  * IPC/maria pool remains an internal implementation detail.
  */
 export interface Database extends DatabaseBase {
-  // Lifecycle — previously on DatabaseDemuxBase, now part of the typed seam
+  // Lifecycle surface of the typed seam
   getSchemaMap(): Promise<SchemaMap>;
   createNewDatabase(dbPath: string, countryCode: string): Promise<string>;
   connectToDatabase(dbPath: string, countryCode?: string): Promise<string>;
@@ -43,19 +34,6 @@ export interface Database extends DatabaseBase {
   // Typed persistence — genuine DB ownership (FOR UPDATE / transaction)
   getNextAutoincrementId(schemaName: string): Promise<number>;
   getNextSeriesValue(prefix: string, schemaName: string): Promise<number>;
-  getStockQuantity(query: StockQuery): Promise<number | null>;
-  getStockQuantity(
-    item: string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null>;
-
-  // Legacy stringly-typed dispatch — retained temporarily for compatibility
-  call?(method: keyof DatabaseBase, ...args: unknown[]): Promise<unknown>;
-  callBespoke?(method: string, ...args: unknown[]): Promise<unknown>;
 }
 
 export type { GetAllOptions, QueryFilter };

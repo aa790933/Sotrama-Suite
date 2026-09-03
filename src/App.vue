@@ -63,7 +63,7 @@ import { showDialog, showToast } from './utils/interactive';
 import { setLanguageMap } from './utils/language';
 import { updateConfigFiles } from './utils/misc';
 import { updatePrintTemplates } from './utils/printTemplates';
-import { getSafeConfigDetail } from 'utils/mariadb-types';
+import { getSafeConfigDetail, equalsConnection } from 'utils/mariadb-types';
 import { Search } from './utils/search';
 import { Shortcuts } from './utils/shortcuts';
 import { routeTo } from './utils/ui';
@@ -152,7 +152,7 @@ export default defineComponent({
   methods: {
     async setInitialScreen(): Promise<void> {
       this.hostRole = normalizeHostRole(fyo.config.get('hostRole'));
-      // P1-A: prefer lastSelectedConnectionId (safe, main-owned), fallback to legacy lastSelectedFilePath
+      // Prefer lastSelectedConnectionId (safe, main-owned), fallback to legacy lastSelectedFilePath
       const lastId = fyo.config.get('lastSelectedConnectionId' as never) as string | null | undefined;
       const lastPath = fyo.config.get('lastSelectedFilePath', null) as string | null;
       const toUse = (typeof lastId === 'string' && lastId.length ? lastId : null) || lastPath;
@@ -201,18 +201,16 @@ export default defineComponent({
       this.activeScreen = Screen.SetupWizard;
     },
     async fileSelected(filePath: string): Promise<void> {
-      // P1-A: support both legacy JSON and new connection ID; persist both for migration
       fyo.config.set('lastSelectedFilePath', filePath);
       try {
         const conns = fyo.config.get('connections' as never) as { id: string }[] | undefined;
         if (conns?.some((c) => c.id === filePath)) {
           fyo.config.set('lastSelectedConnectionId' as never, filePath as never);
         } else {
-          // Try to find ID for this JSON config
           const { parseMariaDBConfigString } = await import('utils/mariadb-types');
           const cfg = parseMariaDBConfigString(filePath);
           const found = conns?.find(
-            (c: any) => c.host === cfg.host && c.port === cfg.port && c.database === cfg.database && c.user === cfg.user
+            (c: any) => equalsConnection(c, cfg)
           );
           if (found) fyo.config.set('lastSelectedConnectionId' as never, found.id as never);
         }

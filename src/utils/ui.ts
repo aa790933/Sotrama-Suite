@@ -16,6 +16,7 @@ import { Invoice } from 'models/baseModels/Invoice/Invoice';
 import { PurchaseInvoice } from 'models/baseModels/PurchaseInvoice/PurchaseInvoice';
 import { SalesInvoice } from 'models/baseModels/SalesInvoice/SalesInvoice';
 import { getLedgerLink } from 'models/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 import { Transfer } from 'models/inventory/Transfer';
 import { Transactional } from 'models/Transactional/Transactional';
 import { ModelNameEnum } from 'models/types';
@@ -367,7 +368,6 @@ export function getFieldsGroupedByTabAndSection(
     tabbed.get(section)!.push(field);
   }
 
-  // Delete empty tabs and sections
   for (const tkey of grouped.keys()) {
     const section = grouped.get(tkey);
     if (!section) {
@@ -402,7 +402,6 @@ export function getFormRoute(
     return route;
   }
 
-  // Use `encodeURIComponent` if more name issues
   return `/edit/${schemaName}/${name.replaceAll('/', '%2F')}`;
 }
 
@@ -637,7 +636,7 @@ async function showInsufficientInventoryDialog(doc: SalesInvoice) {
     }
 
     const stockQuantity =
-      (await fyo.db.getStockQuantity({item: item, toDate: doc.date!.toISOString(), batch: batch})) ?? 0;
+      (await getQuantity(fyo, {item: item, toDate: doc.date!.toISOString(), batch: batch})) ?? 0;
 
     if (stockQuantity > quantity) {
       continue;

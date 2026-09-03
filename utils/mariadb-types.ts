@@ -5,8 +5,7 @@
  */
 export type Platform = 'win' | 'mac' | 'linux';
 
-export interface InstallOptions {
-  platform: Platform;
+export interface HostProvisionConfig {
   rootPassword: string;
   appPassword: string;
   port: number;
@@ -14,10 +13,18 @@ export interface InstallOptions {
   hostMode?: boolean;
 }
 
+export interface InstallProgress {
+  stage: string;
+  percent?: number;
+  downloaded?: number;
+  total?: number;
+}
+
 export interface InstallResult {
   ok: boolean;
   error?: string;
   log?: string;
+  port?: number;
 }
 
 export interface PingOptions {
@@ -49,6 +56,26 @@ export interface MariaDBConfig {
   user: string;
   password: string;
   database: string;
+}
+
+export type ConnectionLike = Pick<
+  MariaDBConfig,
+  'host' | 'port' | 'user' | 'database'
+>;
+
+/** Canonical Connection identity: host + port + database + user. */
+export function equalsConnection(a: ConnectionLike, b: ConnectionLike): boolean {
+  return (
+    a.host === b.host &&
+    a.port === b.port &&
+    a.database === b.database &&
+    a.user === b.user
+  );
+}
+
+/** Safe, non-secret display string for a Connection. Never includes password. */
+export function toSafeDisplay(c: ConnectionLike): string {
+  return `${c.database} @ ${c.host}:${c.port} (${c.user})`;
 }
 
 /**
@@ -110,7 +137,7 @@ export function toConnectionMetadata(conn: PersistedConnection): ConnectionMetad
     user: conn.user,
     database: conn.database,
     openCount: conn.openCount,
-    display: `${conn.database} @ ${conn.host}:${conn.port} (${conn.user})`,
+    display: toSafeDisplay(conn),
     modified: conn.createdAt,
   };
 }
@@ -148,8 +175,7 @@ export const INVALID_CONFIG_LABEL = 'Invalid configuration';
  */
 export function getSafeConfigDisplay(dbPath: string): string {
   try {
-    const cfg = parseMariaDBConfigString(dbPath);
-    return `${cfg.database} @ ${cfg.host}:${cfg.port} (${cfg.user})`;
+    return toSafeDisplay(parseMariaDBConfigString(dbPath));
   } catch {
     if (!dbPath) return '';
     return INVALID_CONFIG_LABEL;

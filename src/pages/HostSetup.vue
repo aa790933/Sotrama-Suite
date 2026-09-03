@@ -384,10 +384,14 @@ import { fyo } from 'src/initFyo';
 
 import type { IPC } from 'main/preload';
 
-// Declare IPC bridge interface
 declare const ipc: IPC;
 
-type ProgressPayload = { percent: number; downloaded: number; total: number };
+type ProgressPayload = {
+  percent?: number;
+  downloaded?: number;
+  total?: number;
+  stage?: string;
+};
 
 function genPassword(): string {
   const arr = new Uint8Array(12);
@@ -436,9 +440,6 @@ export default defineComponent({
     };
   },
   computed: {
-    downloadChannel(): string {
-      return IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER;
-    },
     installChannel(): string {
       return IPC_ACTIONS.INSTALL_MARIA_DB;
     },
@@ -463,7 +464,6 @@ export default defineComponent({
     },
   },
   async mounted() {
-    await this.probeNextFreePort(3306);
     try {
       const ip = await ipc.getLanIp();
       if (ip) this.lanIp = ip;
@@ -504,7 +504,6 @@ export default defineComponent({
 
     cleanupListeners() {
       if (typeof ipc !== 'undefined' && ipc.removeMariaDBProgressListener) {
-        ipc.removeMariaDBProgressListener(this.downloadChannel);
         ipc.removeMariaDBProgressListener(this.installChannel);
       }
     },
@@ -517,25 +516,6 @@ export default defineComponent({
           this.copied = false;
         }, 2000);
       }
-    },
-
-    async probeNextFreePort(start: number) {
-      let candidate = start;
-      while (candidate < start + 20) {
-        const check = await ipc.isPortAvailable(candidate);
-        if (check.available) {
-          this.port = candidate;
-          this.portMessage =
-            candidate === start
-              ? ''
-              : `${t`Port`} ${start} ${t`was in use; allocated port`} ${candidate}.`;
-          return;
-        }
-        candidate += 1;
-      }
-      this.portMessage = `${t`No free port found between`} ${start} ${t`and`} ${
-        start + 19
-      }.`;
     },
 
     async advancedTest() {
@@ -557,7 +537,6 @@ export default defineComponent({
           this.testError = ping.error || '';
           return;
         }
-        // Ping succeeded — now check if target database exists
         try {
           const dbCheck = await ipc.checkDbExists({
             host: this.host,
@@ -617,64 +596,40 @@ export default defineComponent({
     },
 
     async expressInstall() {
-      // Hard gate: only a persisted/selected host role may run the local
-      // MariaDB installation path. Clients and legacy (null-role) installs
-      // must never provision a local server, even if the UI regresses.
       if (!canInstallMariaDB(this.role)) {
         this.errorMsg = t`MariaDB installation is only available on the host computer.`;
         return;
       }
 
       this.installing = true;
-      this.isDownloading = false;
+      this.isDownloading = true;
       this.installStage = t`Preparing installation…`;
+      this.progressPercent = 0;
+      this.portMessage = '';
       this.errorMsg = '';
       this.cleanupListeners();
 
       try {
-        await this.probeNextFreePort(this.port);
-        const portCheck = await ipc.isPortAvailable(this.port);
-        if (!portCheck.available) {
-          this.errorMsg = `${t`Port`} ${
-            this.port
-          } ${t`is in use. Free it and retry.`}`;
-          return;
-        }
-
         this.rootPassword = genPassword();
         this.appPassword = genPassword();
         const database = this.database.trim() || 'sotrama';
+        const requestedPort = this.port;
 
-        const env = await ipc.getEnv();
-        if (env.platform === 'win32') {
-          this.isDownloading = true;
-          this.installStage = t`Downloading MariaDB installer…`;
-          ipc.registerMariaDBProgressListener(
-            this.downloadChannel,
-            (e: ProgressPayload) => {
-              this.progressPercent = e.percent;
-            }
-          );
-          await ipc.downloadMariaDBInstaller(true);
-          this.isDownloading = false;
-        }
-
-        this.installStage = t`Installing MariaDB (admin privileges required)…`;
         ipc.registerMariaDBProgressListener(
           this.installChannel,
           (e: ProgressPayload) => {
-            this.progressPercent = e.percent;
+            if (typeof e.percent === 'number') this.progressPercent = e.percent;
+            if (e.stage) this.installStage = e.stage;
           }
         );
 
-        const result = (await ipc.installMariaDB({
+        const result = (await ipc.provisionMariaDB({
           rootPassword: this.rootPassword,
           appPassword: this.appPassword,
           database,
-          port: this.port,
-          platform: undefined,
+          port: requestedPort,
           hostMode: true,
-        })) as { ok: boolean; error?: string; log?: string };
+        })) as { ok: boolean; error?: string; log?: string; port?: number };
 
         if (!result.ok) {
           this.errorMsg = result.error || t`Installation failed.`;
@@ -684,20 +639,14 @@ export default defineComponent({
           return;
         }
 
-        this.installStage = t`Verifying application user…`;
-        const ping = await ipc.pingMariaDB({
-          host: '127.0.0.1',
-          port: this.port,
-          user: 'sotrama_app',
-          password: this.appPassword,
-        });
-
-        if (!ping.ok) {
-          this.errorMsg =
-            ping.error || t`Application user cannot reach the server.`;
-          return;
+        if (result.port) {
+          if (result.port !== requestedPort) {
+            this.portMessage = `${t`Port`} ${requestedPort} ${t`was in use; allocated port`} ${result.port}.`;
+          }
+          this.port = result.port;
         }
 
+        this.isDownloading = false;
         this.summary = {
           port: this.port,
           database,

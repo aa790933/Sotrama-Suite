@@ -53,7 +53,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     this.converter = new Converter(fieldMapProvider, pesaProvider);
   }
 
-  // Lifecycle — typed, no stringly call()
+  // Lifecycle — typed transport
   async getSchemaMap(): Promise<SchemaMap> {
     if (Object.keys(this.schemaMap).length === 0) {
       this.schemaMap = getSchemas('-', []);
@@ -268,38 +268,6 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return candidate;
   }
 
-  async getStockQuantity(
-    query: import('./Database').StockQuery | string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null> {
-    let q: import('./Database').StockQuery;
-    if (typeof query === 'string') {
-      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
-    } else {
-      q = query;
-    }
-    const table = this.#tables.get('StockLedgerEntry');
-    if (!table || table.size === 0) return null;
-    let total = 0;
-    let found = false;
-    for (const row of table.values()) {
-      if (row.item !== q.item) continue;
-      if (q.location && row.location !== q.location) continue;
-      if (q.batch && row.batch !== q.batch) continue;
-      if (q.serialNumbers?.length && !q.serialNumbers.includes(row.serialNumber as string)) continue;
-      const qty = Number((row as Record<string, unknown>).quantity ?? 0);
-      if (!isNaN(qty)) {
-        total += qty;
-        found = true;
-      }
-    }
-    return found ? total : null;
-  }
-
   async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
     // Count must be total matching rows, not limited page — ignore LIMIT/OFFSET
     const filters = options.filters;
@@ -317,16 +285,6 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     const rows = table ? Array.from(table.values()) : [];
     const filtered = filters ? rows.filter((r) => this.#matchesFilters(r as DocValueMap, filters)) : rows;
     return filtered.length;
-  }
-
-  // Legacy compat — retained for Slice 1
-  async call(method: keyof DatabaseBase, ...args: unknown[]): Promise<unknown> {
-    // @ts-ignore typed dispatch fallback
-    return await (this as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[method](...args);
-  }
-
-  async callBespoke(_method: string, ..._args: unknown[]): Promise<unknown> {
-    throw new Error(`MemoryDatabaseAdapter: bespoke ${_method} not implemented (MariaDB-specific)`);
   }
 
   // Helpers

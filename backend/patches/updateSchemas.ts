@@ -1,10 +1,9 @@
 import { Version } from 'utils/version';
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 import { getRandomString } from '../../utils/index';
 
-async function execute(dm: DatabaseManager) {
-  const db = dm.db;
-  if (!db || !db.pool) {
+async function execute(db: DatabaseCore) {
+  if (!db.isConnected) {
     return;
   }
 
@@ -15,16 +14,15 @@ async function execute(dm: DatabaseManager) {
   )?.[0]?.value;
 
   /**
-   * Versions after this should have the new schemas
+   * Versions after this already have the new schemas.
    */
   if (version && Version.gt(version, '0.4.3-beta.0')) {
     return;
   }
 
   /**
-   * For MariaDB, this migration patch is no longer needed since
-   * migrate() handles schema creation automatically.
-   * Just mark the version to prevent re-execution.
+   * Schema creation is handled by migrate(); this patch only marks the version
+   * to prevent re-execution.
    */
   await db.query(
     `INSERT INTO \`singlevalue\` (name, parent, fieldname, value, created, modified, createdBy, modifiedBy)

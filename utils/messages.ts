@@ -36,17 +36,14 @@ export enum IPC_ACTIONS {
   DELETE_FILE = 'delete-file',
   SEND_API_REQUEST = 'send-api-request',
   // Database messages
-  DOWNLOAD_MARIADB_INSTALLER = 'download-mariadb-installer',
   INSTALL_MARIA_DB = 'install-mariadb',
   PING_MARIA_DB = 'ping-mariadb',
-  IS_PORT_AVAILABLE = 'is-port-available',
   GET_LAN_IP = 'get-lan-ip',
   CHECK_DB_EXISTS = 'check-db-exists',
   CREATE_DATABASE = 'create-database',
   DB_CREATE = 'db-create',
   DB_CONNECT = 'db-connect',
   DB_CALL = 'db-call',
-  DB_BESPOKE = 'db-bespoke',
   DB_SCHEMA = 'db-schema',
 }
 

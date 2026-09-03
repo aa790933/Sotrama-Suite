@@ -249,6 +249,7 @@ import { defineComponent, PropType } from 'vue';
 import { SalesInvoiceItem } from 'models/baseModels/SalesInvoiceItem/SalesInvoiceItem';
 import { Money } from 'pesa';
 import { validateSerialNumberCount } from 'src/utils/pos';
+import { getQuantity } from 'models/inventory/StockLedger';
 
 export default defineComponent({
   name: 'ModernPOSSelectedItemRow',
@@ -339,7 +340,7 @@ export default defineComponent({
       }
 
       return (
-        (await fyo.db.getStockQuantity({item: this.row.item as string, batch: this.row.batch})) ?? 0
+        (await getQuantity(fyo, {item: this.row.item as string, batch: this.row.batch})) ?? 0
       );
     },
     async setBatch(batch: string) {

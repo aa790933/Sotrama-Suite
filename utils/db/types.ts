@@ -50,16 +50,6 @@ export abstract class DatabaseBase {
 
   abstract getNextAutoincrementId(schemaName: string): Promise<number>;
   abstract getNextSeriesValue(prefix: string, schemaName: string): Promise<number>;
-  // StockQuery object preferred; separate args kept for backward compat during migration
-  abstract getStockQuantity(query: StockQuery): Promise<number | null>;
-  abstract getStockQuantity(
-    item: string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null>;
 
   // Other
   abstract close(): Promise<void>;
@@ -84,21 +74,9 @@ export type QueryFilter = Record<
   boolean | string | null | (string | number | (string | number | null)[])[]
 >;
 
-export type StockQuery = {
-  item: string;
-  location?: string;
-  batch?: string;
-  serialNumbers?: string[];
-  fromDate?: string;
-  toDate?: string;
-};
-
 /**
- * DatabaseDemuxBase is an abstract class that ensures that the function signatures
- * match between the DatabaseManager and the DatabaseDemux.
- *
- * This allows testing the frontend code while directly plugging in the DatabaseManager
- * and bypassing all the API and IPC calls.
+ * DatabaseDemuxBase pins the MainDatabase lifecycle surface used by the
+ * Fyo Demux path and the main-process IPC router.
  */
 export abstract class DatabaseDemuxBase {
   abstract getSchemaMap(): Promise<SchemaMap> | SchemaMap;
@@ -112,13 +90,9 @@ export abstract class DatabaseDemuxBase {
     dbPath: string,
     countryCode?: string
   ): Promise<string>;
-
-  abstract call(method: DatabaseMethod, ...args: unknown[]): Promise<unknown>;
-
-  abstract callBespoke(method: string, ...args: unknown[]): Promise<unknown>;
 }
 
-// Return types of Bespoke Queries
+// Finance report return types
 export type TopExpenses = { account: string; total: number }[];
 export type TotalOutstanding = { total: number; outstanding: number };
 export type Cashflow = { inflow: number; outflow: number; yearmonth: string }[];

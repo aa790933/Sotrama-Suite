@@ -1,13 +1,17 @@
-import { DatabaseManager } from '../backend/database/manager';
+import DatabaseCore from '../backend/database/core';
 import { ModelNameEnum } from '../models/types';
 
 export async function checkLoyaltyProgramExpiry() {
-  const dm = new DatabaseManager();
+  const db = new DatabaseCore();
 
   try {
+    if (!db.isConnected) {
+      return { timestamp: new Date().toISOString() };
+    }
+
     const currentDate = new Date();
 
-    const loyaltyPrograms = await dm.db?.getAll(ModelNameEnum.LoyaltyProgram, {
+    const loyaltyPrograms = await db.getAll(ModelNameEnum.LoyaltyProgram, {
       fields: ['name', 'toDate', 'status', 'isEnabled', 'maximumUse', 'used'],
       filters: {
         status: ['not in', ['Expired']],
@@ -18,7 +22,7 @@ export async function checkLoyaltyProgramExpiry() {
     if (loyaltyPrograms) {
       for (const program of loyaltyPrograms) {
         if (program.toDate && new Date(String(program.toDate)) <= currentDate) {
-          await dm.db?.query(
+          await db.query(
             `UPDATE \`${ModelNameEnum.LoyaltyProgram}\` SET status = ?, isEnabled = ? WHERE name = ?`,
             ['Expired', 0, program.name]
           );
@@ -34,7 +38,7 @@ export async function checkLoyaltyProgramExpiry() {
   } catch (error) {
     throw error;
   } finally {
-    await dm.call('close');
+    await db.close();
   }
 }
 

@@ -61,7 +61,6 @@ function buildDocItemMap(items: { item: string; batch?: string; quantity: number
     const batches: Record<string, { quantity: number; serialNumbers?: string[] }> | undefined = it.batch
       ? { [it.batch]: { quantity: it.quantity, serialNumbers: it.serialNumber?.split('\n') } }
       : {};
-    // Only keep batches if there was a batch
     const hasBatch = !!it.batch;
     map[it.item] = {
       quantity: it.quantity,
@@ -85,12 +84,9 @@ function buildReturnBalance(
     const hasBatch = !!Object.keys(docItem.batches ?? {}).length;
     if (retItem) {
       if (!hasBatch) {
-        // Non-batch: subtract returned qty
         balanceQty = -(Math.abs(balanceQty) + Math.abs(retItem.quantity));
       }
-      // Batch handling below
     }
-    // For non-batch, serialNumbers handling
     const balanceSerials: string[] | undefined = [];
     if (retItem?.serialNumbers && docItem.serialNumbers) {
       for (const sn of docItem.serialNumbers) {
@@ -116,8 +112,7 @@ function buildReturnBalance(
         balanceBatches[batch] = { quantity: bQty, serialNumbers: bSerials };
       }
     }
-    // For non-batch case, batches is the shared balanceBatches (but now per-item we use new object per item)
-    // To avoid aliasing, give each item its own batches copy
+    // Per-item batches copy: the shared balanceBatches map must not alias across items.
     const itemBatches = hasBatch ? { ...balanceBatches } : {};
     // Clear for next item to avoid cross-item aliasing
     for (const k in balanceBatches) delete balanceBatches[k];

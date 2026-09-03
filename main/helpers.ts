@@ -1,105 +1,16 @@
-import { constants } from 'fs';
-import fs from 'fs/promises';
-import { ConfigFile } from 'fyo/core/types';
 import { Main } from 'main';
 import config from 'utils/config';
 import { BackendResponse } from 'utils/ipc/types';
 import { IPC_CHANNELS } from 'utils/messages';
-import type { ConfigFilesWithModified } from 'utils/types';
 import {
+  equalsConnection,
   fromMariaDBConfigToPersisted,
-  parseMariaDBConfigString,
   toConnectionMetadata,
 } from 'utils/mariadb-types';
 import type {
   ConnectionMetadata,
   PersistedConnection,
 } from 'utils/mariadb-types';
-
-function isMariaDBConfigString(value: string): boolean {
-  try {
-    parseMariaDBConfigString(value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function setAndGetCleanedConfigFiles() {
-  const files = config.get('files', []);
-
-  const cleanedFileMap: Map<string, ConfigFile> = new Map();
-  for (const file of files) {
-    if (!file.companyName) {
-      continue;
-    }
-
-    const key = `${file.companyName}-${file.dbPath}`;
-    if (cleanedFileMap.has(key)) {
-      continue;
-    }
-
-    // For MariaDB JSON, skip filesystem checks — keep entry if companyName is valid
-    // For legacy SQLite paths, verify file accessibility
-    if (isMariaDBConfigString(file.dbPath)) {
-      cleanedFileMap.set(key, file);
-      continue;
-    }
-
-    const exists = await fs
-      .access(file.dbPath, constants.W_OK)
-      .then(() => true)
-      .catch(() => false);
-
-    if (!exists) {
-      continue;
-    }
-
-    cleanedFileMap.set(key, file);
-  }
-
-  const cleanedFiles = Array.from(cleanedFileMap.values());
-  config.set('files', cleanedFiles);
-  return cleanedFiles;
-}
-
-export async function getConfigFilesWithModified(files: ConfigFile[]) {
-  const filesWithModified: ConfigFilesWithModified[] = [];
-  for (const { dbPath, id, companyName, openCount } of files) {
-    // For MariaDB configs, do not use fs.stat (dbPath is JSON) — use current time
-    if (isMariaDBConfigString(dbPath)) {
-      filesWithModified.push({
-        id,
-        dbPath,
-        companyName,
-        modified: new Date().toISOString(),
-        openCount,
-      });
-      continue;
-    }
-    try {
-      const { mtime } = await fs.stat(dbPath);
-      filesWithModified.push({
-        id,
-        dbPath,
-        companyName,
-        modified: mtime.toISOString(),
-        openCount,
-      });
-    } catch {
-      // If stat fails, still include with current time to avoid losing the entry
-      filesWithModified.push({
-        id,
-        dbPath,
-        companyName,
-        modified: new Date().toISOString(),
-        openCount,
-      });
-    }
-  }
-
-  return filesWithModified;
-}
 
 export function getPersistedConnections(): PersistedConnection[] {
   return (config.get('connections' as never) as PersistedConnection[] | undefined) ?? [];
@@ -114,9 +25,7 @@ export function findConnectionById(id: string): PersistedConnection | undefined 
 }
 
 export function findConnectionByConfig(config: import('utils/mariadb-types').MariaDBConfig): PersistedConnection | undefined {
-  return getPersistedConnections().find(
-    (c) => c.host === config.host && c.port === config.port && c.database === config.database && c.user === config.user
-  );
+  return getPersistedConnections().find((c) => equalsConnection(c, config));
 }
 
 export function upsertConnectionFromConfig(
@@ -147,41 +56,6 @@ export function upsertConnectionFromConfig(
   connections.push(created);
   config.set('connections' as never, connections as never);
   return created;
-}
-
-export function migrateLegacyConnections(): void {
-  const connections = getPersistedConnections();
-  if (connections.length > 0) return; // already migrated
-  const files = config.get('files', []) as ConfigFile[];
-  if (!files.length) return;
-  let migrated = false;
-  for (const file of files) {
-    try {
-      const cfg = parseMariaDBConfigString(file.dbPath);
-      const existing = findConnectionByConfig(cfg);
-      if (existing) continue;
-      const conn = fromMariaDBConfigToPersisted(file.id, file.companyName, cfg, file.openCount ?? 0);
-      connections.push(conn);
-      migrated = true;
-    } catch {
-      // legacy SQLite path, ignore
-    }
-  }
-  if (migrated) {
-    config.set('connections' as never, connections as never);
-  }
-  // Migrate lastSelectedFilePath -> lastSelectedConnectionId
-  const last = config.get('lastSelectedFilePath', null) as string | null;
-  const lastId = config.get('lastSelectedConnectionId' as never) as string | null | undefined;
-  if (last && !lastId) {
-    try {
-      const cfg = parseMariaDBConfigString(last);
-      const found = findConnectionByConfig(cfg);
-      if (found) {
-        config.set('lastSelectedConnectionId' as never, found.id as never);
-      }
-    } catch {}
-  }
 }
 
 export async function getErrorHandledReponse(func: () => unknown) {

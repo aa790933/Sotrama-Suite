@@ -19,12 +19,12 @@ import type {
   TemplateFile,
 } from 'utils/types';
 import type {
+  HostProvisionConfig,
   InstallResult,
   PingOptions,
   PingResult,
-  PortCheckResult,
-  Platform,
 } from 'utils/mariadb-types';
+import { equalsConnection, toSafeDisplay } from 'utils/mariadb-types';
 
 type IPCRendererListener = Parameters<typeof ipcRenderer.on>[1];
 const ipc = {
@@ -178,13 +178,6 @@ const ipc = {
     )) as ConfigFilesWithModified[];
   },
 
-  async isPortAvailable(port: number) {
-    return (await ipcRenderer.invoke(
-      IPC_ACTIONS.IS_PORT_AVAILABLE,
-      port
-    )) as PortCheckResult;
-  },
-
   async getLanIp() {
     return (await ipcRenderer.invoke(IPC_ACTIONS.GET_LAN_IP)) as string | null;
   },
@@ -203,21 +196,7 @@ const ipc = {
     )) as { ok: boolean; error?: string };
   },
 
-  async downloadMariaDBInstaller(emitProgress: boolean) {
-    return (await ipcRenderer.invoke(
-      IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
-      emitProgress
-    )) as string;
-  },
-
-  async installMariaDB(options: {
-    rootPassword: string;
-    appPassword: string;
-    database: string;
-    port: number;
-    platform?: Platform;
-    hostMode?: boolean;
-  }) {
+  async provisionMariaDB(options: HostProvisionConfig) {
     return (await ipcRenderer.invoke(
       IPC_ACTIONS.INSTALL_MARIA_DB,
       options
@@ -232,16 +211,14 @@ const ipc = {
   },
 
   registerMariaDBProgressListener(
-    channel:
-      IPC_ACTIONS.INSTALL_MARIA_DB | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+    channel: IPC_ACTIONS.INSTALL_MARIA_DB,
     listener: IPCRendererListener
   ) {
     ipcRenderer.on(channel, listener);
   },
 
   removeMariaDBProgressListener(
-    channel:
-      IPC_ACTIONS.INSTALL_MARIA_DB | IPC_ACTIONS.DOWNLOAD_MARIADB_INSTALLER,
+    channel: IPC_ACTIONS.INSTALL_MARIA_DB,
     listener?: IPCRendererListener
   ) {
     if (listener) {
@@ -325,14 +302,6 @@ const ipc = {
         ...args
       )) as BackendResponse;
     },
-
-    async bespoke(method: string, ...args: unknown[]) {
-      return (await ipcRenderer.invoke(
-        IPC_ACTIONS.DB_BESPOKE,
-        method,
-        ...args
-      )) as BackendResponse;
-    },
   },
 
   store: {
@@ -349,7 +318,7 @@ const ipc = {
             user: c.user,
             database: c.database,
             openCount: c.openCount,
-            display: `${c.database} @ ${c.host}:${c.port} (${c.user})`,
+            display: toSafeDisplay(c),
           })
         ) as unknown as ConfigMap[K];
       }
@@ -357,12 +326,10 @@ const ipc = {
         // If it's a MariaDB JSON, don't expose raw password to renderer via store; return ID if available
         try {
           const { parseMariaDBConfigString } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
-          parseMariaDBConfigString(value);
+          const parsed = parseMariaDBConfigString(value);
           // It's a MariaDB JSON — try to map to connection ID
           const conns = config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined;
-          const found = conns?.find(
-            (c) => c.host === JSON.parse(value).host && c.port === JSON.parse(value).port && c.database === JSON.parse(value).database
-          );
+          const found = conns?.find((c) => equalsConnection(c, parsed));
           if (found) return found.id as unknown as ConfigMap[K];
         } catch {}
       }

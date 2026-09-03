@@ -53,20 +53,17 @@ export class Fyo {
     this.isElectron = conf.isElectron ?? true;
 
     this.auth = new AuthHandler(this, conf.AuthDemux);
-    // Slice 2: typed transport for CRUD subset (insert/get/getAll/exists/update/delete)
-    // Production (Electron renderer) uses IpcDatabaseAdapter via typed seam;
-    // legacy DatabaseDemux path retained for explicit test injection (DatabaseManager).
+    // Production (Electron renderer) uses IpcDatabaseAdapter via the typed seam;
+    // explicit test injection (DatabaseCore subclass) goes through the Demux path.
     if (conf.database) {
       this.db = new DatabaseHandler(this, undefined, conf.database);
     } else if (conf.DatabaseDemux) {
-      // Explicit injection (tests/helpers.ts: DatabaseManager) — keep legacy stringly path
       this.db = new DatabaseHandler(this, conf.DatabaseDemux);
     } else if (this.isElectron && !this.isTest) {
-      // Normal production renderer path — typed Ipc adapter (Slice 2)
+      // Normal production renderer path — typed Ipc adapter.
       this.db = new DatabaseHandler(this, undefined, new IpcDatabaseAdapter());
     } else {
-      // Non-Electron non-test fallback (e.g., pure unit tests without DB) — typed memory not needed,
-      // use legacy demux which will throw NotImplemented until init (preserves old behavior)
+      // Non-Electron non-test fallback — Demux backend throws NotImplemented until init.
       this.db = new DatabaseHandler(this, conf.DatabaseDemux);
     }
     this.doc = new DocHandler(this);
@@ -134,7 +131,6 @@ export class Fyo {
   }
 
   async #initializeModules() {
-    // temp params while calling routes
     this.temp = {};
 
     this.doc.init();

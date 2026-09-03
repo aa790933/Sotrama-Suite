@@ -1,6 +1,5 @@
 import type { Field, FieldType, RawValue } from '../../schemas/types';
 import type DatabaseCore from './core';
-import type { DatabaseManager } from './manager';
 
 export interface GetQueryBuilderOptions {
   offset?: number;
@@ -44,7 +43,7 @@ export interface Patch {
   name: string;
   version: string;
   patch: {
-    execute: (dm: DatabaseManager) => Promise<void>;
+    execute: (db: DatabaseCore) => Promise<void>;
     beforeMigrate?: boolean;
   };
   priority?: number;
@@ -60,11 +59,6 @@ export type DbType =
   | 'time'
   | 'binary';
 
-
-export type BespokeFunction = (
-  db: DatabaseCore,
-  ...args: unknown[]
-) => Promise<unknown>;
 
 export type SingleValue<T> = {
   fieldname: string;

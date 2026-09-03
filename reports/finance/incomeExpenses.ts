@@ -1,5 +1,6 @@
 import { Fyo } from 'fyo';
 import { IncomeExpense } from 'utils/db/types';
+import { getLedgerEntries, monthKey } from './ledgerSummary';
 
 export async function getIncomeAndExpenses(fyo: Fyo, fromDate: string, toDate: string): Promise<IncomeExpense> {
   const incomeAccounts = (await fyo.db.getAll('Account', {
@@ -12,22 +13,21 @@ export async function getIncomeAndExpenses(fyo: Fyo, fromDate: string, toDate: s
   })) as { name: string }[];
   const incomeSet = new Set(incomeAccounts.map((a) => a.name));
   const expenseSet = new Set(expenseAccounts.map((a) => a.name));
-  const entries = (await fyo.db.getAllRaw('AccountingLedgerEntry', {
-    filters: { reverted: false, date: ['between', fromDate, toDate] as unknown as string },
-    fields: ['account', 'debit', 'credit', 'date'],
-  })) as { account: string; debit: string | number; credit: string | number; date: string }[];
+  const entries = await getLedgerEntries(fyo, {
+    accounts: [...incomeSet, ...expenseSet],
+    fromDate,
+    toDate,
+  });
   const incomeByMonth = new Map<string, number>();
   const expenseByMonth = new Map<string, number>();
   for (const e of entries) {
-    const ym = String(e.date).slice(0, 7);
-    const credit = Number(e.credit ?? 0);
-    const debit = Number(e.debit ?? 0);
+    const ym = monthKey(e.date);
     if (incomeSet.has(e.account)) {
-      const bal = credit - debit;
+      const bal = e.credit - e.debit;
       incomeByMonth.set(ym, (incomeByMonth.get(ym) ?? 0) + bal);
     }
     if (expenseSet.has(e.account)) {
-      const bal = debit - credit;
+      const bal = e.debit - e.credit;
       expenseByMonth.set(ym, (expenseByMonth.get(ym) ?? 0) + bal);
     }
   }

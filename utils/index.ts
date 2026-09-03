@@ -195,6 +195,14 @@ export function safeParseInt(value: unknown): number {
   return safeParseNumber(value, (v: string) => Math.trunc(Number(v)));
 }
 
+/** Millis for a Date, parsable string, or epoch number; NaN otherwise. */
+export function toTimeValue(value: unknown): number {
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return Date.parse(value);
+  return NaN;
+}
+
 export function safeParsePesa(value: unknown, fyo: Fyo): Money {
   if (value instanceof Money) {
     return value;

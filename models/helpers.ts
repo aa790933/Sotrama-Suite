@@ -1248,36 +1248,48 @@ export async function getPricingRule(
 
   const pricingRules: ApplicablePricingRules[] = [];
 
-  for (const item of doc.items) {
-    if (item.isFreeItem) {
-      continue;
-    }
+  const itemQuantity: Record<string, number> = {};
 
-    const pricingRuleDocNames = (
-      await doc.fyo.db.getAll(ModelNameEnum.PricingRuleItem, {
-        fields: ['parent'],
-        filters: {
-          item: item.item as string,
-          unit: item.unit as string,
-        },
-      })
-    ).map((doc) => doc.parent) as string[];
+  for (const item of doc.items) {
+    if (!item?.item) continue;
+
+    if (!itemQuantity[item.item]) {
+      itemQuantity[item.item] = item.quantity ?? 0;
+    } else {
+      itemQuantity[item.item] += item.quantity ?? 0;
+    }
+  }
+
+  const scoped = doc.items.filter((item) => !item.isFreeItem);
+  const namesByItem = await batchPricingRuleDocNames(doc, scoped);
+
+  const allNames = [...new Set(namesByItem.flat())];
+  const rulesByName = new Map<string, PricingRule>();
+  if (allNames.length) {
+    const rules = (await doc.fyo.db.getAll(ModelNameEnum.PricingRule, {
+      fields: ['*'],
+      filters: {
+        name: ['in', allNames],
+        isEnabled: true,
+        isCouponCodeBased: false,
+      },
+      orderBy: 'priority',
+      order: 'desc',
+    })) as PricingRule[];
+    for (const rule of rules) {
+      rulesByName.set(rule.name as string, rule);
+    }
+  }
+
+  for (let i = 0; i < scoped.length; i++) {
+    const item = scoped[i];
+    const pricingRuleDocNames = [...new Set(namesByItem[i])];
+
+    const pricingRuleDocs = pricingRuleDocNames
+      .map((name) => rulesByName.get(name))
+      .filter((rule): rule is PricingRule => !!rule);
 
     let pricingRuleDocsForItem;
-
-    const pricingRuleDocs = (await doc.fyo.db.getAll(
-      ModelNameEnum.PricingRule,
-      {
-        fields: ['*'],
-        filters: {
-          name: ['in', pricingRuleDocNames],
-          isEnabled: true,
-          isCouponCodeBased: false,
-        },
-        orderBy: 'priority',
-        order: 'desc',
-      }
-    )) as PricingRule[];
 
     if (pricingRuleDocs.length) {
       pricingRuleDocsForItem = pricingRuleDocs;
@@ -1296,18 +1308,6 @@ export async function getPricingRule(
 
     if (!pricingRuleDocsForItem) {
       continue;
-    }
-
-    const itemQuantity: Record<string, number> = {};
-
-    for (const item of doc.items) {
-      if (!item?.item) continue;
-
-      if (!itemQuantity[item.item]) {
-        itemQuantity[item.item] = item.quantity ?? 0;
-      } else {
-        itemQuantity[item.item] += item.quantity ?? 0;
-      }
     }
 
     const filtered = filterPricingRules(
@@ -1334,6 +1334,29 @@ export async function getPricingRule(
   }
 
   return pricingRules;
+}
+
+export async function batchPricingRuleDocNames(
+  doc: Invoice,
+  items: { item?: unknown; unit?: unknown }[]
+): Promise<string[][]> {
+  const pairs = items.map((item) => ({
+    item: item.item as string,
+    unit: item.unit as string,
+  }));
+  const rows = (await doc.fyo.db.getAll(ModelNameEnum.PricingRuleItem, {
+    fields: ['parent', 'item', 'unit'],
+    filters: {
+      item: ['in', [...new Set(pairs.map((p) => p.item))]],
+      unit: ['in', [...new Set(pairs.map((p) => p.unit))]],
+    },
+  })) as { parent: string; item: string; unit: string }[];
+  return pairs.map(
+    (p) =>
+      rows
+        .filter((row) => row.item === p.item && row.unit === p.unit)
+        .map((row) => row.parent) as string[]
+  );
 }
 
 export async function getItemRateFromPriceList(
@@ -1411,7 +1434,6 @@ export function canApplyPricingRule(
     return false;
   }
 
-  // Filter by Amount
   if (
     !pricingRuleDoc.minAmount?.isZero() &&
     amount.lte(pricingRuleDoc.minAmount as Money)
@@ -1426,7 +1448,6 @@ export function canApplyPricingRule(
     return false;
   }
 
-  // Filter by Validity
   if (sinvDate) {
     if (
       pricingRuleDoc.validFrom &&
@@ -1451,7 +1472,6 @@ export function canApplyCouponCode(
   amount: Money,
   sinvDate: Date
 ): boolean {
-  // Filter by Amount
   if (
     !couponCodeData.minAmount?.isZero() &&
     amount.lte(couponCodeData.minAmount as Money)
@@ -1466,7 +1486,6 @@ export function canApplyCouponCode(
     return false;
   }
 
-  // Filter by Validity
   if (
     couponCodeData.validFrom &&
     new Date(sinvDate).toISOString() < couponCodeData.validFrom.toISOString()
@@ -1702,14 +1721,10 @@ export async function updatePricingRule(sinvDoc: SalesInvoice) {
     (val) => val.isFreeItem
   ).length;
 
-  setTimeout(() => {
-    void (async () => {
-      if (appliedPricingRuleCount !== applicablePricingRuleNames?.length) {
-        await sinvDoc.appendPricingRuleDetail(applicablePricingRuleNames);
-        await sinvDoc.applyProductDiscount();
-      }
-    })();
-  }, 1);
+  if (appliedPricingRuleCount !== applicablePricingRuleNames?.length) {
+    await sinvDoc.appendPricingRuleDetail(applicablePricingRuleNames);
+    await sinvDoc.applyProductDiscount();
+  }
 }
 
 export function getPricingRulesConflicts(

@@ -1,8 +1,8 @@
 import { getDefaultMetaFieldValueMap } from '../../backend/helpers';
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 
-async function execute(dm: DatabaseManager) {
-  const s = (await dm.db?.getAll('SingleValue', {
+async function execute(db: DatabaseCore) {
+  const s = (await db.getAll('SingleValue', {
     fields: ['value'],
     filters: { fieldname: 'setupComplete' },
   })) as { value: string }[];
@@ -19,21 +19,21 @@ async function execute(dm: DatabaseManager) {
 
   for (const referenceType in names) {
     const name = names[referenceType];
-    await createNumberSeries(name, referenceType, dm);
+    await createNumberSeries(name, referenceType, db);
   }
 }
 
 async function createNumberSeries(
   name: string,
   referenceType: string,
-  dm: DatabaseManager
+  db: DatabaseCore
 ) {
-  const exists = await dm.db?.exists('NumberSeries', name);
+  const exists = await db.exists('NumberSeries', name);
   if (exists) {
     return;
   }
 
-  await dm.db?.insert('NumberSeries', {
+  await db.insert('NumberSeries', {
     name,
     start: 1001,
     padZeros: 4,

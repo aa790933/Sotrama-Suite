@@ -1,4 +1,4 @@
-import { DatabaseManager } from 'backend/database/manager';
+import DatabaseCore from 'backend/database/core';
 import { config } from 'dotenv';
 import { Fyo } from 'fyo';
 import { DummyAuthDemux } from 'fyo/tests/helpers';
@@ -30,9 +30,20 @@ export function getTestSetupWizardOptions(): SetupWizardOptions {
 
 export function getTestDbPath(dbPath?: string) {
   config();
-  // SQLite ':memory:' is no longer a supported backend; MariaDB uses MariaDBConfig via DatabaseManager.
-  // dbPath is retained for API compatibility but ignored for MariaDB (see DatabaseManager.createNewDatabase).
+  // MariaDB uses MariaDBConfig via DatabaseCore; dbPath is retained for API
+  // compatibility but ignored for MariaDB (see DatabaseCore.createNewDatabase).
   return dbPath ?? process.env.TEST_DB_PATH ?? '';
+}
+
+/**
+ * In-process MainDatabase for integration tests. Accepts (and ignores) the
+ * isElectron flag Fyo passes to Demux constructors, so it slots into the
+ * existing DatabaseDemux injection point without its own config.
+ */
+export class MariaDBTestDemux extends DatabaseCore {
+  constructor(_isElectron?: boolean) {
+    super(undefined, undefined);
+  }
 }
 
 /**
@@ -52,7 +63,7 @@ export function getTestDbPath(dbPath?: string) {
 
 export function getTestFyo(): Fyo {
   return new Fyo({
-    DatabaseDemux: DatabaseManager,
+    DatabaseDemux: MariaDBTestDemux,
     AuthDemux: DummyAuthDemux,
     isTest: true,
     isElectron: false,

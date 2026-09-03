@@ -64,7 +64,7 @@ import { defineComponent } from 'vue';
 import { getMapFromList } from 'utils/index';
 import { PeriodKey } from 'src/utils/types';
 
-// Linting broken in this file cause of `extends: ...`
+// `extends:` defeats type inference; unsafe rules are off file-wide.
 /* 
   eslint-disable @typescript-eslint/no-unsafe-argument, 
   @typescript-eslint/no-unsafe-return

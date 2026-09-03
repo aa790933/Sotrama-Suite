@@ -1,5 +1,6 @@
 import test from 'tape';
 import { closeTestFyo, getTestFyo, setupTestFyo } from 'tests/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 import { ModelNameEnum } from 'models/types';
 import { SalesInvoice } from '../SalesInvoice/SalesInvoice';
 import { getItem, getStockMovement } from 'models/inventory/tests/helpers';
@@ -119,7 +120,7 @@ test('Pricing Rule: create dummy item, party, pricing rules, free items, locatio
   );
   await (await stockMovement.sync()).submit();
   t.equal(
-    await fyo.db.getStockQuantity({item: itemMap.Pen.name, location: locationMap.LocationOne}),
+    await getQuantity(fyo, {item: itemMap.Pen.name, location: locationMap.LocationOne}),
     25,
     'Pen has quantity twenty five'
   );

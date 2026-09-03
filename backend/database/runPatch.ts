@@ -1,15 +1,15 @@
 import { emitMainProcessError, getDefaultMetaFieldValueMap } from '../helpers';
-import { DatabaseManager } from './manager';
+import type DatabaseCore from './core';
 import { FieldValueMap, Patch } from './types';
 
 export async function runPatches(
   patches: Patch[],
-  dm: DatabaseManager,
+  db: DatabaseCore,
   version: string
 ) {
   const list: { name: string; success: boolean }[] = [];
   for (const patch of patches) {
-    const success = await runPatch(patch, dm, version);
+    const success = await runPatch(patch, db, version);
     list.push({ name: patch.name, success });
   }
   return list;
@@ -17,12 +17,12 @@ export async function runPatches(
 
 async function runPatch(
   patch: Patch,
-  dm: DatabaseManager,
+  db: DatabaseCore,
   version: string
 ): Promise<boolean> {
   let failed = false;
   try {
-    await patch.patch.execute(dm);
+    await patch.patch.execute(db);
   } catch (error) {
     failed = true;
     if (error instanceof Error) {
@@ -31,7 +31,7 @@ async function runPatch(
     }
   }
 
-  await makeEntry(patch.name, version, failed, dm);
+  await makeEntry(patch.name, version, failed, db);
   return true;
 }
 
@@ -39,7 +39,7 @@ async function makeEntry(
   patchName: string,
   version: string,
   failed: boolean,
-  dm: DatabaseManager
+  db: DatabaseCore
 ) {
   const defaultFieldValueMap = getDefaultMetaFieldValueMap() as FieldValueMap;
 
@@ -48,7 +48,7 @@ async function makeEntry(
   defaultFieldValueMap.version = version;
 
   try {
-    await dm.db!.insert('PatchRun', defaultFieldValueMap);
+    await db.insert('PatchRun', defaultFieldValueMap);
   } catch {
     /**
      * Error is thrown if PatchRun table hasn't been migrated.

@@ -286,6 +286,7 @@ import { showToast } from 'src/utils/interactive';
 import { ModelNameEnum } from 'models/types';
 import AutoComplete from 'src/components/Controls/AutoComplete.vue';
 import { getExistingActiveSerialNumbersForItem } from 'models/inventory/helpers';
+import { getQuantity } from 'models/inventory/StockLedger';
 
 export default defineComponent({
   name: 'SelectedItemRow',
@@ -532,7 +533,7 @@ export default defineComponent({
       }
 
       return (
-        (await fyo.db.getStockQuantity({item: this.row.item as string, batch: this.row.batch})) ?? 0
+        (await getQuantity(fyo, {item: this.row.item as string, batch: this.row.batch})) ?? 0
       );
     },
 

@@ -9,16 +9,10 @@ import { translateSchema } from 'fyo/utils/translation';
 import { Field, RawValue, SchemaMap } from 'schemas/types';
 import { getMapFromList } from 'utils';
 import {
-  Cashflow,
   DatabaseBase,
   DatabaseDemuxBase,
-  DatabaseMethod,
   GetAllOptions,
-  IncomeExpense,
   QueryFilter,
-  TopExpenses,
-  TotalCreditAndDebit,
-  TotalOutstanding,
 } from 'utils/db/types';
 import { schemaTranslateables } from 'utils/translationHelpers';
 import { LanguageMap } from 'utils/types';
@@ -30,15 +24,12 @@ import {
   RawValueMap,
 } from './types';
 import { ReturnDocItem } from 'models/inventory/types';
-import { Money } from 'pesa';
 
 type FieldMap = Record<string, Record<string, Field>>;
 
 /**
- * Legacy adapter — wraps the stringly-typed DatabaseDemuxBase so the handler
- * can depend on the typed Database seam without branching in every method.
- * Conversion (Doc↔Raw) is hidden here for the legacy path, so the handler
- * no longer owns Converter — the Database implementation does.
+ * Adapter from a Raw-layer backend to the typed Database seam.
+ * Owns Doc↔Raw conversion for backends that return RawValueMaps.
  */
 class DemuxDatabaseAdapter implements Database {
   private converter: Converter;
@@ -117,34 +108,12 @@ class DemuxDatabaseAdapter implements Database {
   getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
     return (this.demux as unknown as { getNextSeriesValue: (p: string, s: string) => Promise<number> }).getNextSeriesValue(prefix, schemaName);
   }
-  getStockQuantity(
-    query: import('fyo/database/Database').StockQuery | string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null> {
-    let q: import('fyo/database/Database').StockQuery;
-    if (typeof query === 'string') {
-      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
-    } else {
-      q = query;
-    }
-    return (this.demux as unknown as { getStockQuantity: (q: import('fyo/database/Database').StockQuery) => Promise<number | null> }).getStockQuantity(q);
-  }
-  call(method: DatabaseMethod, ...args: unknown[]): Promise<unknown> {
-    return this.demux.call(method, ...args);
-  }
-  callBespoke(method: string, ...args: unknown[]): Promise<unknown> {
-    return this.demux.callBespoke(method, ...args);
-  }
 }
 
 export class DatabaseHandler extends DatabaseBase {
   /* eslint-disable @typescript-eslint/no-floating-promises */
   #fyo: Fyo;
-  // Kept for backward compat until all callers typed; not used for typed path (conversion behind Database)
+  // Field-level converter for direct conversion outside the typed path.
   converter: Converter;
   #backend: Database;
   dbPath?: string;
@@ -155,7 +124,7 @@ export class DatabaseHandler extends DatabaseBase {
   constructor(fyo: Fyo, Demux?: DatabaseDemuxConstructor, typed?: Database) {
     super();
     this.#fyo = fyo;
-    // Converter kept for legacy fallback only; typed path uses adapter-owned converter
+    // Converter for the Demux path; the typed path uses adapter-owned conversion.
     this.converter = new Converter(() => this.#fieldMap, () => this.#fyo.pesa);
 
     if (typed) {
@@ -173,11 +142,8 @@ export class DatabaseHandler extends DatabaseBase {
     }
   }
 
-  /** Typed adapter accessor — undefined when using legacy Demux path wrapped via DemuxDatabaseAdapter */
+  /** Typed adapter accessor — undefined behind a DemuxDatabaseAdapter. */
   get typedAdapter(): Database | undefined {
-    // Expose the underlying typed adapter if directly injected (Memory/Ipc)
-    // For legacy Demux path, the backend is a DemuxDatabaseAdapter wrapping a demux.
-    // We detect by checking if backend is a DemuxDatabaseAdapter; if so, no direct typed.
     if (this.#backend instanceof DemuxDatabaseAdapter) return undefined;
     return this.#backend;
   }
@@ -317,23 +283,6 @@ export class DatabaseHandler extends DatabaseBase {
 
   async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
     return (await this.backend.getNextSeriesValue(prefix, schemaName)) as number;
-  }
-
-  async getStockQuantity(
-    query: import('fyo/database/Database').StockQuery | string,
-    location?: string,
-    fromDate?: string,
-    toDate?: string,
-    batch?: string,
-    serialNumbers?: string[]
-  ): Promise<number | null> {
-    let q: import('fyo/database/Database').StockQuery;
-    if (typeof query === 'string') {
-      q = { item: query, location, fromDate, toDate, batch, serialNumbers };
-    } else {
-      q = query;
-    }
-    return (await this.backend.getStockQuantity(q)) as number | null;
   }
 
   /**

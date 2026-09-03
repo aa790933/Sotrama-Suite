@@ -16,7 +16,7 @@ test('Memory adapter — typed seam proof: insert/get/getAll/exists', async (t) 
   const fyo = getMemoryFyo();
   await fyo.db.createNewDatabase('', 'in');
 
-  // Direct fyo.db CRUD via typed adapter (not stringly call)
+  // Direct fyo.db CRUD via the typed adapter
   await fyo.db.insert('Party', {
     name: 'TestParty',
     email: 'a@b.com',

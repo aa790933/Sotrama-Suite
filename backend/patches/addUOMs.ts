@@ -1,5 +1,5 @@
 import { ModelNameEnum } from '../../models/types';
-import { DatabaseManager } from '../database/manager';
+import type DatabaseCore from '../database/core';
 import { getDefaultMetaFieldValueMap } from '../helpers';
 
 const defaultUOMs = [
@@ -29,10 +29,10 @@ const defaultUOMs = [
   },
 ];
 
-async function execute(dm: DatabaseManager) {
+async function execute(db: DatabaseCore) {
   for (const uom of defaultUOMs) {
     const defaults = getDefaultMetaFieldValueMap();
-    await dm.db?.insert(ModelNameEnum.UOM, { ...uom, ...defaults });
+    await db.insert(ModelNameEnum.UOM, { ...uom, ...defaults });
   }
 }
 

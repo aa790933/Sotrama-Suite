@@ -433,7 +433,6 @@ export default defineComponent({
         await this.fetchChildren(parentAccount);
         parentAccount.expanded = true;
       }
-      // activate editing of type 'key' and deactivate other type
       let otherKey: AccKey =
         key === 'addingAccount' ? 'addingGroupAccount' : 'addingAccount';
       parentAccount[key] = true;
@@ -449,7 +448,6 @@ export default defineComponent({
       this.newAccountName = '';
     },
     async createNewAccount(parentAccount: AccountItem, isGroup: boolean) {
-      // freeze input
       this.insertingAccount = true;
 
       const accountName = this.newAccountName.trim();
@@ -465,22 +463,17 @@ export default defineComponent({
         });
         await doc.sync();
 
-        // turn off editing
         parentAccount.addingAccount = false;
         parentAccount.addingGroupAccount = false;
 
-        // update accounts
         await this.fetchChildren(parentAccount, true);
 
-        // open quick edit
         await openQuickEdit({ doc });
         this.setOpenAccountDocListener(doc, undefined, parentAccount);
 
-        // unfreeze input
         this.insertingAccount = false;
         this.newAccountName = '';
       } catch (e) {
-        // unfreeze input
         this.insertingAccount = false;
         await handleErrorWithDialog(e, doc);
       }

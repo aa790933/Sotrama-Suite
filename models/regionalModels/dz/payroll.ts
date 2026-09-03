@@ -63,8 +63,7 @@ export const IRG_RATE_BRACKET_2 = 23; // 30,001 → 120,000
 export const IRG_RATE_BRACKET_3 = 27; // 120,001 → 360,000
 export const IRG_RATE_BRACKET_4 = 30; // above 360,000
 
-/** Legacy bracket array kept for backward-compat; calculateDZPayroll now
- *  derives brackets from the settings parameter instead. */
+/** 2026 IRG marginal brackets (min/max/rate). */
 export const IRG_BRACKETS_2026 = [
   { min: 0, max: IRG_BRACKET_1_LIMIT, rate: 0 },
   {
