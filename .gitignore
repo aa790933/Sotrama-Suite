@@ -29,3 +29,6 @@ yarn-error.log*
 /dist_electron
 log_creds.txt
 package-lock.json
+/docs
+/docs
+docs/architecture-backlog.md
