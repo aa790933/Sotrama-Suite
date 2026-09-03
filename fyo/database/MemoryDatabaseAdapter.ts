@@ -54,6 +54,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // Lifecycle — typed transport
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getSchemaMap(): Promise<SchemaMap> {
     if (Object.keys(this.schemaMap).length === 0) {
       this.schemaMap = getSchemas('-', []);
@@ -61,6 +62,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return this.schemaMap;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async createNewDatabase(_dbPath: string, countryCode: string): Promise<string> {
     this.schemaMap = getSchemas(countryCode, []);
     this.#tables.clear();
@@ -87,11 +89,13 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return cc;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async close(): Promise<void> {
     this.#closed = true;
   }
 
   // CRUD — minimal typed subset (external seam is DocValueMap, Raw hidden)
+  // eslint-disable-next-line @typescript-eslint/require-await
   async insert(schemaName: string, fieldValueMap: DocValueMap): Promise<DocValueMap> {
     const schema = this.schemaMap[schemaName];
     if (schema?.isSingle) {
@@ -117,6 +121,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return row;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async get(schemaName: string, name: string, fields?: string | string[]): Promise<DocValueMap> {
     const schema = this.schemaMap[schemaName];
     if (schema?.isSingle) {
@@ -142,8 +147,8 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return out;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getAll(schemaName: string, options: GetAllOptions = {}): Promise<DocValueMap[]> {
-    const schema = this.schemaMap[schemaName];
     if (schemaName === 'SingleValue') {
       const rows: DocValueMap[] = [];
       for (const [parent, map] of this.#singles.entries()) {
@@ -164,6 +169,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return (await this.getAll(schemaName, options)) as unknown as FieldValueMap[];
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getSingleValues(
     ...fieldnames: ({ fieldname: string; parent?: string } | string)[]
   ): Promise<{ fieldname: string; parent: string; value: DocValue }[]> {
@@ -183,6 +189,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return out;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async rename(schemaName: string, oldName: string, newName: string): Promise<void> {
     const table = this.#tables.get(schemaName);
     const row = table?.get(oldName);
@@ -209,6 +216,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async delete(schemaName: string, name: string): Promise<void> {
     if (this.schemaMap[schemaName]?.isSingle) {
       // For isSingle, delete means clear field? simplified: delete parent map entry if name is fieldname
@@ -229,6 +237,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return count;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async exists(schemaName: string, name?: string): Promise<boolean> {
     if (this.schemaMap[schemaName]?.isSingle) {
       return this.#singles.has(schemaName);
@@ -241,6 +250,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
 
   #series = new Map<string, number>();
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getNextAutoincrementId(schemaName: string): Promise<number> {
     const table = this.#tables.get(schemaName);
     if (!table || table.size === 0) return 1;
@@ -252,6 +262,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return max + 1;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
     const key = `${prefix}:${schemaName}`;
     const current = this.#series.get(key) ?? 0;
@@ -268,6 +279,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return candidate;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
     // Count must be total matching rows, not limited page — ignore LIMIT/OFFSET
     const filters = options.filters;

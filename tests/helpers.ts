@@ -41,7 +41,7 @@ export function getTestDbPath(dbPath?: string) {
  * existing DatabaseDemux injection point without its own config.
  */
 export class MariaDBTestDemux extends DatabaseCore {
-  constructor(_isElectron?: boolean) {
+  constructor() {
     super(undefined, undefined);
   }
 }

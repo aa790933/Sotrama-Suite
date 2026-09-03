@@ -3,7 +3,6 @@ import { cloneDeep } from 'lodash';
 import { Fyo } from 'fyo';
 import { Database } from 'fyo/database/Database';
 import { DatabaseDemux } from 'fyo/demux/db';
-import { ValueError } from 'fyo/utils/errors';
 import Observable from 'fyo/utils/observable';
 import { translateSchema } from 'fyo/utils/translation';
 import { Field, RawValue, SchemaMap } from 'schemas/types';
@@ -23,7 +22,6 @@ import {
   DocValueMap,
   RawValueMap,
 } from './types';
-import { ReturnDocItem } from 'models/inventory/types';
 
 type FieldMap = Record<string, Record<string, Field>>;
 

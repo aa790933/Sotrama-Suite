@@ -58,29 +58,33 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getPersistedConnections } = require('../helpers') as typeof import('../helpers');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const config = require('utils/config').default as typeof import('utils/config').default;
     const conns = getPersistedConnections();
     const filtered = conns.filter((c) => c.id !== id);
     config.set('connections' as never, filtered as never);
   }
 
-  async getDbList(): Promise<unknown> {
-    return this.getMetadata().map((m) => ({
-      id: m.id,
-      companyName: m.companyName,
-      dbPath: m.id,
-      openCount: m.openCount,
-      modified: m.modified ?? new Date().toISOString(),
-      display: m.display,
-      host: m.host,
-      port: m.port,
-      database: m.database,
-      user: m.user,
-    }));
+  getDbList(): Promise<unknown> {
+    return Promise.resolve(
+      this.getMetadata().map((m) => ({
+        id: m.id,
+        companyName: m.companyName,
+        dbPath: m.id,
+        openCount: m.openCount,
+        modified: m.modified ?? new Date().toISOString(),
+        display: m.display,
+        host: m.host,
+        port: m.port,
+        database: m.database,
+        user: m.user,
+      }))
+    );
   }
 
   setLastSelected(id: string): void {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const config = require('utils/config').default as typeof import('utils/config').default;
     config.set('lastSelectedConnectionId' as never, id as never);
   }
@@ -148,19 +152,21 @@ export class InMemoryConnectionStore implements ConnectionStore {
     this.conns.delete(id);
   }
 
-  async getDbList(): Promise<unknown> {
-    return this.getMetadata().map((m) => ({
-      id: m.id,
-      companyName: m.companyName,
-      dbPath: m.id,
-      openCount: m.openCount,
-      modified: m.modified ?? new Date().toISOString(),
-      display: m.display,
-      host: m.host,
-      port: m.port,
-      database: m.database,
-      user: m.user,
-    }));
+  getDbList(): Promise<unknown> {
+    return Promise.resolve(
+      this.getMetadata().map((m) => ({
+        id: m.id,
+        companyName: m.companyName,
+        dbPath: m.id,
+        openCount: m.openCount,
+        modified: m.modified ?? new Date().toISOString(),
+        display: m.display,
+        host: m.host,
+        port: m.port,
+        database: m.database,
+        user: m.user,
+      }))
+    );
   }
 
   setLastSelected(id: string): void {

@@ -217,7 +217,7 @@ class MacInstaller implements PlatformInstaller {
     return { ok: true };
   }
 
-  async configureFirewall(_port: number, _subnet: string): Promise<OpResult> {
+  async configureFirewall(): Promise<OpResult> {
     const mariaBinPaths = [
       '/usr/local/mariadb/bin/mariadbd',
       '/opt/homebrew/bin/mariadbd',

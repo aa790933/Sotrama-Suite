@@ -64,6 +64,7 @@ import { setLanguageMap } from './utils/language';
 import { updateConfigFiles } from './utils/misc';
 import { updatePrintTemplates } from './utils/printTemplates';
 import { getSafeConfigDetail, equalsConnection } from 'utils/mariadb-types';
+import type { PersistedConnection } from 'utils/mariadb-types';
 import { Search } from './utils/search';
 import { Shortcuts } from './utils/shortcuts';
 import { routeTo } from './utils/ui';
@@ -203,15 +204,13 @@ export default defineComponent({
     async fileSelected(filePath: string): Promise<void> {
       fyo.config.set('lastSelectedFilePath', filePath);
       try {
-        const conns = fyo.config.get('connections' as never) as { id: string }[] | undefined;
+        const conns = fyo.config.get('connections' as never) as PersistedConnection[] | undefined;
         if (conns?.some((c) => c.id === filePath)) {
           fyo.config.set('lastSelectedConnectionId' as never, filePath as never);
         } else {
           const { parseMariaDBConfigString } = await import('utils/mariadb-types');
           const cfg = parseMariaDBConfigString(filePath);
-          const found = conns?.find(
-            (c: any) => equalsConnection(c, cfg)
-          );
+          const found = conns?.find((c) => equalsConnection(c, cfg));
           if (found) fyo.config.set('lastSelectedConnectionId' as never, found.id as never);
         }
       } catch {}

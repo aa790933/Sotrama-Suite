@@ -57,7 +57,7 @@ export class ElectronSenderPolicy implements SenderPolicy {
 }
 
 export class AllowAllSenderPolicy implements SenderPolicy {
-  isValidSender(_event: Electron.IpcMainInvokeEvent): boolean {
+  isValidSender(): boolean {
     return true;
   }
 }

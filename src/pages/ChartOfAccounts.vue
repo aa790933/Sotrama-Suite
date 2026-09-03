@@ -122,6 +122,8 @@ import { docsPathMap } from 'src/utils/misc';
 import { docsPathRef } from 'src/utils/refs';
 import { commongDocDelete, openQuickEdit } from 'src/utils/ui';
 import { getMapFromList, removeAtIndex } from 'utils/index';
+import { getTotalCreditAndDebit } from 'reports/finance/creditDebit';
+import type { TotalCreditAndDebit } from 'utils/db/types';
 import { defineComponent, nextTick } from 'vue';
 import Button from '../components/Button.vue';
 import { inject } from 'vue';
@@ -272,7 +274,8 @@ export default defineComponent({
       return `${fyo.format(balance, 'Currency')} ${suffix}`;
     },
     async setTotalDebitAndCredit() {
-      const totals = await getTotalCreditAndDebit(this.fyo);
+      const totals: TotalCreditAndDebit[] =
+        await getTotalCreditAndDebit(this.fyo);
       this.totals = getMapFromList(totals, 'account');
     },
     async fetchAccounts() {

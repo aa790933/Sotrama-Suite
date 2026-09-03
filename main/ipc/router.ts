@@ -240,6 +240,7 @@ export class IpcRouter {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getLanIp() {
     return detectLanIp();
   }
@@ -397,6 +398,7 @@ export class IpcRouter {
     return fn(html, app as never, width, height);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async getEnv(isDevelopment: boolean, platform: string, version: string) {
     return { isDevelopment, platform, version };
   }
@@ -454,6 +456,7 @@ export class IpcRouter {
     return sendAPIRequest(endpoint, options);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async showError(title: string, content: string) {
     return this.deps.dialog.showErrorBox(title, content);
   }
@@ -461,6 +464,7 @@ export class IpcRouter {
   register(): void {
     const w = () => this.deps.windowProvider.getWindow();
     const ipc = this.deps.ipcMain ?? ((): typeof import('electron').ipcMain => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       return require('electron').ipcMain as typeof import('electron').ipcMain;
     })();
 
@@ -504,7 +508,10 @@ export class IpcRouter {
     ipc.handle(IPC_ACTIONS.SEND_API_REQUEST, withSender(async (event, endpoint: string, options: NodeFetchRequestInit | undefined) => this.sendAPIRequest(endpoint, options, event)));
     ipc.handle(IPC_ACTIONS.CHECK_FOR_UPDATES, withSender(async () => this.checkForUpdates(this.deps.windowProvider.isDevelopment, this.deps.windowProvider.checkedForUpdate, () => { this.deps.windowProvider.checkedForUpdate = true; })));
     ipc.handle(IPC_ACTIONS.GET_LANGUAGE_MAP, withSender(async (_e, code: string) => this.getLanguageMap(code)));
-    ipc.handle(IPC_ACTIONS.GET_CREDS, withSender(async () => this.getCreds()));
+    ipc.handle(IPC_ACTIONS.GET_CREDS, withSender(
+      // eslint-disable-next-line @typescript-eslint/require-await
+      async () => this.getCreds()
+    ));
     ipc.handle(IPC_ACTIONS.GET_ENV, withSender(async () => {
       let version = this.deps.app.getVersion();
       if (this.deps.windowProvider.isDevelopment) {
@@ -538,6 +545,9 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
     windowProvider: winProvider,
     app: electronApp,
     dialog: electronDialog,
-    connectionStore: new (require('./connectionStore').ElectronStoreConnectionStore as typeof import('./connectionStore').ElectronStoreConnectionStore)(),
+    connectionStore: new (
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      require('./connectionStore').ElectronStoreConnectionStore as typeof import('./connectionStore').ElectronStoreConnectionStore
+    )(),
   });
 }
