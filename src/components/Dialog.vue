@@ -46,7 +46,7 @@
 import { getIconConfig } from 'src/utils/interactive';
 import { DialogButton, ToastType } from 'src/utils/types';
 import { defineComponent, nextTick, PropType, ref } from 'vue';
-import Button from './Button.vue';
+import Button from './ui/button/Button.vue';
 import FeatherIcon from './FeatherIcon.vue';
 
 export default defineComponent({

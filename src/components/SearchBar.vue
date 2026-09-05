@@ -219,7 +219,7 @@ import {
   searchGroups,
 } from 'src/utils/search';
 import { defineComponent, inject, nextTick } from 'vue';
-import Button from './Button.vue';
+import Button from './ui/button/Button.vue';
 import Modal from './Modal.vue';
 
 const COMPONENT_NAME = 'SearchBar';

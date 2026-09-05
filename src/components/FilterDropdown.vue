@@ -152,7 +152,7 @@ import { Field, FieldTypeEnum } from 'schemas/types';
 import { fyo } from 'src/initFyo';
 import { getRandomString } from 'utils';
 import { defineComponent } from 'vue';
-import Button from './Button.vue';
+import Button from './ui/button/Button.vue';
 import Data from './Controls/Data.vue';
 import Select from './Controls/Select.vue';
 import Icon from './Icon.vue';

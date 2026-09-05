@@ -77,7 +77,7 @@ import { Doc } from 'fyo/model/doc';
 import Row from 'src/components/Row.vue';
 import { getErrorMessage } from 'src/utils';
 import { computed, nextTick } from 'vue';
-import Button from '../Button.vue';
+import Button from '../ui/button/Button.vue';
 import FormControl from './FormControl.vue';
 
 export default {

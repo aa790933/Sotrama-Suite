@@ -19,7 +19,7 @@
 <script lang="ts">
 import { Doc } from 'fyo/model/doc';
 import { Action } from 'fyo/model/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Dropdown from 'src/components/Dropdown.vue';
 import { DropdownItem } from 'src/utils/types';
 import { defineComponent, PropType } from 'vue';
