@@ -32,10 +32,12 @@ if (!fs.existsSync(appSourcePath)) {
 
   test('host setup: connect to existing MariaDB', async (t) => {
     /**
-     * A fresh instance boots into the HostSetup screen (MariaDB bootstrap).
-     * The CI job runs a real MariaDB service mapped to host port 3307, so
-     * drive the "advanced" connect flow instead of the local MSI installer.
+     * A fresh instance boots into the HostSetup screen (MariaDB bootstrap)
+     * on role selection. The CI job runs a real MariaDB service mapped to
+     * host port 3307, so pick the host role and drive the "advanced"
+     * connect flow instead of the local MSI installer.
      */
+    await window.getByTestId('role-host').click();
     const advancedRadio = window.getByTestId('advanced-mode-radio');
     await advancedRadio.waitFor({ state: 'visible', timeout: 60_000 });
     await advancedRadio.check();

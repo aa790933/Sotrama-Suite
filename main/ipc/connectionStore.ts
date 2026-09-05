@@ -58,8 +58,7 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getPersistedConnections } = require('../helpers') as typeof import('../helpers');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const config = require('utils/config').default as typeof import('utils/config').default;
+    const { default: config } = require('utils/config') as typeof import('utils/config');
     const conns = getPersistedConnections();
     const filtered = conns.filter((c) => c.id !== id);
     config.set('connections' as never, filtered as never);
@@ -84,8 +83,7 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
 
   setLastSelected(id: string): void {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const config = require('utils/config').default as typeof import('utils/config').default;
+    const { default: config } = require('utils/config') as typeof import('utils/config');
     config.set('lastSelectedConnectionId' as never, id as never);
   }
 

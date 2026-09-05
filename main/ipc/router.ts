@@ -544,14 +544,13 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
   // Lazy to avoid pulling the mariadb driver into unit tests at module load
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { default: MainDatabase } = require('../../backend/database/core') as typeof import('../../backend/database/core');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ElectronStoreConnectionStore } = require('./connectionStore') as typeof import('./connectionStore');
   return new IpcRouter({
     database: new MainDatabase(),
     windowProvider: winProvider,
     app: electronApp,
     dialog: electronDialog,
-    connectionStore: new (
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      require('./connectionStore').ElectronStoreConnectionStore as typeof import('./connectionStore').ElectronStoreConnectionStore
-    )(),
+    connectionStore: new ElectronStoreConnectionStore(),
   });
 }
