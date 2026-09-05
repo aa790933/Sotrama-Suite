@@ -57,7 +57,8 @@ export class ElectronSenderPolicy implements SenderPolicy {
 }
 
 export class AllowAllSenderPolicy implements SenderPolicy {
-  isValidSender(): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isValidSender(_event: Electron.IpcMainInvokeEvent): boolean {
     return true;
   }
 }

@@ -132,7 +132,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
         ? (Array.isArray(fields) ? fields : [fields])
         : Array.from(map.keys());
       for (const f of fieldList) {
-        if (map.has(f)) out[f] = map.get(f) as DocValue;
+        if (map.has(f)) out[f] = map.get(f)!;
       }
       return out;
     }
@@ -156,11 +156,11 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
           rows.push({ parent, fieldname, value } as DocValueMap);
         }
       }
-      return this.#applyGetAllFilters(rows, options) as DocValueMap[];
+      return this.#applyGetAllFilters(rows, options);
     }
     const table = this.#tables.get(schemaName);
     const rows = table ? Array.from(table.values()).map((r) => ({ ...r })) : [];
-    return this.#applyGetAllFilters(rows, options) as DocValueMap[];
+    return this.#applyGetAllFilters(rows, options);
   }
 
   async getAllRaw(schemaName: string, options: GetAllOptions = {}): Promise<FieldValueMap[]> {
@@ -295,7 +295,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     }
     const table = this.#tables.get(schemaName);
     const rows = table ? Array.from(table.values()) : [];
-    const filtered = filters ? rows.filter((r) => this.#matchesFilters(r as DocValueMap, filters)) : rows;
+    const filtered = filters ? rows.filter((r) => this.#matchesFilters(r, filters)) : rows;
     return filtered.length;
   }
 
@@ -320,8 +320,8 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
       const dir = options.order === 'desc' ? -1 : 1;
       if (orderBy) {
         out = [...out].sort((a, b) => {
-          const av = a[orderBy as string];
-          const bv = b[orderBy as string];
+          const av = a[orderBy];
+          const bv = b[orderBy];
           if (av === bv) return 0;
           if (av === undefined) return 1;
           if (bv === undefined) return -1;

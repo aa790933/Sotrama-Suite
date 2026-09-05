@@ -214,8 +214,9 @@ export class IpcRouter {
       const { createConnection } = await import('mariadb');
       const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password });
       try {
-        const rows = (await conn.query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?', [config.database])) as unknown[];
-        return { exists: Array.isArray(rows) && rows.length > 0 };
+        const result: unknown = await conn.query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?', [config.database]);
+        const rows = Array.isArray(result) ? result : [];
+        return { exists: rows.length > 0 };
       } finally {
         await conn.end().catch(() => undefined);
       }
@@ -356,7 +357,7 @@ export class IpcRouter {
     const byId = this.connectionStore.findById(filePath);
     if (byId) {
       this.connectionStore.deleteById(filePath);
-      return getErrorHandledResponse(async () => undefined);
+      return getErrorHandledResponse(() => undefined);
     }
     this.pathPolicy.assertAllowed(filePath);
     return getErrorHandledResponse(async () => fs.unlink(filePath));
@@ -476,7 +477,7 @@ export class IpcRouter {
 
     // DbOps
     ipc.handle(IPC_ACTIONS.CHECK_DB_ACCESS, withSender(async (_e, dbPathOrConfig: string | MariaDBConfig) => {
-      const cfg = typeof dbPathOrConfig === 'string' ? this.peekConfig(dbPathOrConfig) : dbPathOrConfig as MariaDBConfig;
+      const cfg = typeof dbPathOrConfig === 'string' ? this.peekConfig(dbPathOrConfig) : dbPathOrConfig;
       return this.checkDbAccess(cfg);
     }));
     ipc.handle(IPC_ACTIONS.CHECK_DB_EXISTS, withSender(async (_e, config: MariaDBConfig) => this.checkDbExists(config)));
@@ -505,7 +506,10 @@ export class IpcRouter {
     // AppOps
     ipc.handle(IPC_ACTIONS.SHOW_ERROR, withSender(async (_e, { title, content }: { title: string; content: string }) => this.showError(title, content)));
     ipc.handle(IPC_ACTIONS.SEND_ERROR, withSender(async (_e, bodyJson: string) => this.sendError(bodyJson, this.deps.windowProvider as unknown)));
-    ipc.handle(IPC_ACTIONS.SEND_API_REQUEST, withSender(async (event, endpoint: string, options: NodeFetchRequestInit | undefined) => this.sendAPIRequest(endpoint, options, event)));
+    ipc.handle(IPC_ACTIONS.SEND_API_REQUEST, withSender(
+      // eslint-disable-next-line @typescript-eslint/require-await
+      async (event, endpoint: string, options: NodeFetchRequestInit | undefined) => this.sendAPIRequest(endpoint, options, event)
+    ));
     ipc.handle(IPC_ACTIONS.CHECK_FOR_UPDATES, withSender(async () => this.checkForUpdates(this.deps.windowProvider.isDevelopment, this.deps.windowProvider.checkedForUpdate, () => { this.deps.windowProvider.checkedForUpdate = true; })));
     ipc.handle(IPC_ACTIONS.GET_LANGUAGE_MAP, withSender(async (_e, code: string) => this.getLanguageMap(code)));
     ipc.handle(IPC_ACTIONS.GET_CREDS, withSender(

@@ -40,7 +40,7 @@ class DemuxDatabaseAdapter implements Database {
   }
 
   getSchemaMap(): Promise<SchemaMap> {
-    return this.demux.getSchemaMap() as Promise<SchemaMap>;
+    return this.demux.getSchemaMap();
   }
   createNewDatabase(dbPath: string, countryCode: string): Promise<string> {
     return this.demux.createNewDatabase(dbPath, countryCode);
@@ -67,7 +67,7 @@ class DemuxDatabaseAdapter implements Database {
   async getSingleValues(
     ...fieldnames: ({ fieldname: string; parent?: string } | string)[]
   ): Promise<{ fieldname: string; parent: string; value: DocValue }[]> {
-    const raws = (await (this.demux as unknown as { getSingleValues: (...a: unknown[]) => Promise<SingleValue<RawValue>> }).getSingleValues(...fieldnames)) as SingleValue<RawValue>;
+    const raws = (await this.demux.getSingleValues(...fieldnames)) as SingleValue<RawValue>;
     const out: { fieldname: string; parent: string; value: DocValue }[] = [];
     for (const sv of raws) {
       const fm = this.converter.fieldMapProvider();
@@ -276,11 +276,11 @@ export class DatabaseHandler extends DatabaseBase {
   }
 
   async getNextAutoincrementId(schemaName: string): Promise<number> {
-    return (await this.backend.getNextAutoincrementId(schemaName)) as number;
+    return await this.backend.getNextAutoincrementId(schemaName);
   }
 
   async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
-    return (await this.backend.getNextSeriesValue(prefix, schemaName)) as number;
+    return await this.backend.getNextSeriesValue(prefix, schemaName);
   }
 
   /**
