@@ -1,24 +1,35 @@
 <template>
   <div
-    class="relative window-drag flex items-center border-b dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-100 dark:border-gray-800"
-    style="height: 28px"
+    class="relative window-drag flex items-center border-b border-border bg-card text-card-foreground"
+    style="height: 36px"
   >
-    <img src="../../build/icon.png" alt="Sotrama" class="ms-2 h-5 w-5 object-contain" />
-    <p v-if="companyName" class="mx-auto text-sm">
-      {{ companyName }}
-    </p>
+    <div class="ms-3 flex items-center gap-2">
+      <img src="../../build/icon.png" alt="Sotrama" class="h-5 w-5 object-contain" />
+      <p v-if="companyName" class="text-sm font-semibold truncate max-w-48">
+        {{ companyName }}
+      </p>
+      <p v-else class="text-sm font-semibold text-muted-foreground">
+        Sotrama Suite
+      </p>
+      <span
+        v-if="routeCrumb"
+        class="hidden sm:inline text-xs text-muted-foreground truncate"
+      >
+        / {{ routeCrumb }}
+      </span>
+    </div>
     <div
       v-if="!isFullscreen"
       class="absolute window-no-drag flex h-full items-center right-0"
     >
       <div
-        class="flex items-center px-4 h-full hover:bg-gray-300 dark:hover:bg-gray-875"
+        class="flex items-center px-4 h-full hover:bg-accent hover:text-accent-foreground"
         @click="minimizeWindow"
       >
         <feather-icon name="minus" class="h-4 w-4 flex-shrink-0" />
       </div>
       <div
-        class="flex items-center px-4 h-full hover:bg-gray-300 dark:hover:bg-gray-875"
+        class="flex items-center px-4 h-full hover:bg-accent hover:text-accent-foreground"
         @click="toggleMaximize"
       >
         <feather-icon
@@ -29,7 +40,7 @@
         <feather-icon v-else name="square" class="h-3 w-3 flex-shrink-0" />
       </div>
       <div
-        class="flex items-center px-4 h-full hover:bg-red-600 hover:text-white"
+        class="flex items-center px-4 h-full hover:bg-destructive hover:text-destructive-foreground"
         @click="closeWindow"
       >
         <feather-icon name="x" class="h-4 w-4 flex-shrink-0" />
@@ -51,6 +62,12 @@ export default {
       isMax: Boolean,
       isFullscreen: Boolean,
     };
+  },
+  computed: {
+    routeCrumb() {
+      const path = this.$route?.path ?? '';
+      return path.replace(/^\//, '').replace(/\//g, ' / ');
+    },
   },
   mounted() {
     this.getIsMaximized();

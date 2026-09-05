@@ -3,19 +3,19 @@ import { showSidebar } from 'src/utils/refs';
 import { toggleSidebar } from 'src/utils/ui';
 </script>
 <template>
-  <div class="flex overflow-hidden">
+  <div class="flex h-full overflow-hidden bg-background">
     <Transition name="sidebar">
       <!-- eslint-disable vue/require-explicit-emits -->
       <Sidebar
         v-show="showSidebar"
-        class="flex-shrink-0 border-e dark:border-gray-800 whitespace-nowrap w-sidebar"
+        class="flex-shrink-0 border-e border-border whitespace-nowrap w-sidebar"
         :dark-mode="darkMode"
         @change-db-file="$emit('change-db-file')"
       />
     </Transition>
 
     <div
-      class="flex flex-1 overflow-y-hidden custom-scroll custom-scroll-thumb1 bg-white dark:bg-gray-875"
+      class="flex flex-1 h-full overflow-y-auto bg-background p-6 custom-scroll custom-scroll-thumb1"
     >
       <router-view v-slot="{ Component }">
         <keep-alive>

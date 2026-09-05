@@ -1,72 +1,70 @@
 <template>
   <div
-    class="py-2 h-full flex justify-between flex-col bg-gray-25 dark:bg-gray-900 relative"
+    class="py-3 h-full flex justify-between flex-col bg-card border-e border-border relative"
     :class="{
       'window-drag': platform !== 'Windows',
     }"
   >
-    <div>
-      <!-- Company name -->
+    <div class="flex flex-col gap-1 px-3">
+      <!-- Workspace branding -->
       <div
-        class="px-4 flex flex-row items-center justify-between mb-4"
+        class="px-2 flex flex-row items-center gap-2.5 mb-4"
         :class="
-          platform === 'Mac' && languageDirection === 'ltr' ? 'mt-10' : 'mt-2'
+          platform === 'Mac' && languageDirection === 'ltr' ? 'mt-10' : 'mt-1'
         "
       >
-        <h6
-          data-testid="company-name"
-          class="font-semibold dark:text-gray-200 whitespace-nowrap overflow-auto no-scrollbar select-none"
+        <div
+          class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"
         >
-          {{ companyName }}
-        </h6>
+          <Building2 class="h-4 w-4" />
+        </div>
+        <div class="min-w-0">
+          <h6
+            data-testid="company-name"
+            class="truncate text-sm font-semibold text-foreground select-none"
+          >
+            {{ companyName || 'Sotrama Suite' }}
+          </h6>
+          <p class="text-xs text-muted-foreground select-none">
+            {{ t`Workspace` }}
+          </p>
+        </div>
       </div>
 
       <!-- Sidebar Items -->
       <div v-for="group in groups" :key="group.label">
         <div
-          class="px-4 flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-875 h-10"
+          class="flex items-center gap-2.5 cursor-pointer rounded-md px-2.5 h-9 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
           :class="
             isGroupActive(group) && !group.items
-              ? 'bg-gray-100 dark:bg-gray-875 border-s-4 border-gray-800 dark:border-gray-100'
-              : ''
+              ? 'bg-accent text-accent-foreground font-medium'
+              : 'text-muted-foreground'
           "
           @click="routeToSidebarItem(group)"
         >
-          <Icon
-            class="flex-shrink-0"
-            :name="group.icon"
-            :size="group.iconSize || '18'"
-            :height="group.iconHeight ?? 0"
-            :active="!!isGroupActive(group)"
-            :darkMode="darkMode"
-            :class="isGroupActive(group) && !group.items ? '-ms-1' : ''"
+          <component
+            :is="groupIcon(group)"
+            class="h-4 w-4 flex-shrink-0"
           />
-          <div
-            class="ms-2 text-lg text-gray-700"
-            :class="
-              isGroupActive(group) && !group.items
-                ? 'text-gray-900 dark:text-gray-25'
-                : 'dark:text-gray-300'
-            "
-          >
+          <div class="whitespace-nowrap overflow-hidden text-ellipsis">
             {{ group.label }}
           </div>
         </div>
 
         <!-- Expanded Group -->
-        <div v-if="group.items && isGroupActive(group)">
+        <div v-if="group.items && isGroupActive(group)" class="mt-0.5 flex flex-col gap-0.5">
           <div
             v-for="item in group.items"
             :key="item.label"
-            class="text-base h-10 ps-10 cursor-pointer flex items-center hover:bg-gray-100 dark:hover:bg-gray-875"
+            class="text-sm h-9 ps-9 pe-2 cursor-pointer flex items-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
             :class="
               isItemActive(item)
-                ? 'bg-gray-100 dark:bg-gray-875 text-gray-900 dark:text-gray-100 border-s-4 border-gray-800 dark:border-gray-100'
-                : 'text-gray-700 dark:text-gray-400'
+                ? 'bg-accent text-accent-foreground font-medium'
+                : 'text-muted-foreground'
             "
             @click="routeToSidebarItem(item)"
           >
-            <p :style="isItemActive(item) ? 'margin-left: -4px' : ''">
+            <p class="whitespace-nowrap overflow-hidden text-ellipsis">
               {{ item.label }}
             </p>
           </div>
@@ -74,58 +72,82 @@
       </div>
     </div>
 
-    <!-- Report Issue and DB Switcher -->
-    <div class="window-no-drag flex flex-col gap-2 py-2 px-4">
-      <button
-        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
-        @click="openDocumentation"
+    <div class="flex flex-col gap-2 px-3">
+      <!-- Connection badge -->
+      <div
+        class="flex items-center gap-2.5 rounded-lg border border-border bg-muted/50 px-2.5 py-2"
       >
-        <feather-icon name="help-circle" class="h-4 w-4 flex-shrink-0" />
-        <p>
-          {{ t`Help` }}
+        <span class="relative flex h-2 w-2 flex-shrink-0">
+          <span
+            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-60"
+          ></span>
+          <span
+            class="relative inline-flex rounded-full h-2 w-2 bg-green-500"
+          ></span>
+        </span>
+        <div class="min-w-0 leading-tight">
+          <p class="truncate text-xs font-medium text-foreground">
+            {{ connectionLabel }}
+          </p>
+          <p class="truncate text-xs text-muted-foreground">
+            {{ connectionDetail }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Report Issue and DB Switcher -->
+      <div class="window-no-drag flex flex-col gap-0.5 py-1">
+        <button
+          class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
+          @click="openDocumentation"
+        >
+          <feather-icon name="help-circle" class="h-4 w-4 flex-shrink-0" />
+          <p>
+            {{ t`Help` }}
+          </p>
+        </button>
+
+        <button
+          class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
+          @click="viewShortcuts = true"
+        >
+          <feather-icon name="command" class="h-4 w-4 flex-shrink-0" />
+          <p>{{ t`Shortcuts` }}</p>
+        </button>
+
+        <button
+          data-testid="change-db"
+          class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
+          @click="$emit('change-db-file')"
+        >
+          <Database class="h-4 w-4 flex-shrink-0" />
+          <p>{{ t`Change DB` }}</p>
+        </button>
+
+        <button
+          class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
+          @click="() => reportIssue()"
+        >
+          <feather-icon name="flag" class="h-4 w-4 flex-shrink-0" />
+          <p>
+            {{ t`Report Issue` }}
+          </p>
+        </button>
+
+        <p
+          v-if="showDevMode"
+          class="text-xs text-muted-foreground select-none cursor-pointer px-2.5 py-1"
+          @click="showDevMode = false"
+          title="Open dev tools with Ctrl+Shift+I"
+        >
+          dev mode
         </p>
-      </button>
-
-      <button
-        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
-        @click="viewShortcuts = true"
-      >
-        <feather-icon name="command" class="h-4 w-4 flex-shrink-0" />
-        <p>{{ t`Shortcuts` }}</p>
-      </button>
-
-      <button
-        data-testid="change-db"
-        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
-        @click="$emit('change-db-file')"
-      >
-        <feather-icon name="database" class="h-4 w-4 flex-shrink-0" />
-        <p>{{ t`Change DB` }}</p>
-      </button>
-
-      <button
-        class="flex text-sm text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-400 gap-1 items-center"
-        @click="() => reportIssue()"
-      >
-        <feather-icon name="flag" class="h-4 w-4 flex-shrink-0" />
-        <p>
-          {{ t`Report Issue` }}
-        </p>
-      </button>
-
-      <p
-        v-if="showDevMode"
-        class="text-xs text-gray-500 select-none cursor-pointer"
-        @click="showDevMode = false"
-        title="Open dev tools with Ctrl+Shift+I"
-      >
-        dev mode
-      </p>
+      </div>
     </div>
 
     <!-- Hide Sidebar Button -->
     <button
-      class="absolute bottom-0 end-0 text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-875 rounded p-1 m-4 rtl-rotate-180"
+      class="absolute bottom-0 end-0 text-muted-foreground hover:bg-accent rounded p-1 m-4 rtl-rotate-180"
       @click="() => toggleSidebar()"
     >
       <feather-icon name="chevrons-left" class="w-4 h-4" />
@@ -137,6 +159,16 @@
   </div>
 </template>
 <script lang="ts">
+import {
+  BarChart3,
+  Building2,
+  Database,
+  FileText,
+  LayoutDashboard,
+  Package,
+  Settings,
+  ShoppingCart,
+} from '@lucide/vue';
 import { reportIssue } from 'src/errorHandling';
 import { fyo } from 'src/initFyo';
 import { languageDirectionKey, shortcutsKey } from 'src/utils/injectionKeys';
@@ -146,17 +178,51 @@ import { SidebarConfig, SidebarItem, SidebarRoot } from 'src/utils/types';
 import { routeTo, toggleSidebar } from 'src/utils/ui';
 import { defineComponent, inject } from 'vue';
 import router from '../router';
-import Icon from './Icon.vue';
 import Modal from './Modal.vue';
 import ShortcutsHelper from './ShortcutsHelper.vue';
+import type { PersistedConnection } from 'utils/mariadb-types';
+import { normalizeHostRole } from 'src/utils/hostRole';
 
 const COMPONENT_NAME = 'Sidebar';
 
+const NAV_ICONS = {
+  dashboard: LayoutDashboard,
+  sales: FileText,
+  inventory: Package,
+  pos: ShoppingCart,
+  reports: BarChart3,
+  settings: Settings,
+};
+
+function groupIconKind(group: SidebarRoot): keyof typeof NAV_ICONS {
+  const haystack = `${group.route ?? ''} ${group.label ?? ''}`.toLowerCase();
+  if (/(dashboard|desk)/.test(haystack)) {
+    return 'dashboard';
+  }
+  if (/(purchase|sales|invoice|payment|party|customer|quotation)/.test(haystack)) {
+    return 'sales';
+  }
+  if (/(stock|inventory|item|batch|serial|shipment|receipt|movement)/.test(haystack)) {
+    return 'inventory';
+  }
+  if (/pos|point.of.sale/.test(haystack)) {
+    return 'pos';
+  }
+  if (/(report|ledger|account|chart|profit|balance|trial|tax|gst)/.test(haystack)) {
+    return 'reports';
+  }
+  if (/(setting|setup|custom|user|role|print)/.test(haystack)) {
+    return 'settings';
+  }
+  return 'dashboard';
+}
+
 export default defineComponent({
   components: {
-    Icon,
     Modal,
     ShortcutsHelper,
+    Building2,
+    Database,
   },
   props: {
     darkMode: { type: Boolean, default: false },
@@ -175,23 +241,42 @@ export default defineComponent({
       viewShortcuts: false,
       activeGroup: null,
       showDevMode: false,
+      connection: null,
     } as {
       companyName: string;
       groups: SidebarConfig;
       viewShortcuts: boolean;
       activeGroup: null | SidebarRoot;
       showDevMode: boolean;
+      connection: null | PersistedConnection;
     };
   },
   computed: {
     appVersion() {
       return fyo.store.appVersion;
     },
+    connectionLabel(): string {
+      const role = normalizeHostRole(fyo.config.get('hostRole'));
+      if (role === 'host') {
+        return 'Host · MariaDB';
+      }
+      if (role === 'client') {
+        return 'Client · MariaDB';
+      }
+      return 'MariaDB';
+    },
+    connectionDetail(): string {
+      if (this.connection) {
+        return `${this.connection.database} · :${this.connection.port}`;
+      }
+      return 'Not connected';
+    },
   },
   async mounted() {
     const { companyName } = await fyo.doc.getDoc('AccountingSettings');
     this.companyName = companyName as string;
     this.groups = await getSidebarConfig();
+    this.refreshConnection();
 
     this.setActiveGroup();
     router.afterEach(() => {
@@ -214,6 +299,23 @@ export default defineComponent({
     routeTo,
     reportIssue,
     toggleSidebar,
+    groupIcon(group: SidebarRoot) {
+      return NAV_ICONS[groupIconKind(group)];
+    },
+    refreshConnection() {
+      const id = fyo.config.get('lastSelectedConnectionId' as never) as
+        | string
+        | null
+        | undefined;
+      if (typeof id !== 'string' || !id.length) {
+        this.connection = null;
+        return;
+      }
+      const connections = fyo.config.get('connections' as never) as
+        | PersistedConnection[]
+        | undefined;
+      this.connection = connections?.find((c) => c.id === id) ?? null;
+    },
     openDocumentation() {
       ipc.openLink('https://docs.frappe.io/' + docsPathRef.value);
     },

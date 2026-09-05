@@ -32,30 +32,31 @@
     <template v-if="hasDoc" #header>
       <Button
         v-if="canShowLinks"
-        :icon="true"
+        variant="ghost"
+        size="icon"
         :title="t`View linked entries`"
         @click="showLinks = true"
       >
-        <feather-icon name="link" class="w-4 h-4"></feather-icon>
+        <Link2 class="w-4 h-4"></Link2>
       </Button>
       <Button
         v-if="canPrint"
         ref="printButton"
-        :icon="true"
+        variant="ghost"
+        size="icon"
         :title="t`Open Print View`"
         @click="routeTo(`/print/${doc.schemaName}/${doc.name}`)"
       >
-        <feather-icon name="printer" class="w-4 h-4"></feather-icon>
+        <Printer class="w-4 h-4"></Printer>
       </Button>
       <Button
-        :icon="true"
+        variant="ghost"
+        size="icon"
         :title="t`Toggle between form and full width`"
         @click="toggleWidth"
       >
-        <feather-icon
-          :name="useFullWidth ? 'minimize' : 'maximize'"
-          class="w-4 h-4"
-        ></feather-icon>
+        <Minimize2 v-if="useFullWidth" class="w-4 h-4"></Minimize2>
+        <Maximize2 v-else class="w-4 h-4"></Maximize2>
       </Button>
       <DropdownWithActions
         v-for="group of groupedActions"
@@ -66,19 +67,19 @@
         <p v-if="group.group">
           {{ group.group }}
         </p>
-        <feather-icon v-else name="more-horizontal" class="w-4 h-4" />
+        <MoreHorizontal v-else class="w-4 h-4" />
       </DropdownWithActions>
-      <Button v-if="doc?.canSave" type="primary" @click="sync">
+      <Button v-if="doc?.canSave" @click="sync">
         {{ t`Save` }}
       </Button>
-      <Button v-else-if="doc?.canSubmit" type="primary" @click="submit">{{
+      <Button v-else-if="doc?.canSubmit" @click="submit">{{
         t`Submit`
       }}</Button>
     </template>
     <template #body>
       <FormHeader
         :form-title="title"
-        class="sticky top-0 bg-white dark:bg-gray-890 border-b dark:border-gray-800"
+        class="sticky top-0 bg-card border-b border-border"
       >
         <StatusPill v-if="hasDoc" :doc="doc" />
       </FormHeader>
@@ -95,7 +96,7 @@
           class="p-4"
           :class="
             idx !== 0 && activeGroup.size > 1
-              ? 'border-t dark:border-gray-800'
+              ? 'border-t border-border'
               : ''
           "
           :show-title="activeGroup.size > 1 && n !== t`Default`"
@@ -112,7 +113,7 @@
       <!-- Tab Bar -->
       <div
         v-if="groupedFields && groupedFields.size > 1"
-        class="mt-auto px-4 pb-4 flex gap-8 border-t dark:border-gray-800 flex-shrink-0 sticky bottom-0 bg-white dark:bg-gray-875"
+        class="mt-auto px-4 pb-4 flex gap-8 border-t border-border flex-shrink-0 sticky bottom-0 bg-card"
       >
         <div
           v-for="key of groupedFields.keys()"
@@ -120,8 +121,8 @@
           class="text-sm cursor-pointer"
           :class="
             key === activeTab
-              ? 'text-gray-900 dark:text-gray-25 font-semibold border-t-2 border-gray-800 dark:border-gray-100'
-              : 'text-gray-700 dark:text-gray-200 '
+              ? 'text-foreground font-semibold border-t-2 border-primary'
+              : 'text-muted-foreground'
           "
           :style="{
             paddingTop: key === activeTab ? 'calc(1rem - 2px)' : '1rem',
@@ -162,7 +163,8 @@ import { ValidationError } from 'fyo/utils/errors';
 import { getDocStatus } from 'models/helpers';
 import { ModelNameEnum } from 'models/types';
 import { Field, Schema } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import { Link2, Maximize2, Minimize2, MoreHorizontal, Printer } from '@lucide/vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Barcode from 'src/components/Controls/Barcode.vue';
 import ExchangeRate from 'src/components/Controls/ExchangeRate.vue';
 import DropdownWithActions from 'src/components/DropdownWithActions.vue';
@@ -202,6 +204,11 @@ export default defineComponent({
     LinkedEntries,
     RowEditForm,
     StatusPill,
+    Link2,
+    Maximize2,
+    Minimize2,
+    MoreHorizontal,
+    Printer,
   },
   provide() {
     return {

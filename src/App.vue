@@ -1,7 +1,7 @@
 <template>
   <div
     id="app"
-    class="dark:bg-gray-900 h-screen flex flex-col font-sans overflow-hidden antialiased"
+    class="bg-background h-screen flex flex-col font-sans overflow-hidden antialiased text-foreground"
     :dir="languageDirection"
     :language="language"
   >
