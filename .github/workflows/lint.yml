@@ -34,7 +34,7 @@ jobs:
         run: yarn install --no-immutable
 
       - name: Lint
-        run: yarn --no-immutable lint
+        run: yarn lint
 
       - name: Check Formatting
         run: yarn prettier --check .
