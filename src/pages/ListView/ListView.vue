@@ -6,6 +6,7 @@
           schemaName === 'Item' &&
           (!isSelectionMode || (isSelectionMode && selectedItems.length === 0))
         "
+        variant="secondary"
         @click="toggleSelectionMode"
       >
         {{ t`Select` }}
@@ -16,7 +17,7 @@
         "
         class="relative"
       >
-        <Button class="w-40" @click="toggleDropdown"> Create </Button>
+        <Button class="w-40" variant="secondary" @click="toggleDropdown"> Create </Button>
         <div
           v-if="showDropdown"
           class="absolute top-full mt-1 bg-white border border-gray-300 rounded shadow-lg z-10 w-40"
@@ -31,7 +32,7 @@
           </div>
         </div>
       </div>
-      <Button ref="exportButton" :icon="false" @click="openExportModal = true">
+      <Button ref="exportButton" variant="secondary" @click="openExportModal = true">
         {{ t`Export` }}
       </Button>
       <FilterDropdown
@@ -42,9 +43,7 @@
       <Button
         v-if="canCreate"
         ref="makeNewDocButton"
-        :icon="true"
-        type="primary"
-        :padding="false"
+        size="icon"
         class="px-3"
         @click="handleMakeNewDoc"
       >
@@ -76,7 +75,7 @@
 </template>
 <script lang="ts">
 import { Field } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import ExportWizard from 'src/components/ExportWizard.vue';
 import FilterDropdown from 'src/components/FilterDropdown.vue';
 import Modal from 'src/components/Modal.vue';

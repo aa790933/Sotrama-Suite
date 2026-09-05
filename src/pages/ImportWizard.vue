@@ -12,7 +12,8 @@
         v-if="hasImporter"
         :title="t`Add Row`"
         :disabled="isMakingEntries"
-        :icon="true"
+        size="icon"
+        variant="ghost"
         @click="() => importer.addRow()"
       >
         <feather-icon name="plus" class="w-4 h-4" />
@@ -20,7 +21,8 @@
       <Button
         v-if="hasImporter"
         :title="t`Save Template`"
-        :icon="true"
+        size="icon"
+        variant="ghost"
         @click="saveTemplate"
       >
         <feather-icon name="download" class="w-4 h-4" />
@@ -28,7 +30,6 @@
       <Button
         v-if="canImportData"
         :title="t`Import Data`"
-        type="primary"
         :disabled="errorMessage.length > 0 || isMakingEntries"
         @click="importData"
       >
@@ -37,7 +38,6 @@
       <Button
         v-if="importType && !canImportData"
         :title="t`Select File`"
-        type="primary"
         @click="selectFile"
       >
         {{ t`Select File` }}
@@ -270,7 +270,7 @@
           <p class="text-sm text-gray-600 dark:text-gray-400">
             {{ t`${numColumnsPicked} fields selected` }}
           </p>
-          <Button type="primary" @click="showColumnPicker = false">{{
+          <Button @click="showColumnPicker = false">{{
             t`Done`
           }}</Button>
         </div>
@@ -360,15 +360,17 @@
         <div class="flex justify-between p-4">
           <Button
             v-if="failed.length > 0"
+            variant="secondary"
             @click="clearSuccessfullyImportedEntries"
             >{{ t`Fix Failed` }}</Button
           >
           <Button
             v-if="failed.length === 0 && success.length > 0"
+            variant="secondary"
             @click="showMe"
             >{{ t`Show Me` }}</Button
           >
-          <Button @click="clear">{{ t`Done` }}</Button>
+          <Button variant="secondary" @click="clear">{{ t`Done` }}</Button>
         </div>
       </div>
     </Modal>
@@ -381,7 +383,7 @@ import { Verb } from 'fyo/telemetry/types';
 import { ValidationError } from 'fyo/utils/errors';
 import { ModelNameEnum } from 'models/types';
 import { OptionField, RawValue, SelectOption } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import AutoComplete from 'src/components/Controls/AutoComplete.vue';
 import Check from 'src/components/Controls/Check.vue';
 import Data from 'src/components/Controls/Data.vue';

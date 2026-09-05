@@ -45,7 +45,6 @@
                 <Button
                   v-if="item.action"
                   class="leading-tight text-base"
-                  type="primary"
                   @click="handleAction(item)"
                 >
                   {{ t`Set Up` }}
@@ -53,6 +52,7 @@
                 <Button
                   v-if="item.documentation"
                   class="leading-tight text-base"
+                  variant="secondary"
                   :class="{ 'ms-4': item.action }"
                   @click="handleDocumentation(item)"
                 >
@@ -69,7 +69,7 @@
 
 <script lang="ts">
 import { DocValue } from 'fyo/core/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Icon from 'src/components/Icon.vue';
 import PageHeader from 'src/components/PageHeader.vue';
 import { fyo } from 'src/initFyo';

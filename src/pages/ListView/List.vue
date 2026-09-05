@@ -117,7 +117,7 @@
       <p class="my-3 text-gray-800 dark:text-gray-200">
         {{ t`No entries found` }}
       </p>
-      <Button v-if="canCreate" type="primary" @click="$emit('makeNewDoc')">
+      <Button v-if="canCreate" @click="$emit('makeNewDoc')">
         {{ t`Make Entry` }}
       </Button>
     </div>
@@ -126,7 +126,7 @@
 <script lang="ts">
 import { ListViewSettings, RenderData } from 'fyo/model/types';
 import { cloneDeep } from 'lodash';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Check from 'src/components/Controls/Check.vue';
 import Paginator from 'src/components/Paginator.vue';
 import Row from 'src/components/Row.vue';
