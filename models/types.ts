@@ -6,7 +6,6 @@ export type InvoiceStatus =
   | 'Paid'
   | 'Return'
   | 'ReturnIssued'
-  | 'Unpaid'
   | 'PartlyPaid';
 
 export enum ModelNameEnum {

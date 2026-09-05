@@ -670,7 +670,7 @@ export default class DatabaseCore extends DatabaseBase {
     const raw = result[0]?.count;
     if (typeof raw === 'bigint') return Number(raw);
     if (typeof raw === 'string') return Number(raw);
-    return (raw as number) ?? 0;
+    return raw ?? 0;
   }
 
   async getNextAutoincrementId(schemaName: string): Promise<number> {
@@ -691,8 +691,8 @@ export default class DatabaseCore extends DatabaseBase {
         prefix,
       ])) as { current: number | null; start: number; padZeros: number }[];
       let current: number | null | undefined = rows?.[0]?.current;
-      let start = rows?.[0]?.start ?? 0;
-      let padZeros = rows?.[0]?.padZeros ?? 4;
+      const start = rows?.[0]?.start ?? 0;
+      const padZeros = rows?.[0]?.padZeros ?? 4;
       if (!rows.length) {
         await this.query('INSERT INTO `numberseries` (name, current, start, padZeros) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE current = current', [
           prefix,

@@ -110,8 +110,8 @@ export abstract class StockTransfer extends Transfer {
         setDiscountAmount: this.setDiscountAmount as boolean | undefined,
         discountAmount: this.discountAmount as Money | undefined,
         lines: ((doc.items as InvoiceItem[]) ?? []).map((item) => ({
-          itemTaxedTotal: item.itemTaxedTotal as Money | undefined,
-          itemDiscountedTotal: item.itemDiscountedTotal as Money | undefined,
+          itemTaxedTotal: item.itemTaxedTotal,
+          itemDiscountedTotal: item.itemDiscountedTotal,
         })),
         discountAfterTax: (doc.discountAfterTax as boolean) ?? false,
         discountPercent: doc.discountPercent as number | undefined,
@@ -123,15 +123,13 @@ export abstract class StockTransfer extends Transfer {
   getItemDiscountAmount(doc: Doc) {
     return totalItemDiscount(
       (this.items ?? []).map((item) => ({
-        setItemDiscountAmount: !(
-          (item.itemDiscountAmount as Money | undefined)?.isZero() ?? true
-        ),
-        itemDiscountAmount: item.itemDiscountAmount as Money | undefined,
-        quantity: item.quantity as number | undefined,
-        amount: item.amount as Money | undefined,
+        setItemDiscountAmount: !(item.itemDiscountAmount?.isZero() ?? true),
+        itemDiscountAmount: item.itemDiscountAmount,
+        quantity: item.quantity,
+        amount: item.amount,
         itemTaxedTotal: (item as unknown as { itemTaxedTotal?: Money })
           .itemTaxedTotal,
-        itemDiscountPercent: item.itemDiscountPercent as number | undefined,
+        itemDiscountPercent: item.itemDiscountPercent,
       })),
       {
         enabled: this.enableDiscounting ?? false,
@@ -608,7 +606,7 @@ export abstract class StockTransfer extends Transfer {
         returnedItem.batches &&
         returnedItem.batches[item.batch as string]
       ) {
-        const batchInfo = returnedItem.batches[item.batch as string]!;
+        const batchInfo = returnedItem.batches[item.batch as string];
         quantity = batchInfo.quantity;
 
         if (batchInfo.serialNumbers) {

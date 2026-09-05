@@ -10,8 +10,6 @@ export async function getPOSTransactedAmount(
   toDate: Date,
   lastShiftClosingDate?: Date
 ): Promise<Record<string, Money> | undefined> {
-  const filters: Record<string, unknown> = { isPOS: true, date: ['between', fromDate.toISOString(), toDate.toISOString()] as unknown as string };
-  if (lastShiftClosingDate) (filters as Record<string, unknown>)._createdAfter = lastShiftClosingDate.toISOString();
   // Use getAll for SalesInvoice isPOS + date range; lastShift filter applied in JS for simplicity
   const invoices = (await fyo.db.getAll('SalesInvoice', {
     filters: { isPOS: true },

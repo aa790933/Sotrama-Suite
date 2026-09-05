@@ -370,7 +370,7 @@ async function updateInventorySettings(fyo: Fyo) {
       continue;
     }
 
-    const settingName = accountTypeDefaultMap[accountType]!;
+    const settingName = accountTypeDefaultMap[accountType];
     await inventorySettings.set(settingName, accounts[0].name);
   }
 

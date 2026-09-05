@@ -129,7 +129,7 @@ export async function getLinkedEntries(
     for (const d of details) {
       if ('parent' in d) {
         childEntries[field.schemaName] ??= [];
-        childEntries[field.schemaName]!.push(d);
+        childEntries[field.schemaName].push(d);
       } else {
         entries[field.schemaName] ??= [];
         entries[field.schemaName].push(d);

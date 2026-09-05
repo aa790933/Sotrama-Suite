@@ -931,7 +931,7 @@ export class Search {
       const keyword: Keyword = { values: [], meta: {}, priority: 0 };
       this._setKeywordValues(map, searchable, keyword);
       this._setMeta(map, searchable, keyword);
-      this.keywords[searchable.schemaName]!.push(keyword);
+      this.keywords[searchable.schemaName].push(keyword);
     }
 
     this._setPriority(searchable);

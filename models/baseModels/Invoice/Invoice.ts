@@ -432,11 +432,11 @@ export abstract class Invoice extends Transactional {
   private discountLineOf(item: InvoiceItem): DiscountLine {
     return {
       setItemDiscountAmount: item.setItemDiscountAmount,
-      itemDiscountAmount: item.itemDiscountAmount as Money | undefined,
-      quantity: item.quantity as number | undefined,
-      amount: item.amount as Money | undefined,
-      itemTaxedTotal: item.itemTaxedTotal as Money | undefined,
-      itemDiscountPercent: item.itemDiscountPercent as number | undefined,
+      itemDiscountAmount: item.itemDiscountAmount,
+      quantity: item.quantity,
+      amount: item.amount,
+      itemTaxedTotal: item.itemTaxedTotal,
+      itemDiscountPercent: item.itemDiscountPercent,
     };
   }
 
@@ -547,13 +547,13 @@ export abstract class Invoice extends Transactional {
       {
         enabled: this.enableDiscounting ?? false,
         setDiscountAmount: this.setDiscountAmount,
-        discountAmount: this.discountAmount as Money | undefined,
+        discountAmount: this.discountAmount,
         lines: (this.items ?? []).map((item) => ({
-          itemTaxedTotal: item.itemTaxedTotal as Money | undefined,
-          itemDiscountedTotal: item.itemDiscountedTotal as Money | undefined,
+          itemTaxedTotal: item.itemTaxedTotal,
+          itemDiscountedTotal: item.itemDiscountedTotal,
         })),
         discountAfterTax: this.discountAfterTax ?? false,
-        discountPercent: this.discountPercent as number | undefined,
+        discountPercent: this.discountPercent,
       },
       this.fyo.pesa(0)
     );
@@ -1373,7 +1373,7 @@ export abstract class Invoice extends Transactional {
       terms,
       numberSeries,
       backReference: this.name,
-      returnAgainst: linkedEntries ? linkedEntries.Shipment![0] : '',
+      returnAgainst: linkedEntries ? linkedEntries.Shipment[0] : '',
     };
 
     let location = this.autoStockTransferLocation;
@@ -1809,7 +1809,7 @@ export abstract class Invoice extends Transactional {
         couponRuleRows = [];
       }
       for (const row of couponRuleRows) {
-        couponRuleByName.set(row.name, row.pricingRule as string);
+        couponRuleByName.set(row.name, row.pricingRule);
       }
     }
 

@@ -112,7 +112,7 @@ export async function getItemQtyMap(doc: SalesInvoice): Promise<ItemQtyMap> {
       itemQtyMap[row.item][row.batch] = row.balanceQuantity;
     }
 
-    itemQtyMap[row.item]!.availableQty += row.balanceQuantity;
+    itemQtyMap[row.item].availableQty += row.balanceQuantity;
   }
   return itemQtyMap;
 }
@@ -1351,11 +1351,8 @@ export async function batchPricingRuleDocNames(
       unit: ['in', [...new Set(pairs.map((p) => p.unit))]],
     },
   })) as { parent: string; item: string; unit: string }[];
-  return pairs.map(
-    (p) =>
-      rows
-        .filter((row) => row.item === p.item && row.unit === p.unit)
-        .map((row) => row.parent) as string[]
+  return pairs.map((p) =>
+    rows.filter((row) => row.item === p.item && row.unit === p.unit).map((row) => row.parent)
   );
 }
 
