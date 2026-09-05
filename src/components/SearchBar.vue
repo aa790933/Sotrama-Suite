@@ -2,8 +2,8 @@
   <div>
     <!-- Search Bar Button -->
     <Button
+      variant="secondary"
       class="px-3 py-2 rounded-r-none dark:bg-gray-900"
-      :padding="false"
       @click="open"
     >
       <feather-icon

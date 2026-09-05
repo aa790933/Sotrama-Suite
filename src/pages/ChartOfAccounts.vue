@@ -1,8 +1,8 @@
 <template>
   <div class="flex flex-col h-full">
     <PageHeader :title="t`Chart of Accounts`">
-      <Button v-if="!isAllExpanded" @click="expand">{{ t`Expand` }}</Button>
-      <Button v-if="!isAllCollapsed" @click="collapse">{{
+      <Button v-if="!isAllExpanded" variant="secondary" @click="expand">{{ t`Expand` }}</Button>
+      <Button v-if="!isAllCollapsed" variant="secondary" @click="collapse">{{
         t`Collapse`
       }}</Button>
     </PageHeader>
@@ -125,7 +125,7 @@ import { getMapFromList, removeAtIndex } from 'utils/index';
 import { getTotalCreditAndDebit } from 'reports/finance/creditDebit';
 import type { TotalCreditAndDebit } from 'utils/db/types';
 import { defineComponent, nextTick } from 'vue';
-import Button from '../components/Button.vue';
+import Button from '../components/ui/button/Button.vue';
 import { inject } from 'vue';
 import { handleErrorWithDialog } from '../errorHandling';
 import { AccountRootType, AccountType } from 'models/baseModels/Account/types';

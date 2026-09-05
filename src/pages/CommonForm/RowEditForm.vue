@@ -9,7 +9,7 @@
     >
       <div class="flex items-center justify-between px-4 h-row-largest">
         <!-- Close Button -->
-        <Button :icon="true" @click="$emit('close')">
+        <Button size="icon" variant="ghost" @click="$emit('close')">
           <feather-icon name="x" class="w-4 h-4" />
         </Button>
 
@@ -17,12 +17,13 @@
         <div class="flex items-stretch gap-2">
           <Button
             v-if="previous >= 0"
-            :icon="true"
+            size="icon"
+            variant="ghost"
             @click="$emit('previous', previous)"
           >
             <feather-icon name="chevron-left" class="w-4 h-4" />
           </Button>
-          <Button v-if="next >= 0" :icon="true" @click="$emit('next', next)">
+          <Button v-if="next >= 0" size="icon" variant="ghost" @click="$emit('next', next)">
             <feather-icon name="chevron-right" class="w-4 h-4" />
           </Button>
         </div>
@@ -45,7 +46,7 @@
 <script lang="ts">
 import { Doc } from 'fyo/model/doc';
 import { ValueError } from 'fyo/utils/errors';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import FormHeader from 'src/components/FormHeader.vue';
 import TwoColumnForm from 'src/components/TwoColumnForm.vue';
 import { shortcutsKey } from 'src/utils/injectionKeys';

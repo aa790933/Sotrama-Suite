@@ -8,7 +8,7 @@
       style="z-index: 1"
     >
       <div class="flex items-center justify-between w-full">
-        <Button :icon="true" @click="$emit('close')">
+        <Button size="icon" variant="ghost" @click="$emit('close')">
           <feather-icon name="x" class="w-4 h-4" />
         </Button>
         <p class="text-xl font-semibold text-gray-600 dark:text-gray-400">
@@ -160,7 +160,7 @@
 import { Doc } from 'fyo/model/doc';
 import { isPesa } from 'fyo/utils';
 import { ModelNameEnum } from 'models/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import { getBgTextColorClass } from 'src/utils/colors';
 import { getLinkedEntries } from 'src/utils/doc';
 import { shortcutsKey } from 'src/utils/injectionKeys';

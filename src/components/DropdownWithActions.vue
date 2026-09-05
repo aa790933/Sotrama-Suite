@@ -7,7 +7,7 @@
     right
   >
     <template #default="{ toggleDropdown }">
-      <Button :type="type" :icon="icon" @click="toggleDropdown()">
+      <Button :variant="buttonVariant" :size="buttonSize" @click="toggleDropdown()">
         <slot>
           <feather-icon name="more-horizontal" class="w-4 h-4" />
         </slot>
@@ -42,6 +42,15 @@ export default defineComponent({
     icon: { type: Boolean, default: true },
   },
   computed: {
+    buttonVariant(): 'default' | 'secondary' | 'ghost' {
+      if (this.type === 'primary') {
+        return 'default';
+      }
+      return this.icon ? 'ghost' : 'secondary';
+    },
+    buttonSize(): 'icon' | 'default' {
+      return this.icon ? 'icon' : 'default';
+    },
     doc() {
       // @ts-ignore
       const doc = this.injectedDoc;

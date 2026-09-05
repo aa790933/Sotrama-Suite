@@ -8,7 +8,7 @@
     :close-on-click-content="false"
   >
     <template #target="{ togglePopover }">
-      <Button :icon="true" @click="togglePopover()">
+      <Button size="icon" variant="ghost" @click="togglePopover()">
         <span class="flex items-center">
           <Icon
             name="filter"

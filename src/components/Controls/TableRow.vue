@@ -52,9 +52,8 @@
     />
     <Button
       v-if="canEditRow"
-      :icon="true"
-      :padding="false"
-      :background="false"
+      size="icon"
+      variant="ghost"
       @click="openRowQuickEdit"
     >
       <feather-icon

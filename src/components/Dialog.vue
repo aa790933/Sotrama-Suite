@@ -31,7 +31,7 @@
               :ref="b.isPrimary ? 'primary' : 'secondary'"
               :key="b.label"
               style="min-width: 5rem"
-              :type="b.isPrimary ? 'primary' : 'secondary'"
+              :variant="b.isPrimary ? 'default' : 'secondary'"
               @click="() => handleClick(index)"
             >
               {{ b.label }}
