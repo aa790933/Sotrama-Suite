@@ -42,16 +42,17 @@ jobs:
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+      
+      - name: Enable Corepack
+        run: corepack enable
 
-      - name: Setup Node.js LTS (22.x)
+      - name: Setup Node.js LTS (24.x)
         uses: actions/setup-node@v7
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: 'yarn'
           cache-dependency-path: yarn.lock
 
-      - name: Enable Corepack (Yarn 4 via packageManager)
-        run: corepack enable
 
       - name: Install dependencies
         run: yarn install
@@ -96,6 +97,9 @@ jobs:
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+        
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup Node.js LTS (24.x)
         uses: actions/setup-node@v7
@@ -103,9 +107,6 @@ jobs:
           node-version: '24.x'
           cache: 'yarn'
           cache-dependency-path: yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
 
       - name: Install dependencies
         run: yarn install
