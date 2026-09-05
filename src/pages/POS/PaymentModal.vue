@@ -215,7 +215,7 @@
 </template>
 
 <script lang="ts">
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Currency from 'src/components/Controls/Currency.vue';
 import Data from 'src/components/Controls/Data.vue';
 import Date from 'src/components/Controls/Date.vue';

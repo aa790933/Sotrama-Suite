@@ -97,7 +97,7 @@
 </template>
 
 <script lang="ts">
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Modal from 'src/components/Modal.vue';
 import { SalesInvoice } from 'models/baseModels/SalesInvoice/SalesInvoice';
 import { defineComponent, inject } from 'vue';

@@ -142,7 +142,7 @@ import { fyo } from 'src/initFyo';
 import ModernPOS from './ModernPOS.vue';
 import ClassicPOS from './ClassicPOS.vue';
 import { ModelNameEnum } from 'models/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import { showToast } from 'src/utils/interactive';
 import { Item } from 'models/baseModels/Item/Item';
 import { Shipment } from 'models/inventory/Shipment';

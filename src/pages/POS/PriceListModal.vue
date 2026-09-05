@@ -65,7 +65,7 @@
 import { t } from 'fyo';
 import Modal from 'src/components/Modal.vue';
 import { defineComponent, inject } from 'vue';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import { showToast } from 'src/utils/interactive';
 import Link from 'src/components/Controls/Link.vue';
 import { SalesInvoice } from 'models/baseModels/SalesInvoice/SalesInvoice';

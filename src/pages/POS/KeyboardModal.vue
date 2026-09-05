@@ -165,7 +165,7 @@
 import Modal from 'src/components/Modal.vue';
 import { ModelNameEnum } from 'models/types';
 import { defineComponent, inject } from 'vue';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Float from 'src/components/Controls/Float.vue';
 import Currency from 'src/components/Controls/Currency.vue';
 import { SalesInvoice } from 'models/baseModels/SalesInvoice/SalesInvoice';

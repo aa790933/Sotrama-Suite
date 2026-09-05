@@ -372,7 +372,7 @@ import { defineComponent } from 'vue';
 import { getItem } from 'src/utils/pos';
 import AlertModal from './AlertModal.vue';
 import PaymentModal from './PaymentModal.vue';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import KeyboardModal from './KeyboardModal.vue';
 import PriceListModal from './PriceListModal.vue';
 import ItemEnquiryModal from './ItemEnquiryModal.vue';

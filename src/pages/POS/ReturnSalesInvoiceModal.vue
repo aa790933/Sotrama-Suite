@@ -80,7 +80,7 @@
 </template>
 
 <script lang="ts">
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Modal from 'src/components/Modal.vue';
 import Row from 'src/components/Row.vue';
 import FormControl from 'src/components/Controls/FormControl.vue';

@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Modal from 'src/components/Modal.vue';
 import Table from 'src/components/Controls/Table.vue';
 import { AccountTypeEnum } from 'models/baseModels/Account/types';

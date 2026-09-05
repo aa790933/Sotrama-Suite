@@ -52,7 +52,7 @@ import { defineComponent } from 'vue';
 import { t } from 'fyo';
 import { showToast } from 'src/utils/interactive';
 import Modal from 'src/components/Modal.vue';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Link from 'src/components/Controls/Link.vue';
 import { ModelNameEnum } from 'models/types';
 import { fyo } from 'src/initFyo';
