@@ -40,6 +40,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Enforce HTTPS for Git
+        run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
       - name: Setup Node.js LTS (22.x)
         uses: actions/setup-node@v7
         with:
@@ -47,10 +50,8 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: yarn.lock
 
-      - name: Pin Yarn Classic
-        run: |
-          corepack enable
-          yarn set version 1.22.22
+      - name: Enable Corepack (Yarn 4 via packageManager)
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install
@@ -93,17 +94,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup Node.js LTS (22.x)
+      - name: Enforce HTTPS for Git
+        run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+      - name: Setup Node.js LTS (24.x)
         uses: actions/setup-node@v7
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: 'yarn'
           cache-dependency-path: yarn.lock
 
-      - name: Pin Yarn Classic
-        run: |
-          corepack enable
-          yarn set version 1.22.22
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install

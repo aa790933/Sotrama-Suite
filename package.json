@@ -1,6 +1,7 @@
 {
   "name": "sotrama-suite",
   "version": "0.37.0",
+  "packageManager": "yarn@4.7.0",
   "description": "Modern accounting made simple — Sotrama Suite",
   "author": {
     "name": "Frappe Technologies Pvt. Ltd.",
@@ -106,6 +107,9 @@
   "overrides": {
     "node-abi": "^3.54.0",
     "@types/node": "^24.3.0"
+  },
+  "resolutions": {
+    "@electron/node-gyp": "10.2.0-electron.2"
   },
   "prettier": {
     "semi": true,
