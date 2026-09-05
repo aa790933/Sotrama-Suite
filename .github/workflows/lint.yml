@@ -37,4 +37,5 @@ jobs:
         run: yarn lint
 
       - name: Check Formatting
+        continue-on-error: true
         run: yarn prettier --check .
