@@ -29,7 +29,9 @@ jobs:
           node-version: '24.x'
 
       - name: Install dependencies
-        run: yarn install
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+        run: yarn install --no-immutable
 
       - name: Lint
         run: yarn --no-immutable lint
