@@ -17,7 +17,7 @@
     </div>
 
     <div class="flex justify-around items-center">
-      <Button
+      <Button variant="secondary"
         :background="false"
         class="w-full h-full p-2 mt-2"
         :class="{ 'dark:bg-gray-890 underline': savedInvoiceList }"
@@ -25,7 +25,7 @@
         >Saved</Button
       >
 
-      <Button
+      <Button variant="secondary"
         :background="false"
         class="w-full h-full p-2 mt-2"
         :class="{ 'dark:bg-gray-890 underline': !savedInvoiceList }"
@@ -73,7 +73,7 @@
 
     <div class="row-start-6 grid grid-cols-2 gap-4 mt-4">
       <div class="col-span-2">
-        <Button
+        <Button variant="secondary"
           class="w-full p-5 bg-red-500 dark:bg-red-700"
           @click="$emit('toggleModal', 'SavedInvoice')"
         >

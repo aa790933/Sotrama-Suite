@@ -19,14 +19,14 @@ jobs:
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-        
-      - name: Enable Corepack
-        run: corepack enable
 
       - name: Setup Node.js LTS (24.x)
         uses: actions/setup-node@v7
         with:
           node-version: '24.x'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install

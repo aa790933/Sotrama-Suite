@@ -39,7 +39,7 @@
         />
 
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <Button
+          <Button variant="secondary"
             class="w-full py-5 bg-red-500 dark:bg-red-700"
             @click="$router.back()"
           >
@@ -50,7 +50,7 @@
             </slot>
           </Button>
 
-          <Button
+          <Button variant="secondary"
             class="w-full py-5 bg-green-500 dark:bg-green-700"
             @click="handleSubmit"
           >

@@ -2,7 +2,7 @@
   <div class="flex-col">
     <PageHeader :title="t`Point of Sale`">
       <slot>
-        <Button
+        <Button variant="secondary"
           class="bg-red-500 dark:bg-red-700"
           @click="toggleModal('ShiftClose')"
         >

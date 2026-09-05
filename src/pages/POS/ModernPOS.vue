@@ -180,7 +180,7 @@
 
             <div class="flex w-full gap-2">
               <div class="w-full">
-                <Button
+                <Button variant="secondary"
                   class="mt-2 w-full py-5"
                   :style="{
                     backgroundColor:
@@ -196,7 +196,7 @@
                     </p>
                   </slot>
                 </Button>
-                <Button
+                <Button variant="secondary"
                   class="w-full mt-2 py-5"
                   :style="{
                     backgroundColor:
@@ -214,7 +214,7 @@
                 </Button>
               </div>
               <div class="w-full">
-                <Button
+                <Button variant="secondary"
                   class="mt-2 w-full py-5"
                   :style="{
                     backgroundColor:
@@ -230,7 +230,7 @@
                     </p>
                   </slot>
                 </Button>
-                <Button
+                <Button variant="secondary"
                   v-if="isReturnInvoiceEnabledReturn"
                   class="mt-2 w-full py-5"
                   :style="{
@@ -246,7 +246,7 @@
                     </p>
                   </slot>
                 </Button>
-                <Button
+                <Button variant="secondary"
                   v-else
                   class="mt-2 w-full py-5"
                   :style="{
@@ -264,7 +264,7 @@
                 </Button>
               </div>
             </div>
-            <Button
+            <Button variant="secondary"
               v-if="isReturnInvoiceEnabledReturn"
               class="mt-2 w-full py-5"
               :style="{

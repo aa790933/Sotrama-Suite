@@ -22,7 +22,7 @@
       />
 
       <div class="mt-8 mb-6 grid grid-cols-2 gap-4">
-        <Button
+        <Button variant="secondary"
           class="w-full bg-green-500 dark:bg-green-700"
           style="padding: 1.35rem"
           :disabled="!selectedBatch"
@@ -33,7 +33,7 @@
           </p>
         </Button>
 
-        <Button
+        <Button variant="secondary"
           class="w-full bg-red-500 dark:bg-red-700"
           style="padding: 1.35rem"
           @click="closeModal"

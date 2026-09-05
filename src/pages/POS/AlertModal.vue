@@ -8,7 +8,7 @@
 
     <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto pb-6">
       <div class="flex col-span-2 gap-5">
-        <Button
+        <Button variant="secondary"
           class="py-5 w-full bg-red-500 dark:bg-red-700"
           @click="$emit('toggleModal', 'Alert')"
         >
@@ -19,7 +19,7 @@
           </slot>
         </Button>
 
-        <Button
+        <Button variant="secondary"
           class="w-full py-5 bg-green-500 dark:bg-green-700"
           @click="
             routeTo('/list/SalesInvoice');
@@ -34,7 +34,7 @@
         </Button>
       </div>
       <div class="col-span-2 flex justify-center mt-3">
-        <Button
+        <Button variant="secondary"
           class="w-full py-5 bg-blue-500 dark:bg-blue-700"
           @click="$emit('saveAndContinue')"
         >
