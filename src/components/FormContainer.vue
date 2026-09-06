@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex bg-gray-25 dark:bg-gray-875 overflow-x-auto custom-scroll custom-scroll-thumb1"
+    class="flex bg-background overflow-x-auto custom-scroll custom-scroll-thumb1"
   >
     <div class="flex flex-1 flex-col">
       <!-- Page Header (Title, Buttons, etc) -->
@@ -18,11 +18,11 @@
 
       <!-- Common Form -->
       <div
-        class="flex flex-col self-center h-full overflow-auto bg-white dark:bg-gray-890"
+        class="flex flex-col self-center h-full overflow-auto bg-card text-card-foreground"
         :class="
           useFullWidth
-            ? 'w-full border-t dark:border-gray-800'
-            : 'w-form border dark:border-gray-800 rounded-lg shadow-lg mb-4 mx-4'
+            ? 'w-full border-t border-border'
+            : 'w-full max-w-6xl border border-border rounded-xl shadow-lg mb-6 mx-4 p-6'
         "
       >
         <slot name="body" />

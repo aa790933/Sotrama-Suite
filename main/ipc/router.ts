@@ -97,7 +97,7 @@ export interface AppOps {
 async function getErrorHandledResponse<T>(fn: () => Promise<T> | T): Promise<BackendResponse> {
   try {
     const data = await fn();
-    return { data };
+    return { data: sanitizeForIpc(data) };
   } catch (err) {
     const e = err as NodeJS.ErrnoException & { name?: string; message?: string; stack?: string; code?: string };
     return {
@@ -109,6 +109,31 @@ async function getErrorHandledResponse<T>(fn: () => Promise<T> | T): Promise<Bac
       },
     };
   }
+}
+
+/**
+ * Deep-convert IPC payloads into structured-clone-safe values. BigInt (driver
+ * BIGINT/COUNT without bigIntAsNumber) and other non-cloneables abort the
+ * invoke; Dates and plain data pass through untouched.
+ */
+function sanitizeForIpc(value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeForIpc);
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      out[key] = sanitizeForIpc(entry);
+    }
+    return out;
+  }
+  return value;
 }
 
 /** IPC router: exposes DbOps/InstallerOps/FileOps/AppOps over validated channels. */
@@ -255,10 +280,14 @@ export class IpcRouter {
     opts: HostProvisionConfig,
     sender: Electron.WebContents | null
   ) {
-    const safeDb = sanitizeDatabaseName(opts.database);
-    return provisionHost({ ...opts, database: safeDb }, (e) =>
-      sender?.send(IPC_ACTIONS.INSTALL_MARIA_DB, e)
-    );
+    try {
+      const safeDb = sanitizeDatabaseName(opts.database);
+      return await provisionHost({ ...opts, database: safeDb }, (e) =>
+        sender?.send(IPC_ACTIONS.INSTALL_MARIA_DB, e)
+      );
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
   }
 
   async createNewDatabase(dbPath: string, countryCode: string): Promise<BackendResponse> {

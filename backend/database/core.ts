@@ -366,6 +366,8 @@ export default class DatabaseCore extends DatabaseBase {
       timezone: 'Z',
       dateStrings: false,
       multipleStatements: true,
+      bigIntAsNumber: true,
+      decimalAsNumber: true,
     });
   }
 
