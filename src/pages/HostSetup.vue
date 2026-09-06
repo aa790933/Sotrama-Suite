@@ -400,6 +400,20 @@ function genPassword(): string {
   return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function withIpcTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`Request timed out after ${ms / 1000}s.`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export default defineComponent({
   name: 'HostSetup',
   components: {
@@ -537,25 +551,31 @@ export default defineComponent({
       this.dbExists = null;
       this.dbExistsChecked = false;
       try {
-        const ping = await ipc.pingMariaDB({
-          host: this.host,
-          port: this.port,
-          user: this.user,
-          password: this.password,
-        });
+        const ping = await withIpcTimeout(
+          ipc.pingMariaDB({
+            host: this.host,
+            port: this.port,
+            user: this.user,
+            password: this.password,
+          }),
+          30000
+        );
         if (!ping.ok) {
           this.testOk = false;
           this.testError = ping.error || '';
           return;
         }
         try {
-          const dbCheck = await ipc.checkDbExists({
-            host: this.host,
-            port: this.port,
-            user: this.user,
-            password: this.password,
-            database: this.database.trim(),
-          });
+          const dbCheck = await withIpcTimeout(
+            ipc.checkDbExists({
+              host: this.host,
+              port: this.port,
+              user: this.user,
+              password: this.password,
+              database: this.database.trim(),
+            }),
+            30000
+          );
           this.dbExists = dbCheck.exists;
           this.dbExistsChecked = true;
           if (dbCheck.exists) {
@@ -585,13 +605,16 @@ export default defineComponent({
       this.creatingDb = true;
       this.errorMsg = '';
       try {
-        const res = await ipc.createDatabase({
-          host: this.host,
-          port: this.port,
-          user: this.user,
-          password: this.password,
-          database: this.database.trim(),
-        });
+        const res = await withIpcTimeout(
+          ipc.createDatabase({
+            host: this.host,
+            port: this.port,
+            user: this.user,
+            password: this.password,
+            database: this.database.trim(),
+          }),
+          30000
+        );
         if (res.ok) {
           this.dbExists = true;
           this.testOk = true;

@@ -188,6 +188,7 @@ export class IpcRouter {
         password: config.password,
         database: config.database,
         connectionLimit: 1,
+        connectTimeout: 8000,
       });
       const conn = await pool.getConnection();
       await conn.release();
@@ -212,7 +213,7 @@ export class IpcRouter {
     try {
       sanitizeDatabaseName(config.database);
       const { createConnection } = await import('mariadb');
-      const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password });
+      const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password, connectTimeout: 8000 });
       try {
         const result: unknown = await conn.query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?', [config.database]);
         const rows = Array.isArray(result) ? result : [];
@@ -229,7 +230,7 @@ export class IpcRouter {
     try {
       const safeDb = sanitizeDatabaseName(config.database);
       const { createConnection } = await import('mariadb');
-      const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password });
+      const conn = await createConnection({ host: config.host, port: config.port, user: config.user, password: config.password, connectTimeout: 8000 });
       try {
         await conn.query(`CREATE DATABASE IF NOT EXISTS \`${safeDb}\``);
         return { ok: true };

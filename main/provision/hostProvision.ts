@@ -191,8 +191,22 @@ export async function probeFreePort(start: number): Promise<number | null> {
   return null;
 }
 
-/** Probe whether MariaDB is reachable. */
+/** Probe whether MariaDB is reachable. Always settles: every stage is bounded. */
 export async function pingMariaDB(opts: PingOptions): Promise<PingResult> {
+  const timeout = new Promise<PingResult>((resolve) =>
+    setTimeout(
+      () =>
+        resolve({
+          ok: false,
+          error: `Connection to ${opts.host}:${opts.port} timed out.`,
+        }),
+      20000
+    )
+  );
+  return await Promise.race([pingMariaDBInner(opts), timeout]);
+}
+
+async function pingMariaDBInner(opts: PingOptions): Promise<PingResult> {
   const { host, port } = opts;
   const tcp = await tcpProbe(host, port);
   if (!tcp) {
@@ -214,10 +228,25 @@ export async function pingMariaDB(opts: PingOptions): Promise<PingResult> {
       ]);
       let out = '';
       let err = '';
+      let settled = false;
+      const done = (result: { code: number; out: string; err: string }) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(killTimer);
+        resolve(result);
+      };
+      const killTimer = setTimeout(() => {
+        child.kill();
+        done({
+          code: -1,
+          out,
+          err: err || 'mariadb-admin timed out after 10s',
+        });
+      }, 10000);
       child.stdout?.on('data', (d: Buffer) => (out += d.toString()));
       child.stderr?.on('data', (d: Buffer) => (err += d.toString()));
-      child.on('close', (code) => resolve({ code: code ?? -1, out, err }));
-      child.on('error', (e) => resolve({ code: -1, out, err: e.message }));
+      child.on('close', (code) => done({ code: code ?? -1, out, err }));
+      child.on('error', (e) => done({ code: -1, out, err: e.message }));
     }
   );
   if (cli.code !== 0) {
@@ -243,7 +272,13 @@ async function pingViaDriver(
   const mariadb = await import('mariadb');
   let conn;
   try {
-    conn = await mariadb.createConnection({ host, port, user, password });
+    conn = await mariadb.createConnection({
+      host,
+      port,
+      user,
+      password,
+      connectTimeout: 8000,
+    });
     await conn.query('SELECT 1');
     return { ok: true };
   } catch (err) {
