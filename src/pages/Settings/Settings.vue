@@ -1,7 +1,7 @@
 <template>
   <FormContainer>
     <template #header>
-      <Button v-if="canSave" type="primary" @click="sync">
+      <Button v-if="canSave" @click="sync">
         {{ t`Save` }}
       </Button>
       <LanguageSelector class="ms-4 text-sm w-40" />
@@ -91,7 +91,7 @@ import { Doc } from 'fyo/model/doc';
 import { ValidationError } from 'fyo/utils/errors';
 import { ModelNameEnum } from 'models/types';
 import { Field, Schema } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import FormContainer from 'src/components/FormContainer.vue';
 import FormHeader from 'src/components/FormHeader.vue';
 import LanguageSelector from 'src/components/Controls/LanguageSelector.vue';

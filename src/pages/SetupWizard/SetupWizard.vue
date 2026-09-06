@@ -45,19 +45,20 @@
         </p>
         <Button
           v-if="!loading"
+          variant="outline"
           class="w-24 border dark:border-gray-800"
           @click="cancel"
           >{{ t`Cancel` }}</Button
         >
         <Button
           v-if="fyo.store.isDevelopment && !loading"
+          variant="outline"
           class="w-24 ml-auto mr-4 border dark:border-gray-800"
           :disabled="loading"
           @click="fill"
           >{{ t`Fill` }}</Button
         >
         <Button
-          type="primary"
           class="w-24"
           data-testid="submit-button"
           :disabled="!areAllValuesFilled || loading"
@@ -75,7 +76,7 @@ import { Verb } from 'fyo/telemetry/types';
 import { TranslationString } from 'fyo/utils/translation';
 import { ModelNameEnum } from 'models/types';
 import { Field } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import FormContainer from 'src/components/FormContainer.vue';
 import FormHeader from 'src/components/FormHeader.vue';
 import { getErrorMessage } from 'src/utils';

@@ -14,22 +14,23 @@
           @change="async (value) => await doc?.set('name', value)"
         />
       </template>
-      <Button v-if="displayDoc && doc?.template" @click="savePDF()">
+      <Button v-if="displayDoc && doc?.template" variant="secondary" @click="savePDF()">
         {{ t`Save as PDF` }}
       </Button>
-      <Button v-if="displayDoc && doc?.template" @click="savePDF(true)">
+      <Button v-if="displayDoc && doc?.template" variant="secondary" @click="savePDF(true)">
         {{ t`Print` }}
       </Button>
       <Button
         v-if="doc && doc.isCustom && displayDoc"
         :title="t`Toggle Edit Mode`"
-        :icon="true"
+        size="icon"
+        variant="ghost"
         @click="toggleEditMode"
       >
         <feather-icon name="edit" class="w-4 h-4" />
       </Button>
       <DropdownWithActions v-if="actions.length" :actions="actions" />
-      <Button v-if="doc?.canSave" type="primary" @click="sync()">
+      <Button v-if="doc?.canSave" @click="sync()">
         {{ t`Save` }}
       </Button>
     </PageHeader>
@@ -217,7 +218,7 @@ import { PrintTemplate } from 'models/baseModels/PrintTemplate';
 import { ModelNameEnum } from 'models/types';
 import { saveExportData } from 'reports/commonExporter';
 import { Field, TargetField } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import FormControl from 'src/components/Controls/FormControl.vue';
 import Link from 'src/components/Controls/Link.vue';
 import DropdownWithActions from 'src/components/DropdownWithActions.vue';

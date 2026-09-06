@@ -16,10 +16,10 @@
         @change="onTemplateNameChange"
       />
       <DropdownWithActions :actions="actions" :title="t`More`" />
-      <Button class="text-xs" type="primary" @click="savePDF()">
+      <Button class="text-xs" @click="savePDF()">
         {{ t`Save as PDF` }}
       </Button>
-      <Button class="text-xs" type="primary" @click="savePDF(true)">
+      <Button class="text-xs" @click="savePDF(true)">
         {{ t`Print` }}
       </Button>
     </PageHeader>
@@ -53,7 +53,7 @@ import { Doc } from 'fyo/model/doc';
 import { Action } from 'fyo/model/types';
 import { PrintTemplate } from 'models/baseModels/PrintTemplate';
 import { ModelNameEnum } from 'models/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import AutoComplete from 'src/components/Controls/AutoComplete.vue';
 import DropdownWithActions from 'src/components/DropdownWithActions.vue';
 import PageHeader from 'src/components/PageHeader.vue';

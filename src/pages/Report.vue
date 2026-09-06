@@ -13,7 +13,8 @@
       </DropdownWithActions>
       <Button
         ref="printButton"
-        :icon="true"
+        size="icon"
+        variant="ghost"
         :title="t`Open Report Print View`"
         @click="routeTo(`/report-print/${reportClassName}`)"
       >
@@ -49,7 +50,7 @@ import { t } from 'fyo';
 import { DocValue } from 'fyo/core/types';
 import { reports } from 'reports';
 import { Report } from 'reports/Report';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import FormControl from 'src/components/Controls/FormControl.vue';
 import DropdownWithActions from 'src/components/DropdownWithActions.vue';
 import PageHeader from 'src/components/PageHeader.vue';

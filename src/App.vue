@@ -214,11 +214,12 @@ export default defineComponent({
           if (found) fyo.config.set('lastSelectedConnectionId' as never, found.id as never);
         }
       } catch {}
-      if (!(await ipc.checkDbAccess(filePath))) {
+      const access = await ipc.checkDbAccess(filePath);
+      if (!access.ok) {
         await showDialog({
           title: this.t`Cannot open file`,
           type: 'error',
-          detail: getSafeConfigDetail(filePath),
+          detail: access.error || getSafeConfigDetail(filePath),
         });
         return;
       }

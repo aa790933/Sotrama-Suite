@@ -113,7 +113,7 @@
       v-if="!data?.length"
       class="flex flex-col items-center justify-center my-auto"
     >
-      <img src="../../assets/img/list-empty-state.svg" alt="" class="w-24" />
+      <img :src="emptyStateUrl" alt="" class="w-24" />
       <p class="my-3 text-gray-800 dark:text-gray-200">
         {{ t`No entries found` }}
       </p>
@@ -126,6 +126,7 @@
 <script lang="ts">
 import { ListViewSettings, RenderData } from 'fyo/model/types';
 import { cloneDeep } from 'lodash';
+import emptyStateSvg from '../../assets/img/list-empty-state.svg';
 import Button from 'src/components/ui/button/Button.vue';
 import Check from 'src/components/Controls/Check.vue';
 import Paginator from 'src/components/Paginator.vue';
@@ -169,6 +170,9 @@ export default defineComponent({
     };
   },
   computed: {
+    emptyStateUrl() {
+      return emptyStateSvg;
+    },
     dataSlice() {
       return this.data.slice(this.pageStart, this.pageEnd);
     },

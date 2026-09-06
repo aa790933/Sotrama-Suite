@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col w-full h-full">
     <PageHeader :title="t`Print ${title}`">
-      <Button class="text-xs" type="primary" @click="savePDF()">
+      <Button class="text-xs" @click="savePDF()">
         {{ t`Save as PDF` }}
       </Button>
-      <Button class="text-xs" type="primary" @click="savePDF(true)">
+      <Button class="text-xs" @click="savePDF(true)">
         {{ t`Print` }}
       </Button>
     </PageHeader>
@@ -156,7 +156,7 @@ import { Verb } from 'fyo/telemetry/types';
 import { Report } from 'reports/Report';
 import { reports } from 'reports/index';
 import { OptionField } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Check from 'src/components/Controls/Check.vue';
 import Int from 'src/components/Controls/Int.vue';
 import Select from 'src/components/Controls/Select.vue';

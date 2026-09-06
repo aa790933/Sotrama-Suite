@@ -8,18 +8,17 @@
       style="z-index: 1"
     >
       <!-- Close Button  -->
-      <Button :icon="true" @click="routeToPrevious">
+      <Button size="icon" variant="ghost" @click="routeToPrevious">
         <feather-icon name="x" class="w-4 h-4" />
       </Button>
 
       <!-- Save & Submit Buttons -->
-      <Button v-if="doc?.canSave" :icon="true" type="primary" @click="sync">
+      <Button v-if="doc?.canSave" size="icon" @click="sync">
         {{ t`Save` }}
       </Button>
       <Button
         v-else-if="doc?.canSubmit"
-        :icon="true"
-        type="primary"
+        size="icon"
         @click="submit"
       >
         {{ t`Submit` }}
@@ -74,7 +73,7 @@
 <script lang="ts">
 import { DocValue } from 'fyo/core/types';
 import { Field, Schema } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import AttachImage from 'src/components/Controls/AttachImage.vue';
 import FormControl from 'src/components/Controls/FormControl.vue';
 import TwoColumnForm from 'src/components/TwoColumnForm.vue';

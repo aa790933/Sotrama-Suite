@@ -53,7 +53,7 @@ export interface IpcRouterDeps {
 // ---- Typed sub-interfaces (the seam) ----
 
 export interface DbOps {
-  checkDbAccess(config: MariaDBConfig): Promise<boolean>;
+  checkDbAccess(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }>;
   createNewDatabase(dbPath: string, countryCode: string): Promise<BackendResponse>;
   connectToDatabase(dbPath: string, countryCode?: string): Promise<BackendResponse>;
   dbCall(method: DatabaseMethod, ...args: unknown[]): Promise<BackendResponse>;
@@ -177,7 +177,7 @@ export class IpcRouter {
     if (!this.senderPolicy.isValidSender(event)) throw new Error('Invalid IPC sender');
   }
 
-  async checkDbAccess(config: MariaDBConfig): Promise<boolean> {
+  async checkDbAccess(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }> {
     try {
       sanitizeDatabaseName(config.database);
       const { createPool } = await import('mariadb');
@@ -192,9 +192,9 @@ export class IpcRouter {
       const conn = await pool.getConnection();
       await conn.release();
       await pool.end();
-      return true;
-    } catch {
-      return false;
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
     }
   }
 

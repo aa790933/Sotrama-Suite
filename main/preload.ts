@@ -118,7 +118,7 @@ const ipc = {
     return (await ipcRenderer.invoke(
       IPC_ACTIONS.CHECK_DB_ACCESS,
       filePath
-    )) as boolean;
+    )) as { ok: boolean; error?: string };
   },
 
   async checkForUpdates() {

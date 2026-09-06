@@ -18,7 +18,6 @@
 
     <div class="flex justify-around items-center">
       <Button variant="secondary"
-        :background="false"
         class="w-full h-full p-2 mt-2"
         :class="{ 'dark:bg-gray-890 underline': savedInvoiceList }"
         @click="savedInvoiceList = true"
@@ -26,7 +25,6 @@
       >
 
       <Button variant="secondary"
-        :background="false"
         class="w-full h-full p-2 mt-2"
         :class="{ 'dark:bg-gray-890 underline': !savedInvoiceList }"
         @click="savedInvoiceList = false"

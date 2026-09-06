@@ -556,7 +556,9 @@ function escapePowerShellArg(arg: string): string {
 function runElevated(cmd: string, args: string[]): Promise<RunResult> {
   if (process.platform === 'win32') {
     const escapedArgs = args.map(escapePowerShellArg).join(', ');
-    const psCommand = `Start-Process -FilePath ${escapePowerShellArg(cmd)} -ArgumentList @(${escapedArgs}) -Verb RunAs -Wait -PassThru`;
+    // Capture the elevated exit code explicitly: without it powershell.exe
+    // exits 0 even when the child (msiexec/netsh) fails, hiding install errors.
+    const psCommand = `$p = Start-Process -FilePath ${escapePowerShellArg(cmd)} -ArgumentList @(${escapedArgs}) -Verb RunAs -Wait -PassThru; exit $p.ExitCode`;
     const psArgs = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psCommand];
     return runCommand('powershell.exe', psArgs);
   }

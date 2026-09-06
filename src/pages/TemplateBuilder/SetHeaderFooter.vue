@@ -86,7 +86,7 @@
       </div>
     </div>
     <div class="flex border-t dark:border-gray-800 p-4">
-      <Button class="ml-auto" type="primary" @click="done">{{
+      <Button class="ml-auto" @click="done">{{
         t`Done`
       }}</Button>
     </div>
@@ -96,7 +96,7 @@
 <script lang="ts">
 import { Doc } from 'fyo/model/doc';
 import { OptionField, Field } from 'schemas/types';
-import Button from 'src/components/Button.vue';
+import Button from 'src/components/ui/button/Button.vue';
 import Float from 'src/components/Controls/Float.vue';
 import Select from 'src/components/Controls/Select.vue';
 import FormControl from 'src/components/Controls/FormControl.vue';
