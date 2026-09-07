@@ -24,6 +24,7 @@ export default () => {
     plugins: [vue()],
     resolve: {
       alias: {
+        '@': path.resolve(__dirname, './src'),
         vue: 'vue/dist/vue.esm-bundler.js',
         fyo: path.resolve(__dirname, './fyo'),
         src: path.resolve(__dirname, './src'),

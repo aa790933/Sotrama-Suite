@@ -131,24 +131,23 @@
       <!-- Tab Bar -->
       <div
         v-if="groupedFields && groupedFields.size > 1"
-        class="mt-auto px-4 pb-4 flex gap-8 border-t border-border flex-shrink-0 sticky bottom-0 bg-card"
+        class="mt-auto px-4 pb-4 border-t border-border flex-shrink-0 sticky bottom-0 bg-card"
       >
-        <div
-          v-for="key of groupedFields.keys()"
-          :key="key"
-          class="text-sm cursor-pointer"
-          :class="
-            key === activeTab
-              ? 'text-foreground font-semibold border-t-2 border-primary'
-              : 'text-muted-foreground'
-          "
-          :style="{
-            paddingTop: key === activeTab ? 'calc(1rem - 2px)' : '1rem',
-          }"
-          @click="activeTab = key"
+        <Tabs
+          :model-value="activeTab"
+          @update:model-value="(value) => (activeTab = value as string)"
         >
-          {{ key }}
-        </div>
+          <TabsList class="bg-transparent p-0 gap-6">
+            <TabsTrigger
+              v-for="key of groupedFields.keys()"
+              :key="key"
+              :value="key"
+              class="rounded-none px-0 pb-4 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              {{ key }}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
     </template>
     <template #quickedit>
@@ -190,6 +189,9 @@ import BreadcrumbPage from 'src/components/ui/breadcrumb/BreadcrumbPage.vue';
 import BreadcrumbSeparator from 'src/components/ui/breadcrumb/BreadcrumbSeparator.vue';
 import Badge from 'src/components/ui/badge/Badge.vue';
 import Button from 'src/components/ui/button/Button.vue';
+import Tabs from '@/components/ui/tabs/Tabs.vue';
+import TabsList from '@/components/ui/tabs/TabsList.vue';
+import TabsTrigger from '@/components/ui/tabs/TabsTrigger.vue';
 import Barcode from 'src/components/Controls/Barcode.vue';
 import ExchangeRate from 'src/components/Controls/ExchangeRate.vue';
 import DropdownWithActions from 'src/components/DropdownWithActions.vue';
@@ -230,6 +232,9 @@ export default defineComponent({
     BreadcrumbPage,
     BreadcrumbSeparator,
     Badge,
+    Tabs,
+    TabsList,
+    TabsTrigger,
     DropdownWithActions,
     Barcode,
     ExchangeRate,
