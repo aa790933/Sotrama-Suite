@@ -27,11 +27,11 @@
       <p
         v-if="!isEmpty"
         :class="[baseInputClasses]"
-        class="overflow-auto no-scrollbar whitespace-nowrap dark:text-gray-100"
+        class="overflow-auto no-scrollbar whitespace-nowrap text-foreground"
       >
         {{ formattedValue }}
       </p>
-      <p v-else-if="inputPlaceholder" class="text-base text-gray-500 w-full">
+      <p v-else-if="inputPlaceholder" class="text-base text-muted-foreground w-full">
         {{ inputPlaceholder }}
       </p>
 
@@ -40,7 +40,7 @@
           name="calendar"
           class="w-4 h-4"
           :class="
-            showMandatory ? 'text-red-600' : 'text-gray-600 dark:text-gray-400'
+            showMandatory ? 'text-red-600' : 'text-muted-foreground'
           "
         />
       </button>
@@ -86,10 +86,10 @@ export default defineComponent({
         return '';
       }
 
-      const border = 'border border-gray-200 dark:border-gray-800';
-      let background = 'bg-gray-25 dark:bg-gray-875';
+      const border = 'border border-border';
+      let background = 'bg-muted/50';
       if (this.isReadOnly) {
-        background = 'bg-gray-50 dark:bg-gray-850';
+        background = 'bg-muted';
       }
 
       if (this.showInput) {

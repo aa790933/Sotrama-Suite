@@ -24,7 +24,7 @@
       />
       <p
         v-if="schema.label && !(canShowBarcode || canShowExchangeRate)"
-        class="text-xl font-semibold items-center text-gray-600"
+        class="text-xl font-semibold items-center text-foreground"
       >
         {{ schema.label }}
       </p>

@@ -10,6 +10,7 @@
         @update:model-value="onSelect"
       >
         <SelectTrigger
+          ref="trigger"
           :aria-label="df.label"
           :class="size === 'small' ? 'h-8 text-xs' : ''"
         >
@@ -93,6 +94,24 @@ export default defineComponent({
     onSelect(value: string) {
       this.selectedValue = value;
       this.triggerChange(value);
+    },
+    focus(): void {
+      // Base.focus() targets `ref="input"`, which this Reka-based template
+      // does not render — without this override, keyboard focus into Select
+      // fields dies silently.
+      const trigger = this.$refs.trigger as unknown as
+        | { $el?: unknown }
+        | undefined;
+      const el = trigger?.$el;
+      if (el instanceof HTMLElement) {
+        el.focus();
+        return;
+      }
+
+      const fallback = (this.$el as HTMLElement | undefined)?.querySelector?.(
+        'button'
+      );
+      fallback?.focus();
     },
   },
 });

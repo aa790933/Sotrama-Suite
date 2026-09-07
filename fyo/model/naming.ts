@@ -2,6 +2,7 @@ import { Fyo } from 'fyo';
 import NumberSeries from 'fyo/models/NumberSeries';
 import { DEFAULT_SERIES_START } from 'fyo/utils/consts';
 import { BaseError } from 'fyo/utils/errors';
+import { Schema } from 'schemas/types';
 import { getRandomString } from 'utils';
 import { Doc } from './doc';
 
@@ -29,7 +30,16 @@ export function isNameAutoSet(schemaName: string, fyo: Fyo): boolean {
 
 export async function setName(doc: Doc, fyo: Fyo) {
   if (doc.schema.naming === 'manual') {
-    return;
+    if (!doc.name || isTemporaryNameLike(doc.name, fyo, doc.schema)) {
+      doc.name = await getCollisionFreeTemporaryName(
+        doc.schemaName,
+        fyo,
+        doc.schema,
+        doc.name ?? undefined
+      );
+    }
+
+    return doc.name;
   }
 
   if (doc.schema.naming === 'autoincrement') {
@@ -60,6 +70,60 @@ export async function setName(doc: Doc, fyo: Fyo) {
 export async function getNextId(schemaName: string, fyo: Fyo): Promise<string> {
   const next = await fyo.db.getNextAutoincrementId(schemaName);
   return String(next).padStart(9, '0');
+}
+
+/**
+ * Locale-independent fallback for temporary names (`New <label> <digits>`).
+ * Covers names minted under a different locale than the current one, where
+ * `DocHandler.isTemporaryName` (translation-sensitive) no longer matches.
+ */
+const TEMPORARY_NAME_PATTERN = /^New .+ \d+$/;
+
+export function isTemporaryNameLike(
+  name: string,
+  fyo: Fyo,
+  schema: Schema
+): boolean {
+  try {
+    if (fyo.doc.isTemporaryName(name, schema)) {
+      return true;
+    }
+  } catch {
+    // DocHandler unavailable (e.g. unit tests); fall through to pattern.
+  }
+
+  return TEMPORARY_NAME_PATTERN.test(name);
+}
+
+/**
+ * Resolve a `manual`-naming doc's temporary name to the first free
+ * `New <label> NN` slot in the database. Temporary counters in DocHandler
+ * are process-memory only, so after a reload the counter restarts at `01`
+ * while the previous draft still owns that primary key — the scan here is
+ * what makes re-insertion collision-free across sessions.
+ */
+export async function getCollisionFreeTemporaryName(
+  schemaName: string,
+  fyo: Fyo,
+  schema: Schema,
+  afterName?: string
+): Promise<string> {
+  const label = schema.label ?? schema.name;
+  let idx = parseTemporarySuffix(afterName);
+  for (let attempts = 0; attempts < 10000; attempts++, idx++) {
+    const candidate = fyo.t`New ${label} ${String(idx).padStart(2, '0')}`;
+    if (!(await fyo.db.exists(schemaName, candidate as string))) {
+      return candidate as string;
+    }
+  }
+
+  return `${fyo.t`New ${label} ` as string}${getRandomString()}`;
+}
+
+function parseTemporarySuffix(name?: string): number {
+  const match = name?.match(/ (\d+)$/);
+  const parsed = match ? parseInt(match[1]!, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
 export async function getSeriesNext(

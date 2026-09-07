@@ -1,17 +1,17 @@
 <template>
   <div
-    class="px-2 w-36 flex items-center border rounded bg-gray-50 dark:text-gray-200 dark:border-gray-800 dark:bg-gray-890 dark:focus-within:bg-gray-900 focus-within:bg-gray-100"
+    class="px-2 w-36 flex items-center border border-border rounded-md bg-muted/50 text-foreground focus-within:bg-muted"
   >
     <input
       ref="scanner"
       type="text"
-      class="text-base placeholder-gray-600 w-full bg-transparent outline-none"
+      class="text-base placeholder:text-muted-foreground w-full bg-transparent outline-none"
       :placeholder="t`Enter barcode`"
       @change="handleChange"
     />
     <feather-icon
       name="maximize"
-      class="w-3 h-3 text-gray-600 dark:text-gray-400 cursor-text"
+      class="w-3 h-3 text-muted-foreground cursor-text"
       @click="() => ($refs.scanner as HTMLInputElement).focus()"
     />
   </div>
@@ -38,12 +38,14 @@ export default defineComponent({
   },
   unmounted() {
     document.removeEventListener('keydown', this.scanListener);
+    this.clearTimer();
   },
   activated() {
     document.addEventListener('keydown', this.scanListener);
   },
   deactivated() {
     document.removeEventListener('keydown', this.scanListener);
+    this.clearTimer();
   },
   methods: {
     handleChange(e: Event) {
@@ -102,7 +104,7 @@ export default defineComponent({
         return await this.setItemFromBarcode();
       }
 
-      this.clearInterval();
+      this.clearTimer();
 
       this.barcode += key;
       this.timerId = setTimeout(async () => {
@@ -118,14 +120,14 @@ export default defineComponent({
       await this.selectItem(this.barcode);
 
       this.barcode = '';
-      this.clearInterval();
+      this.clearTimer();
     },
-    clearInterval() {
+    clearTimer() {
       if (this.timerId === null) {
         return;
       }
 
-      clearInterval(this.timerId);
+      clearTimeout(this.timerId);
       this.timerId = null;
     },
     error(message: string) {

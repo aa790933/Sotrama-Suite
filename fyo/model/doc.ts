@@ -3,7 +3,7 @@ import { Converter } from 'fyo/core/converter';
 import { DocValue, DocValueMap, RawValueMap } from 'fyo/core/types';
 import { Verb } from 'fyo/telemetry/types';
 import { DEFAULT_USER } from 'fyo/utils/consts';
-import { ConflictError, MandatoryError, NotFoundError } from 'fyo/utils/errors';
+import { ConflictError, DuplicateEntryError, MandatoryError, NotFoundError } from 'fyo/utils/errors';
 import Observable from 'fyo/utils/observable';
 import {
   DynamicLinkField,
@@ -25,7 +25,7 @@ import {
   setChildDocIdx,
   shouldApplyFormula,
 } from './helpers';
-import { setName } from './naming';
+import { setName, getCollisionFreeTemporaryName, isTemporaryNameLike } from './naming';
 import {
   Action,
   ChangeArg,
@@ -889,17 +889,43 @@ export class Doc extends Observable<DocValue | Doc[]> {
     await setName(this, this.fyo);
     await this._preSync();
 
-    const validDict = this.getValidDict(false, true);
-    let data: DocValueMap;
-    try {
-      data = await this.fyo.db.insert(this.schemaName, validDict);
-    } catch (err) {
-      throw await getDbSyncError(err as Error, this, this.fyo);
-    }
-    await this._syncValues(data);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const validDict = this.getValidDict(false, true);
+      try {
+        const data: DocValueMap = await this.fyo.db.insert(
+          this.schemaName,
+          validDict
+        );
+        await this._syncValues(data);
 
-    this.fyo.telemetry.log(Verb.Created, this.schemaName);
-    return this;
+        this.fyo.telemetry.log(Verb.Created, this.schemaName);
+        return this;
+      } catch (err) {
+        const mapped = await getDbSyncError(err as Error, this, this.fyo);
+        if (
+          attempt > 0 ||
+          !(mapped instanceof DuplicateEntryError) ||
+          this.schema.naming !== 'manual' ||
+          !this.name ||
+          !isTemporaryNameLike(this.name, this.fyo, this.schema)
+        ) {
+          throw mapped;
+        }
+
+        // Lost a cross-client race on the same temporary name (e.g. two
+        // PCs on one MariaDB host both minting `New Party 01`): the name
+        // was never user-chosen, so resolve the next free slot and retry
+        // once instead of surfacing a primary-key collision.
+        this.name = await getCollisionFreeTemporaryName(
+          this.schemaName,
+          this.fyo,
+          this.schema,
+          this.name
+        );
+      }
+    }
+
+    throw new Error(`Insert failed for ${this.schemaName}.`);
   }
 
   async _update() {

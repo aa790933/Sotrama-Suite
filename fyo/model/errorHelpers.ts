@@ -19,6 +19,10 @@ export async function getDbSyncError(
     return getDuplicateEntryError(err, doc);
   }
 
+  if (err.message.includes('Duplicate entry')) {
+    return getMariaDBDuplicateEntryError(err, doc);
+  }
+
   if (err.message.includes('FOREIGN KEY constraint failed')) {
     return getNotFoundError(err, doc, fyo);
   }
@@ -47,6 +51,33 @@ function getDuplicateEntryError(
     schemaName,
     fieldname,
     value: validDict[fieldname],
+  };
+
+  return duplicateEntryError;
+}
+
+/**
+ * MariaDB reports primary-key collisions as
+ * `Duplicate entry '<name>' for key 'PRIMARY'` (error 1062), not as
+ * `UNIQUE constraint failed`. Map it to the same DuplicateEntryError shape
+ * (`more: { schemaName, fieldname, value }`) so callers rendering
+ * "`<Label>` `<value>` already exists." keep working.
+ */
+function getMariaDBDuplicateEntryError(
+  err: Error,
+  doc: Doc
+): Error | DuplicateEntryError {
+  const matches = err.message.match(/Duplicate entry '(.+?)' for key '(.+?)'/);
+  if (!matches) {
+    return err;
+  }
+
+  const duplicateEntryError = new DuplicateEntryError(err.message, false);
+  duplicateEntryError.stack = err.stack;
+  duplicateEntryError.more = {
+    schemaName: doc.schemaName,
+    fieldname: matches[2] === 'PRIMARY' ? 'name' : matches[2],
+    value: matches[1],
   };
 
   return duplicateEntryError;
