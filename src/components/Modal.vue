@@ -1,26 +1,21 @@
 <template>
-  <Transition>
-    <div
-      v-if="openModal"
-      class="backdrop z-20 flex justify-center items-center"
-      @click="$emit('closemodal')"
+  <UiDialog :open="openModal" @update:open="(value) => onOpenChange(value)">
+    <UiDialogContent
+      class="max-h-[90vh] overflow-auto sm:max-w-2xl"
+      v-bind="$attrs"
     >
-      <div
-        class="bg-white dark:bg-gray-850 rounded-lg shadow-2xl border dark:border-gray-800 overflow-hidden inner"
-        v-bind="$attrs"
-        @click.stop
-      >
-        <slot></slot>
-      </div>
-    </div>
-  </Transition>
+      <slot></slot>
+    </UiDialogContent>
+  </UiDialog>
 </template>
 
 <script lang="ts">
-import { shortcutsKey } from 'src/utils/injectionKeys';
-import { defineComponent, inject } from 'vue';
+import { defineComponent } from 'vue';
+import UiDialog from './ui/dialog/Dialog.vue';
+import UiDialogContent from './ui/dialog/DialogContent.vue';
 
 export default defineComponent({
+  components: { UiDialog, UiDialogContent },
   props: {
     openModal: {
       default: false,
@@ -28,45 +23,16 @@ export default defineComponent({
     },
   },
   emits: ['closemodal'],
-  setup() {
-    const context = `Modal-` + Math.random().toString(36).slice(2, 6);
-    return { shortcuts: inject(shortcutsKey), context };
-  },
-  watch: {
-    openModal(value: boolean) {
-      if (value) {
-        this.shortcuts?.set(this.context, ['Escape'], () => {
-          this.$emit('closemodal');
-        });
-      } else {
-        this.shortcuts?.delete(this.context);
+  methods: {
+    onOpenChange(value: boolean) {
+      // Reka closes on overlay click, the X button, or Escape — all of
+      // which previously resolved to `closemodal` (backdrop click, the
+      // Escape shortcut registration). The contract is unchanged: every
+      // close path notifies the caller, which flips `openModal`.
+      if (!value) {
+        this.$emit('closemodal');
       }
     },
   },
 });
 </script>
-<style scoped>
-.v-enter-active,
-.v-leave-active {
-  transition: all 100ms ease-out;
-}
-
-.inner {
-  transition: all 150ms ease-out;
-}
-
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
-}
-
-.v-enter-from .inner,
-.v-leave-to .inner {
-  transform: translateY(-50px);
-}
-
-.v-enter-to .inner,
-.v-leave-from .inner {
-  transform: translateY(0px);
-}
-</style>

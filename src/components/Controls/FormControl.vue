@@ -45,7 +45,10 @@ export default {
       const input = this.$refs.control.$refs.input;
       if (input instanceof HTMLInputElement) {
         input.value = '';
+        return;
       }
+
+      input?.clear?.();
     },
     select() {
       this.$refs.control.$refs?.input?.select();

@@ -3,139 +3,141 @@
     <div v-if="showLabel" :class="labelClasses">
       {{ df.label }}
     </div>
-    <input
-      v-show="showInput"
-      ref="input"
-      :class="[inputClasses, containerClasses]"
-      :type="inputType"
-      :value="inputValue"
-      :placeholder="inputPlaceholder"
-      :readonly="isReadOnly"
-      :tabindex="isReadOnly ? '-1' : '0'"
-      @blur="onBlur"
-      @focus="onFocus"
-      @input="(e) => $emit('input', e)"
-    />
-    <div
-      v-show="!showInput"
-      class="flex"
-      :class="[containerClasses, sizeClasses]"
-      tabindex="0"
-      @click="activateInput"
-      @focus="activateInput"
-    >
-      <p
-        v-if="!isEmpty"
-        :class="[baseInputClasses]"
-        class="overflow-auto no-scrollbar whitespace-nowrap text-foreground"
-      >
-        {{ formattedValue }}
-      </p>
-      <p v-else-if="inputPlaceholder" class="text-base text-muted-foreground w-full">
-        {{ inputPlaceholder }}
-      </p>
-
-      <button v-if="!isReadOnly" class="-me-0.5 ms-1">
-        <FeatherIcon
-          name="calendar"
-          class="w-4 h-4"
-          :class="
-            showMandatory ? 'text-red-600' : 'text-muted-foreground'
-          "
+    <Popover v-model:open="popoverOpen">
+      <PopoverTrigger as-child :disabled="isReadOnly">
+        <UiButton
+          ref="trigger"
+          variant="outline"
+          :class="[
+            inputClasses,
+            containerClasses,
+            'w-full justify-start text-left font-normal',
+          ]"
+          :tabindex="isReadOnly ? '-1' : '0'"
+          @focus="(e) => $emit('focus', e)"
+        >
+          <FeatherIcon
+            name="calendar"
+            class="me-2 w-4 h-4 shrink-0"
+            :class="
+              showMandatory ? 'text-red-600' : 'text-muted-foreground'
+            "
+          />
+          <span v-if="!isEmpty" class="truncate text-foreground">
+            {{ formattedValue }}
+          </span>
+          <span v-else class="text-muted-foreground">
+            {{ inputPlaceholder }}
+          </span>
+        </UiButton>
+      </PopoverTrigger>
+      <PopoverContent class="w-auto p-0" align="start">
+        <Calendar
+          :model-value="calendarValue"
+          @update:model-value="(date) => onSelectDate(date)"
         />
-      </button>
-    </div>
+        <div v-if="withTime" class="border-t border-border p-3">
+          <UiInput
+            type="time"
+            :model-value="timeValue"
+            :aria-label="df.label"
+            @change="(e) => onTimeInput(e.target.value)"
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
   </div>
 </template>
 <script lang="ts">
-import { DateTime } from 'luxon';
+import { CalendarDate, getLocalTimeZone } from '@internationalized/date';
+import type { DateValue } from '@internationalized/date';
 import { fyo } from 'src/initFyo';
-import { defineComponent, nextTick } from 'vue';
+import { defineComponent } from 'vue';
+import FeatherIcon from '../FeatherIcon.vue';
+import UiButton from '../ui/button/Button.vue';
+import Calendar from '../ui/calendar/Calendar.vue';
+import UiInput from '../ui/input/Input.vue';
+import Popover from '../ui/popover/Popover.vue';
+import PopoverContent from '../ui/popover/PopoverContent.vue';
+import PopoverTrigger from '../ui/popover/PopoverTrigger.vue';
 import Base from './Base.vue';
 
 export default defineComponent({
   extends: Base,
+  components: {
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+    Calendar,
+    UiButton,
+    UiInput,
+    FeatherIcon,
+  },
   emits: ['input', 'focus'],
   data() {
     return {
-      showInput: false,
+      popoverOpen: false,
     };
   },
   computed: {
-    inputValue(): string {
-      let value = this.value;
+    withTime(): boolean {
+      return false;
+    },
+    timeValue(): string {
+      return '';
+    },
+    calendarValue(): DateValue | undefined {
+      let value: unknown = this.value;
       if (typeof value === 'string') {
         value = new Date(value);
       }
 
-      if (value instanceof Date && !Number.isNaN(value.valueOf())) {
-        return DateTime.fromJSDate(value).toISODate();
+      if (!(value instanceof Date) || Number.isNaN(value.valueOf())) {
+        return undefined;
       }
 
-      return '';
-    },
-    inputType() {
-      return 'date';
+      return new CalendarDate(
+        value.getFullYear(),
+        value.getMonth() + 1,
+        value.getDate()
+      );
     },
     formattedValue() {
       const value = this.parse(this.value);
       return fyo.format(value, this.df, this.doc);
     },
-    borderClasses(): string {
-      if (!this.border) {
-        return '';
-      }
-
-      const border = 'border border-border';
-      let background = 'bg-muted/50';
-      if (this.isReadOnly) {
-        background = 'bg-muted';
-      }
-
-      if (this.showInput) {
-        return background;
-      }
-
-      return border + ' ' + background;
-    },
   },
   methods: {
-    onFocus(e: FocusEvent) {
-      const target = e.target;
-      if (!(target instanceof HTMLInputElement)) {
-        return;
-      }
-
-      target.select();
-      this.showInput = true;
-      this.$emit('focus', e);
+    toJSDate(date: DateValue): Date {
+      // Local-midnight parity with the old native date input.
+      return date.toDate(getLocalTimeZone());
     },
-    onBlur(e: FocusEvent) {
-      const target = e.target;
-      if (!(target instanceof HTMLInputElement)) {
+    onSelectDate(date: DateValue | undefined) {
+      if (!date || this.isReadOnly) {
         return;
       }
-      this.showInput = false;
 
-      let value: Date | null = DateTime.fromISO(target.value).toJSDate();
-      if (Number.isNaN(value.valueOf())) {
-        value = null;
-      }
-
-      this.triggerChange(value);
+      this.commitDate(this.toJSDate(date));
     },
-    activateInput() {
-      if (this.isReadOnly) {
+    commitDate(date: Date) {
+      this.triggerChange(date);
+      this.popoverOpen = false;
+    },
+    onTimeInput(_value: string) {},
+    focus(): void {
+      const trigger = this.$refs.trigger as unknown as
+        | { $el?: unknown }
+        | undefined;
+      const el = trigger?.$el;
+      if (el instanceof HTMLElement) {
+        el.focus();
         return;
       }
 
-      this.showInput = true;
-      nextTick(() => {
-        this.focus();
-
-        // @ts-ignore
-        this.$refs.input.showPicker();
-      });
+      const fallback = (
+        this.$el as HTMLElement | undefined
+      )?.querySelector?.('button');
+      fallback?.focus();
     },
   },
 });

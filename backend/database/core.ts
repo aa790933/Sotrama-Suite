@@ -972,8 +972,13 @@ export default class DatabaseCore extends DatabaseBase {
     }
 
     if (options.offset !== undefined && options.offset > 0) {
+      // MariaDB requires LIMIT alongside OFFSET. 2^32 - 1 is exactly
+      // representable (unlike 2^64 - 1) and valid as a LIMIT value; it
+      // behaves as "no effective limit". A BigInt literal must not be
+      // passed here — driver parameter binding is not guaranteed to
+      // accept non-Number values the way result parsing does.
       sql += ` LIMIT ? OFFSET ?`;
-      params.push(options.limit ?? 18446744073709551615n, options.offset);
+      params.push(options.limit ?? 4294967295, options.offset);
     } else if (options.limit !== undefined) {
       sql += ` LIMIT ?`;
       params.push(options.limit);

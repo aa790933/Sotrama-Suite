@@ -4,13 +4,12 @@
       {{ df.label }}
     </div>
     <div :class="showMandatory ? 'show-mandatory' : ''">
-      <input
+      <UiInput
         ref="input"
         spellcheck="false"
-        class="bg-transparent"
         :class="[inputClasses, containerClasses]"
         :type="inputType"
-        :value="value"
+        :model-value="inputModelValue"
         :placeholder="inputPlaceholder"
         :readonly="isReadOnly"
         :step="step"
@@ -35,9 +34,11 @@ import { isNumeric } from 'src/utils';
 import { evaluateReadOnly, evaluateRequired } from 'src/utils/doc';
 import { getIsNullOrUndef } from 'utils/index';
 import { defineComponent, PropType } from 'vue';
+import UiInput from '../ui/input/Input.vue';
 
 export default defineComponent({
   name: 'Base',
+  components: { UiInput },
   inject: {
     injectedDoc: {
       from: 'doc',
@@ -82,6 +83,18 @@ export default defineComponent({
     inputType(): string {
       return 'text';
     },
+    inputModelValue(): string | number {
+      const value = this.value;
+      if (typeof value === 'string' || typeof value === 'number') {
+        return value;
+      }
+
+      if (value === null || value === undefined) {
+        return '';
+      }
+
+      return String(value);
+    },
     labelClasses(): string {
       return 'text-foreground text-sm font-medium mb-1';
     },
@@ -95,6 +108,7 @@ export default defineComponent({
       classes.push(...this.baseInputClasses);
       if (this.textRight ?? isNumeric(this.df)) {
         classes.push('text-end');
+        classes.push('tabular-nums');
       }
 
       classes.push(this.sizeClasses);
@@ -224,11 +238,24 @@ export default defineComponent({
       return [classes, inputClass].flat();
     },
     focus(): void {
-      const el = this.$refs.input;
-
+      // `ref="input"` is either a native input (AutoComplete, Check, Date,
+      // Currency templates) or a ui primitive exposing focus()/select().
+      const el = this.$refs.input as unknown;
       if (el instanceof HTMLInputElement) {
         el.focus();
+        return;
       }
+
+      (el as { focus?: () => void } | null | undefined)?.focus?.();
+    },
+    select(): void {
+      const el = this.$refs.input as unknown;
+      if (el instanceof HTMLInputElement) {
+        el.select();
+        return;
+      }
+
+      (el as { select?: () => void } | null | undefined)?.select?.();
     },
     triggerChange(value: unknown): void {
       value = this.parse(value);

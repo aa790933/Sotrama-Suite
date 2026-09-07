@@ -3,13 +3,13 @@
     <div v-if="showLabel" :class="labelClasses">
       {{ df.label }}
     </div>
-    <input
+    <UiInput
       v-show="showInput"
       ref="input"
-      class="text-end"
+      class="text-end tabular-nums"
       :class="[inputClasses, containerClasses]"
       :type="inputType"
-      :value="round(value)"
+      :model-value="inputDisplayValue"
       :placeholder="inputPlaceholder"
       :readonly="isReadOnly"
       :tabindex="isReadOnly ? '-1' : '0'"
@@ -35,10 +35,12 @@ import { Money } from 'pesa';
 import { fyo } from 'src/initFyo';
 import { safeParsePesa } from 'utils/index';
 import { defineComponent, nextTick } from 'vue';
+import UiInput from '../ui/input/Input.vue';
 import Float from './Float.vue';
 
 export default defineComponent({
   name: 'Currency',
+  components: { UiInput },
   extends: Float,
   emits: ['input', 'focus'],
   data() {
@@ -62,6 +64,9 @@ export default defineComponent({
     formattedValue() {
       const value = this.parse(this.value);
       return fyo.format(value, this.df, this.doc);
+    },
+    inputDisplayValue(): string {
+      return String(this.round(this.value));
     },
   },
   methods: {
