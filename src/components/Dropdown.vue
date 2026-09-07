@@ -16,20 +16,20 @@
     </template>
     <template #content>
       <div
-        class="bg-white dark:bg-gray-850 dark:text-white rounded w-full min-w-40 overflow-hidden"
+        class="bg-popover text-popover-foreground border border-border rounded-md shadow-lg w-full min-w-40 overflow-hidden"
       >
         <div
           class="p-1 max-h-64 overflow-auto custom-scroll custom-scroll-thumb2 text-sm"
         >
           <div
             v-if="isLoading"
-            class="p-2 text-gray-600 dark:text-gray-400 italic"
+            class="p-2 text-muted-foreground italic"
           >
             {{ t`Loading...` }}
           </div>
           <div
             v-else-if="dropdownItems.length === 0"
-            class="p-2 text-gray-600 dark:text-gray-400 italic"
+            class="p-2 text-muted-foreground italic"
           >
             {{ getEmptyMessage() }}
           </div>
@@ -41,7 +41,7 @@
             >
               <div
                 v-if="d.isGroup"
-                class="px-2 pt-3 pb-1 text-xs uppercase text-gray-700 dark:text-gray-400 font-semibold tracking-wider"
+                class="px-2 pt-3 pb-1 text-xs uppercase text-muted-foreground font-semibold tracking-wider"
               >
                 {{ d.label }}
               </div>
@@ -50,7 +50,7 @@
                 class="block p-2 rounded-md mt-1 first:mt-0 cursor-pointer truncate"
                 :class="
                   index === highlightedIndex
-                    ? 'bg-gray-100 dark:bg-gray-875'
+                    ? 'bg-accent text-accent-foreground'
                     : ''
                 "
                 @mouseenter="highlightedIndex = index"

@@ -105,7 +105,7 @@ export default defineComponent({
         return this.labelClass;
       }
 
-      return 'text-gray-600 text-base';
+      return 'text-muted-foreground text-base';
     },
   },
   methods: {

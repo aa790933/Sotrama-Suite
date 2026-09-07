@@ -1,32 +1,25 @@
 <script setup lang="ts">
-import { DropdownMenuItem } from 'reka-ui';
-import { cn } from '../../../lib/utils';
+import type { DropdownMenuItemProps } from "reka-ui"
+import type { HTMLAttributes } from "vue"
+import { reactiveOmit } from "@vueuse/core"
+import { DropdownMenuItem, useForwardProps } from "reka-ui"
+import { cn } from 'src/lib/utils'
 
-interface Props {
-  disabled?: boolean;
-  class?: string;
-}
+const props = defineProps<DropdownMenuItemProps & { class?: HTMLAttributes["class"], inset?: boolean }>()
 
-const props = withDefaults(defineProps<Props>(), {
-  disabled: false,
-  class: undefined,
-});
+const delegatedProps = reactiveOmit(props, "class")
 
-const emit = defineEmits<{
-  (e: 'select', event: Event): void;
-}>();
+const forwardedProps = useForwardProps(delegatedProps)
 </script>
 
 <template>
   <DropdownMenuItem
-    :disabled="props.disabled"
-    :class="
-      cn(
-        'relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0',
-        props.class
-      )
-    "
-    @select="emit('select', $event)"
+    v-bind="forwardedProps"
+    :class="cn(
+      'relative flex cursor-default select-none items-center rounded-sm gap-2 px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0',
+      inset && 'pl-8',
+      props.class,
+    )"
   >
     <slot />
   </DropdownMenuItem>

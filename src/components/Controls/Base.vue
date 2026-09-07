@@ -83,7 +83,7 @@ export default defineComponent({
       return 'text';
     },
     labelClasses(): string {
-      return 'text-gray-600 dark:text-gray-500 text-sm mb-1';
+      return 'text-foreground text-sm font-medium mb-1';
     },
     inputClasses(): string[] {
       /**
@@ -106,8 +106,11 @@ export default defineComponent({
       return [
         'text-base',
         'focus:outline-none',
+        'focus-visible:ring-1',
+        'focus-visible:ring-ring',
+        'rounded-sm',
         'w-full',
-        'placeholder-gray-500',
+        'placeholder:text-muted-foreground',
       ];
     },
     sizeClasses(): string {
@@ -118,10 +121,10 @@ export default defineComponent({
     },
     inputReadOnlyClasses(): string {
       if (this.isReadOnly) {
-        return 'text-gray-800 dark:text-gray-300 cursor-default';
+        return 'text-muted-foreground cursor-default';
       }
 
-      return 'text-gray-900 dark:text-gray-100';
+      return 'text-foreground';
     },
     containerClasses(): string[] {
       /**
@@ -139,7 +142,7 @@ export default defineComponent({
     },
     containerReadOnlyClasses(): string {
       if (!this.isReadOnly) {
-        return 'focus-within:bg-gray-100 dark:focus-within:bg-gray-850';
+        return 'focus-within:bg-accent';
       }
 
       return '';
@@ -149,10 +152,10 @@ export default defineComponent({
         return '';
       }
 
-      const border = 'border border-gray-200 dark:border-gray-800';
-      let background = 'bg-gray-25 dark:bg-gray-875';
+      const border = 'border border-input';
+      let background = 'bg-muted/50';
       if (this.isReadOnly) {
-        background = 'bg-gray-50 dark:bg-gray-850';
+        background = 'bg-muted';
       }
 
       return border + ' ' + background;

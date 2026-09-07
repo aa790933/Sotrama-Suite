@@ -77,6 +77,24 @@
       }}</Button>
     </template>
     <template #body>
+      <div v-if="hasDoc" class="flex flex-wrap items-center gap-2 px-4 pt-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink @click="routeTo(`/list/${schemaName}`)">
+                {{ schema?.label ?? schemaName }}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{{ doc?.name ?? title }}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <Badge v-if="doc?.numberSeries" variant="outline">
+          {{ doc.numberSeries }}
+        </Badge>
+      </div>
       <FormHeader
         :form-title="title"
         class="sticky top-0 bg-card border-b border-border"
@@ -164,6 +182,13 @@ import { getDocStatus } from 'models/helpers';
 import { ModelNameEnum } from 'models/types';
 import { Field, Schema } from 'schemas/types';
 import { Link2, Maximize2, Minimize2, MoreHorizontal, Printer } from '@lucide/vue';
+import Breadcrumb from 'src/components/ui/breadcrumb/Breadcrumb.vue';
+import BreadcrumbItem from 'src/components/ui/breadcrumb/BreadcrumbItem.vue';
+import BreadcrumbLink from 'src/components/ui/breadcrumb/BreadcrumbLink.vue';
+import BreadcrumbList from 'src/components/ui/breadcrumb/BreadcrumbList.vue';
+import BreadcrumbPage from 'src/components/ui/breadcrumb/BreadcrumbPage.vue';
+import BreadcrumbSeparator from 'src/components/ui/breadcrumb/BreadcrumbSeparator.vue';
+import Badge from 'src/components/ui/badge/Badge.vue';
 import Button from 'src/components/ui/button/Button.vue';
 import Barcode from 'src/components/Controls/Barcode.vue';
 import ExchangeRate from 'src/components/Controls/ExchangeRate.vue';
@@ -198,6 +223,13 @@ export default defineComponent({
     FormHeader,
     CommonFormSection,
     Button,
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+    Badge,
     DropdownWithActions,
     Barcode,
     ExchangeRate,

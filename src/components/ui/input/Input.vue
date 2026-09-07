@@ -1,44 +1,24 @@
 <script setup lang="ts">
-import { cn } from '../../../lib/utils';
+import type { HTMLAttributes } from "vue"
+import { useVModel } from "@vueuse/core"
+import { cn } from 'src/lib/utils'
 
-interface Props {
-  modelValue?: string | number;
-  type?: string;
-  placeholder?: string;
-  disabled?: boolean;
-  class?: string;
-}
+const props = defineProps<{
+  defaultValue?: string | number
+  modelValue?: string | number
+  class?: HTMLAttributes["class"]
+}>()
 
-const props = withDefaults(defineProps<Props>(), {
-  modelValue: undefined,
-  type: 'text',
-  placeholder: undefined,
-  disabled: false,
-  class: undefined,
-});
+const emits = defineEmits<{
+  (e: "update:modelValue", payload: string | number): void
+}>()
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number): void;
-}>();
-
-function onInput(event: Event) {
-  const target = event.target as HTMLInputElement | null;
-  emit('update:modelValue', target?.value ?? '');
-}
+const modelValue = useVModel(props, "modelValue", emits, {
+  passive: true,
+  defaultValue: props.defaultValue,
+})
 </script>
 
 <template>
-  <input
-    :type="props.type"
-    :value="props.modelValue"
-    :placeholder="props.placeholder"
-    :disabled="props.disabled"
-    :class="
-      cn(
-        'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
-        props.class
-      )
-    "
-    @input="onInput"
-  />
+  <input v-model="modelValue" :class="cn('flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50', props.class)">
 </template>
