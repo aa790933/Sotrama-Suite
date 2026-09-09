@@ -25,7 +25,7 @@
       :y-min="chartData.yMin"
     />
     <div v-else class="flex-1 w-full h-full flex-center my-20">
-      <span class="text-base text-gray-600 dark:text-gray-500">
+      <span class="text-base text-muted-foreground">
         {{ t`No transactions yet` }}
       </span>
     </div>
@@ -45,8 +45,8 @@ import { defineComponent } from 'vue';
 
 // `extends:` defeats type inference; unsafe rules are off file-wide.
 /*
-  eslint-disable @typescript-eslint/no-unsafe-argument,
-  @typescript-eslint/no-unsafe-return
+ eslint-disable @typescript-eslint/no-unsafe-argument,
+ @typescript-eslint/no-unsafe-return
 */
 export default defineComponent({
   name: 'ProfitAndLoss',
@@ -99,7 +99,10 @@ export default defineComponent({
         this.period
       );
 
-      const data = await getIncomeAndExpenses(fyo, fromDate.toISO(), toDate.toISO()
+      const data = await getIncomeAndExpenses(
+        fyo,
+        fromDate.toISO(),
+        toDate.toISO()
       );
       const incomes = getValueMapFromList(data.income, 'yearmonth', 'balance');
       const expenses = getValueMapFromList(

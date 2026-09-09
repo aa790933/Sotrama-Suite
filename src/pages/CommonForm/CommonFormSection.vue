@@ -6,13 +6,13 @@
       :class="[collapsed ? '' : 'mb-4', collapsible ? 'cursor-pointer' : '']"
       @click="toggleCollapsed"
     >
-      <h2 class="text-base text-gray-900 dark:text-gray-25 font-semibold">
+      <h2 class="text-base text-foreground font-semibold">
         {{ title }}
       </h2>
       <feather-icon
         v-if="collapsible"
         :name="collapsed ? 'chevron-up' : 'chevron-down'"
-        class="w-4 h-4 text-gray-600 dark:text-gray-400"
+        class="w-4 h-4 text-muted-foreground"
       />
     </div>
     <div v-if="!collapsed" class="grid gap-4 gap-x-8 grid-cols-2">

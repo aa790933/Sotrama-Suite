@@ -7,9 +7,9 @@
       <div
         v-for="section in sections"
         :key="section.label"
-        class="p-4 border-b dark:border-gray-800"
+        class="p-4 border-b border-border"
       >
-        <h2 class="font-medium dark:text-gray-25">{{ section.label }}</h2>
+        <h2 class="font-medium">{{ section.label }}</h2>
         <div class="flex mt-4 gap-4">
           <div
             v-for="item in section.items"
@@ -17,7 +17,7 @@
             class="w-full md:w-1/3 sm:w-1/2"
           >
             <div
-              class="flex flex-col justify-between h-40 p-4 border dark:border-gray-800 dark:text-gray-50 rounded-lg"
+              class="flex flex-col justify-between h-40 p-4 border border-border rounded-lg"
               @mouseenter="() => (activeCard = item.key)"
               @mouseleave="() => (activeCard = null)"
             >
@@ -34,7 +34,7 @@
                   class="w-5 h-5 mb-4"
                 />
                 <h3 class="font-medium">{{ item.label }}</h3>
-                <p class="mt-2 text-sm text-gray-800 dark:text-gray-400">
+                <p class="mt-2 text-sm text-foreground">
                   {{ item.description }}
                 </p>
               </div>

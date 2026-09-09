@@ -2,7 +2,8 @@
   <div class="flex-col">
     <PageHeader :title="t`Point of Sale`">
       <slot>
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           class="bg-red-500 dark:bg-red-700"
           @click="toggleModal('ShiftClose')"
         >
@@ -936,7 +937,10 @@ export default defineComponent({
 
           if (existingItems.length > 0) {
             for (let existingItem of existingItems) {
-              const availableQty = await getQuantity(this.fyo, {item: existingItem.item as string, batch: existingItem.batch});
+              const availableQty = await getQuantity(this.fyo, {
+                item: existingItem.item as string,
+                batch: existingItem.batch,
+              });
               if (
                 existingItem.batch != null &&
                 availableQty != null &&
@@ -1113,7 +1117,8 @@ export default defineComponent({
         let availableQty = 0;
         if (itemDoc.trackItem) {
           availableQty =
-            (await getQuantity(fyo, {item: item.name, batch: batchName})) ?? 0;
+            (await getQuantity(fyo, { item: item.name, batch: batchName })) ??
+            0;
 
           const itemIndex = this.items.findIndex((i) => i.name === item.name);
           if (itemIndex !== -1) {

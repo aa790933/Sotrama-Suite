@@ -91,7 +91,7 @@ export default {
           const option = {
             label:
               r[this.secondaryLink] && this.showSecondaryLink
-                ? `${r[schema.titleField]}  ` + `  ${r[this.secondaryLink]}`
+                ? `${r[schema.titleField]} ` + ` ${r[this.secondaryLink]}`
                 : r[schema.titleField],
             value: r.name,
             value2: r[this.secondaryLink],
@@ -124,7 +124,7 @@ export default {
           {
             component: markRaw({
               template:
-                '<span class="text-gray-600 dark:text-gray-400">{{ t`No results found` }}</span>',
+                '<span class="text-muted-foreground">{{ t`No results found` }}</span>',
             }),
             action: () => {},
             actionOnly: true,

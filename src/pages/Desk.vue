@@ -15,7 +15,7 @@ import { toggleSidebar } from 'src/utils/ui';
     </Transition>
 
     <div
-      class="flex flex-1 h-full overflow-y-auto bg-background p-6 custom-scroll custom-scroll-thumb1"
+      class="flex flex-1 h-full min-w-0 overflow-y-auto bg-background p-6 custom-scroll custom-scroll-thumb1"
     >
       <router-view v-slot="{ Component }">
         <keep-alive>
@@ -23,7 +23,7 @@ import { toggleSidebar } from 'src/utils/ui';
             :is="Component"
             :key="$route.path"
             :dark-mode="darkMode"
-            class="flex-1"
+            class="flex-1 min-w-0"
           />
         </keep-alive>
       </router-view>
@@ -44,8 +44,9 @@ import { toggleSidebar } from 'src/utils/ui';
     <!-- Show Sidebar Button -->
     <button
       v-show="!showSidebar"
-      class="absolute bottom-0 start-0 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded rtl-rotate-180 p-1 m-4 opacity-0 hover:opacity-100 hover:shadow-md"
+      class="absolute bottom-0 start-0 text-muted-foreground bg-card border border-border hover:bg-accent rounded rtl-rotate-180 p-1 m-4 shadow-sm"
       @click="() => toggleSidebar()"
+      :title="'Show sidebar'"
     >
       <feather-icon name="chevrons-right" class="w-4 h-4" />
     </button>

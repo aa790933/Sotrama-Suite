@@ -42,17 +42,17 @@
           "
           @click="routeToSidebarItem(group)"
         >
-          <component
-            :is="groupIcon(group)"
-            class="h-4 w-4 flex-shrink-0"
-          />
+          <component :is="groupIcon(group)" class="h-4 w-4 flex-shrink-0" />
           <div class="whitespace-nowrap overflow-hidden text-ellipsis">
             {{ group.label }}
           </div>
         </div>
 
         <!-- Expanded Group -->
-        <div v-if="group.items && isGroupActive(group)" class="mt-0.5 flex flex-col gap-0.5">
+        <div
+          v-if="group.items && isGroupActive(group)"
+          class="mt-0.5 flex flex-col gap-0.5"
+        >
           <div
             v-for="item in group.items"
             :key="item.label"
@@ -199,16 +199,24 @@ function groupIconKind(group: SidebarRoot): keyof typeof NAV_ICONS {
   if (/(dashboard|desk)/.test(haystack)) {
     return 'dashboard';
   }
-  if (/(purchase|sales|invoice|payment|party|customer|quotation)/.test(haystack)) {
+  if (
+    /(purchase|sales|invoice|payment|party|customer|quotation)/.test(haystack)
+  ) {
     return 'sales';
   }
-  if (/(stock|inventory|item|batch|serial|shipment|receipt|movement)/.test(haystack)) {
+  if (
+    /(stock|inventory|item|batch|serial|shipment|receipt|movement)/.test(
+      haystack
+    )
+  ) {
     return 'inventory';
   }
   if (/pos|point.of.sale/.test(haystack)) {
     return 'pos';
   }
-  if (/(report|ledger|account|chart|profit|balance|trial|tax|gst)/.test(haystack)) {
+  if (
+    /(report|ledger|account|chart|profit|balance|trial|tax|gst)/.test(haystack)
+  ) {
     return 'reports';
   }
   if (/(setting|setup|custom|user|role|print)/.test(haystack)) {
@@ -304,16 +312,13 @@ export default defineComponent({
     },
     refreshConnection() {
       const id = fyo.config.get('lastSelectedConnectionId' as never) as
-        | string
-        | null
-        | undefined;
+        string | null | undefined;
       if (typeof id !== 'string' || !id.length) {
         this.connection = null;
         return;
       }
       const connections = fyo.config.get('connections' as never) as
-        | PersistedConnection[]
-        | undefined;
+        PersistedConnection[] | undefined;
       this.connection = connections?.find((c) => c.id === id) ?? null;
     },
     openDocumentation() {

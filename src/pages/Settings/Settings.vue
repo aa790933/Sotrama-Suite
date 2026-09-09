@@ -10,7 +10,7 @@
       <FormHeader
         :form-title="tabLabels[activeTab] ?? ''"
         :form-sub-title="t`Settings`"
-        class="sticky top-0 bg-white dark:bg-gray-890 border-b dark:border-gray-800"
+        class="sticky top-0 bg-card border-b border-border"
       >
       </FormHeader>
 
@@ -22,9 +22,7 @@
           ref="section"
           class="p-4"
           :class="
-            idx !== 0 && activeGroup.size > 1
-              ? 'border-t dark:border-gray-800'
-              : ''
+            idx !== 0 && activeGroup.size > 1 ? 'border-t border-border' : ''
           "
           :show-title="activeGroup.size > 1 && name !== t`Default`"
           :title="name"
@@ -38,7 +36,7 @@
       <!-- Tab Bar -->
       <div
         v-if="groupedFields && groupedFields.size > 1"
-        class="mt-auto px-4 pb-4 flex gap-8 border-t dark:border-gray-800 flex-shrink-0 sticky bottom-0 bg-white dark:bg-gray-890"
+        class="mt-auto px-4 pb-4 flex gap-8 border-t border-border flex-shrink-0 sticky bottom-0 bg-card"
       >
         <div
           v-for="key of groupedFields.keys()"
@@ -46,8 +44,8 @@
           class="text-sm cursor-pointer"
           :class="
             key === activeTab
-              ? 'text-gray-900 dark:text-gray-25 font-semibold border-t-2 border-gray-800 dark:border-gray-100'
-              : 'text-gray-700 dark:text-gray-200 '
+              ? 'text-foreground font-semibold border-t-2 border-primary'
+              : 'text-muted-foreground'
           "
           :style="{
             paddingTop: key === activeTab ? 'calc(1rem - 2px)' : '1rem',
@@ -60,7 +58,7 @@
 
       <!-- Credits -->
       <div
-        class="mt-4 pb-4 px-4 text-xs text-gray-500 dark:text-gray-500 flex flex-col gap-1"
+        class="mt-4 pb-4 px-4 text-xs text-muted-foreground flex flex-col gap-1"
       >
         <div>
           Sotrama Suite — based on
@@ -68,7 +66,7 @@
             href="https://github.com/frappe/books"
             target="_blank"
             rel="noopener noreferrer"
-            class="underline hover:text-gray-700 dark:hover:text-gray-300"
+            class="underline hover:text-foreground"
             >Frappe Books</a
           >
           by
@@ -76,7 +74,7 @@
             href="https://frappe.io"
             target="_blank"
             rel="noopener noreferrer"
-            class="underline hover:text-gray-700 dark:hover:text-gray-300"
+            class="underline hover:text-foreground"
             >Frappe Technologies Pvt. Ltd.</a
           >
           , licensed under AGPL-3.0-only.

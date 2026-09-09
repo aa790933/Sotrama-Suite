@@ -57,10 +57,7 @@
     </TableCell>
     <TableCell v-if="canEditRow" :style="{ width: lastColumnWidth }">
       <Button size="icon" variant="ghost" @click="openRowQuickEdit">
-        <feather-icon
-          name="edit"
-          class="w-4 h-4 text-muted-foreground"
-        />
+        <feather-icon name="edit" class="w-4 h-4 text-muted-foreground" />
       </Button>
     </TableCell>
   </UiTableRow>

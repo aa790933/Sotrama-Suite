@@ -4,7 +4,7 @@ import { Fyo } from 'fyo';
 import { Database } from 'fyo/database/Database';
 import { DatabaseDemux } from 'fyo/demux/db';
 import Observable from 'fyo/utils/observable';
-import { translateSchema } from 'fyo/utils/translation';
+import { TranslationString, translateSchema } from 'fyo/utils/translation';
 import { Field, RawValue, SchemaMap } from 'schemas/types';
 import { getMapFromList } from 'utils';
 import {
@@ -48,63 +48,141 @@ class DemuxDatabaseAdapter implements Database {
   connectToDatabase(dbPath: string, countryCode?: string): Promise<string> {
     return this.demux.connectToDatabase(dbPath, countryCode);
   }
-  async insert(schemaName: string, docValueMap: DocValueMap): Promise<DocValueMap> {
-    const raw = this.converter.toRawValueMap(schemaName, docValueMap) as RawValueMap;
-    const resultRaw = (await (this.demux as unknown as { insert: (s: string, m: FieldValueMap) => Promise<FieldValueMap> }).insert(schemaName, raw as unknown as FieldValueMap)) as unknown as RawValueMap;
+  async insert(
+    schemaName: string,
+    docValueMap: DocValueMap
+  ): Promise<DocValueMap> {
+    const raw = this.converter.toRawValueMap(
+      schemaName,
+      docValueMap
+    ) as RawValueMap;
+    const resultRaw = (await (
+      this.demux as unknown as {
+        insert: (s: string, m: FieldValueMap) => Promise<FieldValueMap>;
+      }
+    ).insert(
+      schemaName,
+      raw as unknown as FieldValueMap
+    )) as unknown as RawValueMap;
     return this.converter.toDocValueMap(schemaName, resultRaw) as DocValueMap;
   }
-  async get(schemaName: string, name: string, fields?: string | string[]): Promise<DocValueMap> {
-    const raw = (await (this.demux as unknown as { get: (s: string, n: string, f?: string | string[]) => Promise<FieldValueMap> }).get(schemaName, name, fields)) as unknown as RawValueMap;
+  async get(
+    schemaName: string,
+    name: string,
+    fields?: string | string[]
+  ): Promise<DocValueMap> {
+    const raw = (await (
+      this.demux as unknown as {
+        get: (
+          s: string,
+          n: string,
+          f?: string | string[]
+        ) => Promise<FieldValueMap>;
+      }
+    ).get(schemaName, name, fields)) as unknown as RawValueMap;
     return this.converter.toDocValueMap(schemaName, raw) as DocValueMap;
   }
-  async getAll(schemaName: string, options: GetAllOptions = {}): Promise<DocValueMap[]> {
-    const raws = (await (this.demux as unknown as { getAll: (s: string, o: GetAllOptions) => Promise<FieldValueMap[]> }).getAll(schemaName, options)) as unknown as RawValueMap[];
+  async getAll(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<DocValueMap[]> {
+    const raws = (await (
+      this.demux as unknown as {
+        getAll: (s: string, o: GetAllOptions) => Promise<FieldValueMap[]>;
+      }
+    ).getAll(schemaName, options)) as unknown as RawValueMap[];
     return this.converter.toDocValueMap(schemaName, raws) as DocValueMap[];
   }
-  getAllRaw(schemaName: string, options: GetAllOptions = {}): Promise<FieldValueMap[]> {
-    return (this.demux as unknown as { getAll: (s: string, o: GetAllOptions) => Promise<FieldValueMap[]> }).getAll(schemaName, options);
+  getAllRaw(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<FieldValueMap[]> {
+    return (
+      this.demux as unknown as {
+        getAll: (s: string, o: GetAllOptions) => Promise<FieldValueMap[]>;
+      }
+    ).getAll(schemaName, options);
   }
   async getSingleValues(
     ...fieldnames: ({ fieldname: string; parent?: string } | string)[]
   ): Promise<{ fieldname: string; parent: string; value: DocValue }[]> {
-    const raws = (await this.demux.getSingleValues(...fieldnames)) as SingleValue<RawValue>;
+    const raws = (await this.demux.getSingleValues(
+      ...fieldnames
+    )) as SingleValue<RawValue>;
     const out: { fieldname: string; parent: string; value: DocValue }[] = [];
     for (const sv of raws) {
       const fm = this.converter.fieldMapProvider();
       const fieldDef = fm[sv.parent]?.[sv.fieldname];
       const pesa = this.converter.pesaProvider();
-      const docVal = fieldDef ? Converter.toDocValue(sv.value, fieldDef, pesa) : (sv.value as DocValue);
+      const docVal = fieldDef
+        ? Converter.toDocValue(sv.value, fieldDef, pesa)
+        : (sv.value as DocValue);
       out.push({ fieldname: sv.fieldname, parent: sv.parent, value: docVal });
     }
     return out;
   }
   rename(schemaName: string, oldName: string, newName: string): Promise<void> {
-    return (this.demux as unknown as { rename: (s: string, o: string, n: string) => Promise<void> }).rename(schemaName, oldName, newName);
+    return (
+      this.demux as unknown as {
+        rename: (s: string, o: string, n: string) => Promise<void>;
+      }
+    ).rename(schemaName, oldName, newName);
   }
   async update(schemaName: string, docValueMap: DocValueMap): Promise<void> {
-    const raw = this.converter.toRawValueMap(schemaName, docValueMap) as RawValueMap;
-    await (this.demux as unknown as { update: (s: string, m: FieldValueMap) => Promise<void> }).update(schemaName, raw as unknown as FieldValueMap);
+    const raw = this.converter.toRawValueMap(
+      schemaName,
+      docValueMap
+    ) as RawValueMap;
+    await (
+      this.demux as unknown as {
+        update: (s: string, m: FieldValueMap) => Promise<void>;
+      }
+    ).update(schemaName, raw as unknown as FieldValueMap);
   }
   delete(schemaName: string, name: string): Promise<void> {
-    return (this.demux as unknown as { delete: (s: string, n: string) => Promise<void> }).delete(schemaName, name);
+    return (
+      this.demux as unknown as {
+        delete: (s: string, n: string) => Promise<void>;
+      }
+    ).delete(schemaName, name);
   }
   deleteAll(schemaName: string, filters: QueryFilter): Promise<number> {
-    return (this.demux as unknown as { deleteAll: (s: string, f: QueryFilter) => Promise<number> }).deleteAll(schemaName, filters);
+    return (
+      this.demux as unknown as {
+        deleteAll: (s: string, f: QueryFilter) => Promise<number>;
+      }
+    ).deleteAll(schemaName, filters);
   }
   exists(schemaName: string, name?: string): Promise<boolean> {
-    return (this.demux as unknown as { exists: (s: string, n?: string) => Promise<boolean> }).exists(schemaName, name);
+    return (
+      this.demux as unknown as {
+        exists: (s: string, n?: string) => Promise<boolean>;
+      }
+    ).exists(schemaName, name);
   }
   close(): Promise<void> {
     return (this.demux as unknown as { close: () => Promise<void> }).close();
   }
   count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
-    return (this.demux as unknown as { count: (s: string, o: GetAllOptions) => Promise<number> }).count(schemaName, options);
+    return (
+      this.demux as unknown as {
+        count: (s: string, o: GetAllOptions) => Promise<number>;
+      }
+    ).count(schemaName, options);
   }
   getNextAutoincrementId(schemaName: string): Promise<number> {
-    return (this.demux as unknown as { getNextAutoincrementId: (s: string) => Promise<number> }).getNextAutoincrementId(schemaName);
+    return (
+      this.demux as unknown as {
+        getNextAutoincrementId: (s: string) => Promise<number>;
+      }
+    ).getNextAutoincrementId(schemaName);
   }
   getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
-    return (this.demux as unknown as { getNextSeriesValue: (p: string, s: string) => Promise<number> }).getNextSeriesValue(prefix, schemaName);
+    return (
+      this.demux as unknown as {
+        getNextSeriesValue: (p: string, s: string) => Promise<number>;
+      }
+    ).getNextSeriesValue(prefix, schemaName);
   }
 }
 
@@ -123,20 +201,35 @@ export class DatabaseHandler extends DatabaseBase {
     super();
     this.#fyo = fyo;
     // Converter for the Demux path; the typed path uses adapter-owned conversion.
-    this.converter = new Converter(() => this.#fieldMap, () => this.#fyo.pesa);
+    this.converter = new Converter(
+      () => this.#fieldMap,
+      () => this.#fyo.pesa
+    );
 
     if (typed) {
       // Wire typed adapter to this handler's live fieldMap/pesa so conversion stays behind Database seam
       const maybeTyped = typed as Database & {
-        setProviders?: (fm: () => FieldMap, pp: () => import('pesa').MoneyMaker) => void;
+        setProviders?: (
+          fm: () => FieldMap,
+          pp: () => import('pesa').MoneyMaker
+        ) => void;
       };
       if (maybeTyped.setProviders) {
-        maybeTyped.setProviders(() => this.#fieldMap, () => this.#fyo.pesa);
+        maybeTyped.setProviders(
+          () => this.#fieldMap,
+          () => this.#fyo.pesa
+        );
       }
       this.#backend = typed;
     } else {
-      const demux = Demux ? new Demux(fyo.isElectron) : new DatabaseDemux(fyo.isElectron);
-      this.#backend = new DemuxDatabaseAdapter(demux as unknown as Database & DatabaseDemuxBase, () => this.#fieldMap, () => this.#fyo.pesa);
+      const demux = Demux
+        ? new Demux(fyo.isElectron)
+        : new DatabaseDemux(fyo.isElectron);
+      this.#backend = new DemuxDatabaseAdapter(
+        demux as unknown as Database & DatabaseDemuxBase,
+        () => this.#fieldMap,
+        () => this.#fyo.pesa
+      );
     }
   }
 
@@ -167,6 +260,7 @@ export class DatabaseHandler extends DatabaseBase {
     countryCode = await this.backend.createNewDatabase(dbPath, countryCode);
     await this.init();
     this.dbPath = dbPath;
+    await this.#reapplyPendingLanguageMap();
     return countryCode;
   }
 
@@ -174,6 +268,7 @@ export class DatabaseHandler extends DatabaseBase {
     countryCode = await this.backend.connectToDatabase(dbPath, countryCode);
     await this.init();
     this.dbPath = dbPath;
+    await this.#reapplyPendingLanguageMap();
     return countryCode;
   }
 
@@ -183,9 +278,34 @@ export class DatabaseHandler extends DatabaseBase {
     this.observer = new Observable();
   }
 
+  /**
+   * Post-connect translation seam: `setLanguageMap()` runs at renderer
+   * startup before any database is connected, so its translation only lands
+   * on the global `TranslationString` prototype while the schema map is
+   * still empty — and `init()` then overwrites labels with English defaults.
+   * Re-applying the pending map here (idempotently) keeps translated
+   * DocType field labels across every connect, for every caller, without
+   * any caller knowing about translation ordering.
+   */
+  async #reapplyPendingLanguageMap(): Promise<void> {
+    const pending = TranslationString.prototype.languageMap;
+    if (!pending) {
+      return;
+    }
+    await this.translateSchemaMap(pending);
+  }
+
   async translateSchemaMap(languageMap?: LanguageMap) {
     if (languageMap) {
-      this.#schemaMap = cloneDeep(this.#schemaMap);
+      // Refetch-then-translate when connected: the in-memory map may already
+      // carry a previous language's labels, whose values are not keys in the
+      // new map. Refetching the canonical English schema first makes every
+      // switch sequence (EN→FR, FR→DE, FR→FR) idempotent.
+      if (this.dbPath) {
+        this.#schemaMap = await this.backend.getSchemaMap();
+      } else {
+        this.#schemaMap = cloneDeep(this.#schemaMap);
+      }
       translateSchema(this.#schemaMap, languageMap, schemaTranslateables);
       this.#setFieldMap();
     } else {
@@ -201,26 +321,39 @@ export class DatabaseHandler extends DatabaseBase {
     this.#fieldMap = {};
   }
 
-  async insert(schemaName: string, docValueMap: DocValueMap): Promise<DocValueMap> {
+  async insert(
+    schemaName: string,
+    docValueMap: DocValueMap
+  ): Promise<DocValueMap> {
     const result = await this.backend.insert(schemaName, docValueMap);
     this.observer.trigger(`insert:${schemaName}`, docValueMap);
     return result;
   }
 
   // Read
-  async get(schemaName: string, name: string, fields?: string | string[]): Promise<DocValueMap> {
+  async get(
+    schemaName: string,
+    name: string,
+    fields?: string | string[]
+  ): Promise<DocValueMap> {
     const result = await this.backend.get(schemaName, name, fields);
     this.observer.trigger(`get:${schemaName}`, { name, fields });
     return result;
   }
 
-  async getAll(schemaName: string, options: GetAllOptions = {}): Promise<DocValueMap[]> {
+  async getAll(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<DocValueMap[]> {
     const result = await this.backend.getAll(schemaName, options);
     this.observer.trigger(`getAll:${schemaName}`, options);
     return result;
   }
 
-  async getAllRaw(schemaName: string, options: GetAllOptions = {}): Promise<RawValueMap[]> {
+  async getAllRaw(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<RawValueMap[]> {
     // getAllRaw intentionally leaks Raw — bypass Doc conversion
     const raws = await this.backend.getAllRaw(schemaName, options);
     this.observer.trigger(`getAllRaw:${schemaName}`, options);
@@ -235,14 +368,21 @@ export class DatabaseHandler extends DatabaseBase {
     return result as SingleValue<DocValue>;
   }
 
-  async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
+  async count(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<number> {
     const count = await this.backend.count(schemaName, options);
     this.observer.trigger(`count:${schemaName}`, options);
     return count;
   }
 
   // Update
-  async rename(schemaName: string, oldName: string, newName: string): Promise<void> {
+  async rename(
+    schemaName: string,
+    oldName: string,
+    newName: string
+  ): Promise<void> {
     await this.backend.rename(schemaName, oldName, newName);
     this.observer.trigger(`rename:${schemaName}`, { oldName, newName });
   }
@@ -279,7 +419,10 @@ export class DatabaseHandler extends DatabaseBase {
     return await this.backend.getNextAutoincrementId(schemaName);
   }
 
-  async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
+  async getNextSeriesValue(
+    prefix: string,
+    schemaName: string
+  ): Promise<number> {
     return await this.backend.getNextSeriesValue(prefix, schemaName);
   }
 
@@ -287,7 +430,10 @@ export class DatabaseHandler extends DatabaseBase {
    * Internal — kept for any legacy callers that still expect Raw via #getAll;
    * now correctly delegates to getAllRaw (Raw) rather than getAll (Doc).
    */
-  async #getAll(schemaName: string, options: GetAllOptions = {}): Promise<RawValueMap[]> {
+  async #getAll(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<RawValueMap[]> {
     return (await this.backend.getAllRaw(schemaName, options)) as RawValueMap[];
   }
 

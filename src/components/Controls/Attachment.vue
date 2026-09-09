@@ -9,7 +9,7 @@
         class="block whitespace-nowrap overflow-auto no-scrollbar"
         :class="[
           inputClasses,
-          !value ? 'text-gray-600 dark:text-gray-400' : 'cursor-default',
+          !value ? 'text-muted-foreground' : 'cursor-default',
         ]"
         >{{ label }}</label
       >
@@ -27,18 +27,12 @@
       <div class="me-2 flex gap-1">
         <!-- Upload Button -->
         <button v-if="!value" class="p-0.5 rounded" @click="upload">
-          <FeatherIcon
-            name="upload"
-            class="h-4 w-4 text-gray-600 dark:text-gray-400"
-          />
+          <FeatherIcon name="upload" class="h-4 w-4 text-muted-foreground" />
         </button>
 
         <!-- Download Button -->
         <button v-if="value" class="p-0.5 rounded" @click="download">
-          <FeatherIcon
-            name="download"
-            class="h-4 w-4 text-gray-600 dark:text-gray-400"
-          />
+          <FeatherIcon name="download" class="h-4 w-4 text-muted-foreground" />
         </button>
 
         <!-- Clear Button -->
@@ -47,10 +41,7 @@
           class="p-0.5 rounded"
           @click="clear"
         >
-          <FeatherIcon
-            name="x"
-            class="h-4 w-4 text-gray-600 dark:text-gray-400"
-          />
+          <FeatherIcon name="x" class="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
     </div>
@@ -84,12 +75,12 @@ export default defineComponent({
     },
     inputReadOnlyClasses() {
       if (!this.value) {
-        return 'text-gray-600';
+        return 'text-muted-foreground';
       } else if (this.isReadOnly) {
-        return 'text-gray-800 cursor-default';
+        return 'text-foreground cursor-default';
       }
 
-      return 'text-gray-900';
+      return 'text-foreground';
     },
     containerReadOnlyClasses() {
       return '';

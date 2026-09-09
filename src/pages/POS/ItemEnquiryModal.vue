@@ -2,7 +2,7 @@
   <Modal class="h-auto w-96" :set-close-listener="false">
     <p class="text-center font-semibold py-3">{{ t`Item Enquiry` }}</p>
     <div class="px-10">
-      <hr class="dark:border-gray-800" />
+      <hr class="border-border" />
       <div class="flex flex-col gap-5 pt-8">
         <Link
           :df="{
@@ -76,7 +76,8 @@
 
       <div class="grid grid-cols-2 gap-4 mt-10 mb-4">
         <div class="col-span-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full bg-green-500 dark:bg-green-700"
             style="padding: 1.35rem"
             @click="submitForm"
@@ -92,7 +93,8 @@
 
       <div class="grid grid-cols-2 gap-4 mb-6">
         <div class="col-span-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full bg-red-500 dark:bg-red-700"
             style="padding: 1.35rem"
             @click="closeModal"

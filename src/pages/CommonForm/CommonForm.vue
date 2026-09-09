@@ -113,9 +113,7 @@
           ref="section"
           class="p-4"
           :class="
-            idx !== 0 && activeGroup.size > 1
-              ? 'border-t border-border'
-              : ''
+            idx !== 0 && activeGroup.size > 1 ? 'border-t border-border' : ''
           "
           :show-title="activeGroup.size > 1 && n !== t`Default`"
           :title="n"
@@ -180,7 +178,13 @@ import { ValidationError } from 'fyo/utils/errors';
 import { getDocStatus } from 'models/helpers';
 import { ModelNameEnum } from 'models/types';
 import { Field, Schema } from 'schemas/types';
-import { Link2, Maximize2, Minimize2, MoreHorizontal, Printer } from '@lucide/vue';
+import {
+  Link2,
+  Maximize2,
+  Minimize2,
+  MoreHorizontal,
+  Printer,
+} from '@lucide/vue';
 import Breadcrumb from 'src/components/ui/breadcrumb/Breadcrumb.vue';
 import BreadcrumbItem from 'src/components/ui/breadcrumb/BreadcrumbItem.vue';
 import BreadcrumbLink from 'src/components/ui/breadcrumb/BreadcrumbLink.vue';

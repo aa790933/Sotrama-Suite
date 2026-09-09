@@ -29,8 +29,8 @@ export default defineComponent({
 .key-common {
   font-family: monospace;
   font-weight: 600;
-  @apply rounded-md px-1.5 py-0.5 bg-gray-200 text-gray-700
-    tracking-tighter;
+  @apply rounded-md px-1.5 py-0.5 bg-muted text-foreground
+ tracking-tighter;
 }
 
 .key-styling {

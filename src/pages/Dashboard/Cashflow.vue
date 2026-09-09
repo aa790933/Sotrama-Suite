@@ -2,7 +2,7 @@
   <div>
     <!-- Title and Period Selector -->
     <div class="flex items-center justify-between">
-      <div class="font-semibold text-base dark:text-white">
+      <div class="font-semibold text-base dark:text-foreground">
         {{ t`Cashflow` }}
       </div>
 
@@ -12,16 +12,16 @@
           <span
             class="w-3 h-3 rounded-sm inline-block bg-blue-500 dark:bg-blue-600"
           />
-          <span class="text-gray-900 dark:text-gray-25">{{ t`Inflow` }}</span>
+          <span class="text-foreground">{{ t`Inflow` }}</span>
         </div>
         <div class="flex items-center gap-2">
           <span
             class="w-3 h-3 rounded-sm inline-block bg-pink-500 dark:bg-pink-600"
           />
-          <span class="text-gray-900 dark:text-gray-25">{{ t`Outflow` }}</span>
+          <span class="text-foreground">{{ t`Outflow` }}</span>
         </div>
       </div>
-      <div v-else class="w-16 h-5 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div v-else class="w-16 h-5 bg-muted rounded" />
 
       <PeriodSelector
         v-if="hasData"
@@ -29,7 +29,7 @@
         :options="periodOptions"
         @change="(value) => (period = value)"
       />
-      <div v-else class="w-20 h-5 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div v-else class="w-20 h-5 bg-muted rounded" />
     </div>
 
     <!-- Line Chart -->
@@ -66,8 +66,8 @@ import { PeriodKey } from 'src/utils/types';
 
 // `extends:` defeats type inference; unsafe rules are off file-wide.
 /* 
-  eslint-disable @typescript-eslint/no-unsafe-argument, 
-  @typescript-eslint/no-unsafe-return
+ eslint-disable @typescript-eslint/no-unsafe-argument, 
+ @typescript-eslint/no-unsafe-return
 */
 
 export default defineComponent({

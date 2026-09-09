@@ -1,13 +1,13 @@
 <template>
   <div class="relative group">
-    <div class="bg-gray-100 p-1.5 rounded-md" @click="toggleItemsView">
+    <div class="bg-muted p-1.5 rounded-md" @click="toggleItemsView">
       <FeatherIcon
         :name="tableView ? 'grid' : 'list'"
         class="w-5 h-5 text-black"
       />
     </div>
     <span
-      class="p-2 mb-2 w-20 absolute bottom-full left-1/2 transform -translate-x-1/2 text-center opacity-0 bg-gray-100 text-black text-xs rounded-md transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
+      class="p-2 mb-2 w-20 absolute bottom-full left-1/2 transform -translate-x-1/2 text-center opacity-0 bg-muted text-black text-xs rounded-md transition-opacity duration-300 group-hover:opacity-100 dark:text-white"
     >
       {{ tableView ? t`Grid View` : t`List View` }}
     </span>
@@ -15,7 +15,7 @@
 
   <div class="relative group">
     <div
-      class="px-1.5 py-1 rounded-md bg-gray-100"
+      class="px-1.5 py-1 rounded-md bg-muted"
       @click="() => $emit('emitRouteToSinvList')"
     >
       <svg
@@ -32,7 +32,7 @@
     </div>
 
     <span
-      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 rounded-md opacity-0 bg-gray-100 text-black text-xs text-center transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
+      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 rounded-md opacity-0 bg-muted text-black text-xs text-center transition-opacity duration-300 group-hover:opacity-100 dark:text-white"
     >
       {{ t`Sales Invoice List` }}
     </span>
@@ -47,10 +47,10 @@
     }"
   >
     <div
-      class="p-1 rounded-md bg-gray-100"
+      class="p-1 rounded-md bg-muted"
       :class="{
-        'bg-gray-100': loyaltyPoints,
-        'dark:bg-gray-600 cursor-not-allowed':
+        'bg-muted': loyaltyPoints,
+        'opacity-50 cursor-not-allowed':
           !loyaltyPoints || !sinvDoc?.party || !sinvDoc?.items?.length,
       }"
       @click="openLoyaltyModal"
@@ -69,7 +69,7 @@
     </div>
 
     <span
-      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-100 text-black text-xs rounded-md text-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
+      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 bg-muted text-black text-xs rounded-md text-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:text-white"
     >
       {{ t`Loyalty Program` }}
     </span>
@@ -82,9 +82,9 @@
     }"
   >
     <div
-      class="p-0.5 rounded-md bg-gray-100"
+      class="p-0.5 rounded-md bg-muted"
       :class="{
-        'dark:bg-gray-600 cursor-not-allowed':
+        'opacity-50 cursor-not-allowed':
           !sinvDoc?.party || !sinvDoc?.items?.length,
       }"
       @click="openCouponModal"
@@ -145,7 +145,7 @@
       </svg>
     </div>
     <span
-      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-100 text-black text-xs rounded-md text-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-800 dark:text-white"
+      class="mb-2 p-2 w-28 absolute bottom-full left-1/2 transform -translate-x-1/2 bg-muted text-black text-xs rounded-md text-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:text-white"
     >
       Coupon Code
     </span>
@@ -164,7 +164,7 @@
     }"
   >
     <div
-      class="p-1 rounded-md bg-gray-100"
+      class="p-1 rounded-md bg-muted"
       @click="$emit('toggleModal', 'PriceList')"
     >
       <svg
@@ -181,7 +181,7 @@
     </div>
 
     <span
-      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-100 dark:bg-gray-800 dark:text-white text-black text-xs rounded-md p-2 w-28 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-muted dark:text-white text-black text-xs rounded-md p-2 w-28 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     >
       Price List
     </span>
@@ -193,7 +193,7 @@
     }"
   >
     <div
-      class="p-1 rounded-md bg-gray-100"
+      class="p-1 rounded-md bg-muted"
       @click="$emit('toggleModal', 'ItemEnquiry')"
     >
       <svg
@@ -213,7 +213,7 @@
     </div>
 
     <span
-      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-100 dark:bg-gray-800 dark:text-white text-black text-xs rounded-md p-2 w-28 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-muted dark:text-white text-black text-xs rounded-md p-2 w-28 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     >
       Item Enquiry
     </span>

@@ -89,7 +89,7 @@ export default defineComponent({
        * Based under the assumption that
        * - Barcode scanners trigger keydown events
        * - Keydown events are triggered quicker than human can
-       *    i.e. at max 20ms between events
+       * i.e. at max 20ms between events
        * - Keydown events are triggered for barcode digits
        * - The sequence of digits might be punctuated by a return
        */

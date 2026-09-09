@@ -7,7 +7,11 @@
     right
   >
     <template #default="{ toggleDropdown }">
-      <Button :variant="buttonVariant" :size="buttonSize" @click="toggleDropdown()">
+      <Button
+        :variant="buttonVariant"
+        :size="buttonSize"
+        @click="toggleDropdown()"
+      >
         <slot>
           <feather-icon name="more-horizontal" class="w-4 h-4" />
         </slot>

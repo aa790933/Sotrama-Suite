@@ -21,10 +21,7 @@
         <div
           class="p-1 max-h-64 overflow-auto custom-scroll custom-scroll-thumb2 text-sm"
         >
-          <div
-            v-if="isLoading"
-            class="p-2 text-muted-foreground italic"
-          >
+          <div v-if="isLoading" class="p-2 text-muted-foreground italic">
             {{ t`Loading...` }}
           </div>
           <div
@@ -70,6 +67,7 @@
 <script lang="ts">
 import { Doc } from 'fyo/model/doc';
 import { Field } from 'schemas/types';
+import { handleErrorWithDialog } from 'src/errorHandling';
 import { fyo } from 'src/initFyo';
 import { DropdownItem } from 'src/utils/types';
 import { defineComponent, PropType } from 'vue';
@@ -158,10 +156,21 @@ export default defineComponent({
         return;
       }
 
-      if (this.doc) {
-        await d.action(this.doc, this.$router);
-      } else {
-        await d.action();
+      // Single invocation seam for every dropdown action (Make Payment,
+      // Make Return, stock transfers, duplicates…): surface failures in a
+      // dialog with doc context instead of an unhandled rejection.
+      try {
+        if (this.doc) {
+          await d.action(this.doc, this.$router);
+        } else {
+          await d.action();
+        }
+      } catch (error) {
+        await handleErrorWithDialog(
+          error,
+          this.doc instanceof Doc ? this.doc : undefined
+        );
+        return;
       }
 
       this.toggleDropdown(false);

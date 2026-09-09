@@ -6,7 +6,9 @@
       'window-drag': platform !== 'Windows',
     }"
   >
-    <Card class="w-full max-w-xl max-h-[90vh] relative flex flex-col overflow-hidden shadow-lg">
+    <Card
+      class="w-full max-w-xl max-h-[90vh] relative flex flex-col overflow-hidden shadow-lg"
+    >
       <!-- Header Section -->
       <CardHeader class="border-b border-border">
         <CardTitle class="text-2xl select-none">
@@ -76,9 +78,7 @@
       <Separator />
 
       <!-- Database File List -->
-      <div
-        class="flex-1 overflow-y-auto p-2 space-y-1"
-      >
+      <div class="flex-1 overflow-y-auto p-2 space-y-1">
         <div
           v-for="(file, i) in files"
           :key="file.dbPath"
@@ -98,20 +98,14 @@
           </div>
           <div class="w-full min-w-0">
             <div class="flex justify-between items-baseline gap-2">
-              <h2
-                class="font-medium text-sm text-foreground truncate"
-              >
+              <h2 class="font-medium text-sm text-foreground truncate">
                 {{ file.companyName }}
               </h2>
-              <span
-                class="text-xs text-muted-foreground flex-shrink-0"
-              >
+              <span class="text-xs text-muted-foreground flex-shrink-0">
                 {{ formatDate(file.modified) }}
               </span>
             </div>
-            <p
-              class="text-xs text-muted-foreground truncate mt-0.5 font-mono"
-            >
+            <p class="text-xs text-muted-foreground truncate mt-0.5 font-mono">
               {{ (file as any).display || getSafeConfigDisplay(file.dbPath) }}
             </p>
           </div>
@@ -129,9 +123,7 @@
       <Separator />
 
       <!-- Footer Bar -->
-      <div
-        class="px-6 py-4 bg-muted/50 flex justify-between items-center"
-      >
+      <div class="px-6 py-4 bg-muted/50 flex justify-between items-center">
         <LanguageSelector v-show="!creatingDemo" class="text-sm w-32" />
         <Button
           v-if="files?.length"
@@ -165,10 +157,7 @@
           }}
         </p>
         <div class="my-6 flex items-center justify-center gap-4">
-          <label
-            for="basecount"
-            class="text-sm font-medium text-foreground"
-          >
+          <label for="basecount" class="text-sm font-medium text-foreground">
             {{ t`Base Count` }}
           </label>
           <Input
@@ -180,7 +169,9 @@
           />
         </div>
         <div class="flex justify-end gap-3">
-          <Button variant="outline" @click="openModal = false">{{ t`Cancel` }}</Button>
+          <Button variant="outline" @click="openModal = false">{{
+            t`Cancel`
+          }}</Button>
           <Button
             @click="
               () => {

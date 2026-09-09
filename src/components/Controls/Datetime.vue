@@ -43,9 +43,10 @@ export default defineComponent({
         base = new Date(base);
       }
       if (!(base instanceof Date) || Number.isNaN(base.valueOf())) {
-        base = this.calendarValue instanceof Object
-          ? this.toJSDate(this.calendarValue as DateValue)
-          : new Date();
+        base =
+          this.calendarValue instanceof Object
+            ? this.toJSDate(this.calendarValue as DateValue)
+            : new Date();
       }
 
       const merged = new Date((base as Date).valueOf());

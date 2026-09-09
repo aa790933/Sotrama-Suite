@@ -25,7 +25,7 @@
     <!-- Filters -->
     <div
       v-if="report && report.filters.length"
-      class="grid grid-cols-5 gap-4 p-4 border-b dark:border-gray-800"
+      class="grid grid-cols-5 gap-4 p-4 border-b border-border"
     >
       <FormControl
         v-for="field in report.filters"

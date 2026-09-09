@@ -14,38 +14,34 @@
       <div class="flex justify-between">
         <!-- Paid -->
         <div
-          class="text-sm font-medium dark:text-gray-25"
+          class="text-sm font-medium"
           :class="{
-            'bg-gray-200 dark:bg-gray-700 text-gray-200 dark:text-gray-700 rounded':
-              !count,
+            'bg-muted text-muted-foreground rounded': !count,
             'cursor-pointer': paidCount > 0,
           }"
           :title="paidCount > 0 ? t`View Paid Invoices` : ''"
           @click="() => routeToInvoices('paid')"
         >
           {{ fyo.format(paid, 'Currency') }}
-          <span
-            :class="{ 'text-gray-900 dark:text-gray-200 font-normal': count }"
-            >{{ t`Paid` }}</span
-          >
+          <span :class="{ 'text-foreground font-normal': count }">{{
+            t`Paid`
+          }}</span>
         </div>
 
         <!-- Unpaid -->
         <div
-          class="text-sm font-medium dark:text-gray-25"
+          class="text-sm font-medium"
           :class="{
-            'bg-gray-200 dark:bg-gray-700 text-gray-200 dark:text-gray-700 rounded':
-              !count,
+            'bg-muted text-muted-foreground rounded': !count,
             'cursor-pointer': unpaidCount > 0,
           }"
           :title="unpaidCount > 0 ? t`View Unpaid Invoices` : ''"
           @click="() => routeToInvoices('unpaid')"
         >
           {{ fyo.format(unpaid, 'Currency') }}
-          <span
-            :class="{ 'text-gray-900 dark:text-gray-200 font-normal': count }"
-            >{{ t`Unpaid` }}</span
-          >
+          <span :class="{ 'text-foreground font-normal': count }">{{
+            t`Unpaid`
+          }}</span>
         </div>
       </div>
 
@@ -68,7 +64,7 @@
       :offset="15"
       :show="show"
       placement="top"
-      class="text-sm shadow-md px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-s-4"
+      class="text-sm shadow-md px-2 py-1 bg-card text-foreground border-s-4"
       :style="{ borderColor: colors }"
     >
       <div class="flex justify-between gap-4">
@@ -100,9 +96,9 @@ import SectionHeader from './SectionHeader.vue';
 
 // `extends:` defeats type inference; unsafe rules are off file-wide.
 /* 
-  eslint-disable @typescript-eslint/no-unsafe-argument, 
-  @typescript-eslint/restrict-template-expressions,
-  @typescript-eslint/no-unsafe-return
+ eslint-disable @typescript-eslint/no-unsafe-argument, 
+ @typescript-eslint/restrict-template-expressions,
+ @typescript-eslint/no-unsafe-return
 */
 export default defineComponent({
   name: 'UnpaidInvoices',
@@ -198,7 +194,11 @@ export default defineComponent({
     async setData() {
       const { fromDate, toDate } = getDatesAndPeriodList(this.period);
 
-      const { total, outstanding } = await getTotalOutstanding(fyo, this.schemaName, fromDate.toISO(), toDate.toISO()
+      const { total, outstanding } = await getTotalOutstanding(
+        fyo,
+        this.schemaName,
+        fromDate.toISO(),
+        toDate.toISO()
       );
 
       const { countTotal, countOutstanding } = await this.getCounts(

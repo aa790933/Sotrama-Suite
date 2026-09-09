@@ -9,7 +9,7 @@
 
     <div v-show="hasData" class="flex relative">
       <!-- Chart Legend -->
-      <div class="w-1/2 flex flex-col gap-4 justify-center dark:text-gray-25">
+      <div class="w-1/2 flex flex-col gap-4 justify-center">
         <!-- Ledgend Item -->
         <div
           v-for="(d, i) in expenses"
@@ -46,7 +46,7 @@
       v-if="expenses.length === 0"
       class="flex-1 w-full h-full flex-center my-20"
     >
-      <span class="text-base text-gray-600 dark:text-gray-500">
+      <span class="text-base text-muted-foreground">
         {{ t`No expenses in this period` }}
       </span>
     </div>
@@ -66,9 +66,9 @@ import SectionHeader from './SectionHeader.vue';
 
 // `extends:` defeats type inference; unsafe rules are off file-wide.
 /*
-  eslint-disable @typescript-eslint/no-unsafe-argument,
-  @typescript-eslint/no-unsafe-return,
-  @typescript-eslint/restrict-plus-operands
+ eslint-disable @typescript-eslint/no-unsafe-argument,
+ @typescript-eslint/no-unsafe-return,
+ @typescript-eslint/restrict-plus-operands
 */
 export default defineComponent({
   name: 'Expenses',
@@ -115,7 +115,10 @@ export default defineComponent({
   methods: {
     async setData() {
       const { fromDate, toDate } = getDatesAndPeriodList(this.period);
-      let topExpenses = await getTopExpenses(fyo, fromDate.toISO(), toDate.toISO()
+      let topExpenses = await getTopExpenses(
+        fyo,
+        fromDate.toISO(),
+        toDate.toISO()
       );
       const shades = [
         { class: 'bg-pink-500', hex: uicolors.pink['500'] },

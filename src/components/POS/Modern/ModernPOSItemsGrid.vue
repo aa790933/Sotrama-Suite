@@ -8,7 +8,7 @@
       class="gap-2 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7'"
     >
       <div
-        class="pb-3 border border-gray-300 dark:border-gray-800 flex flex-col text-sm text-center"
+        class="pb-3 border border-border flex flex-col text-sm text-center"
         @click="handleChange(item as POSItem)"
         v-for="item in items as POSItem[]"
         :key="item.name"
@@ -24,9 +24,11 @@
 
             <div
               v-else
-              class="rounded-lg bg-gray-100 w-full h-full flex justify-center items-center dark:bg-gray-850"
+              class="rounded-lg bg-muted w-full h-full flex justify-center items-center"
             >
-              <p class="text-4xl font-semibold text-gray-400 select-none">
+              <p
+                class="text-4xl font-semibold text-muted-foreground select-none"
+              >
                 {{ getExtractedWords(item.name) }}
               </p>
             </div>

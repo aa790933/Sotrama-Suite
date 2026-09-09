@@ -1,12 +1,9 @@
 <template>
   <div
-    class="border-s dark:border-gray-800 h-full overflow-auto w-quick-edit bg-white dark:bg-gray-890 custom-scroll custom-scroll-thumb2"
+    class="border-s border-border h-full overflow-auto w-quick-edit bg-card custom-scroll custom-scroll-thumb2"
   >
     <!-- Row Edit Tool bar -->
-    <div
-      class="sticky top-0 border-b dark:border-gray-800 bg-white dark:bg-gray-890"
-      style="z-index: 1"
-    >
+    <div class="sticky top-0 border-b border-border bg-card" style="z-index: 1">
       <div class="flex items-center justify-between px-4 h-row-largest">
         <!-- Close Button -->
         <Button size="icon" variant="ghost" @click="$emit('close')">
@@ -23,13 +20,18 @@
           >
             <feather-icon name="chevron-left" class="w-4 h-4" />
           </Button>
-          <Button v-if="next >= 0" size="icon" variant="ghost" @click="$emit('next', next)">
+          <Button
+            v-if="next >= 0"
+            size="icon"
+            variant="ghost"
+            @click="$emit('next', next)"
+          >
             <feather-icon name="chevron-right" class="w-4 h-4" />
           </Button>
         </div>
       </div>
       <FormHeader
-        class="border-t dark:border-gray-800"
+        class="border-t border-border"
         :form-title="t`Row ${index + 1}`"
         :form-sub-title="fieldlabel"
       />

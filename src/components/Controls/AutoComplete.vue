@@ -53,7 +53,9 @@
             d="M1 2.636L2.636 1l1.637 1.636M1 7.364L2.636 9l1.637-1.636"
             class="stroke-current"
             :class="
-              showMandatory ? 'text-red-400 dark:text-red-600' : 'text-gray-400'
+              showMandatory
+                ? 'text-red-400 dark:text-red-600'
+                : 'text-muted-foreground'
             "
             fill="none"
             fill-rule="evenodd"
@@ -65,7 +67,7 @@
         <div v-if="canLink" class="flex items-center gap-1">
           <button
             v-if="value && showClearButton"
-            class="p-0.5 rounded bg-transparent text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+            class="p-0.5 rounded bg-transparent text-muted-foreground hover:text-foreground transition-colors"
             @click.stop.prevent="clearValue"
             @mousedown.prevent
           >
@@ -85,7 +87,7 @@
               <template #target>
                 <feather-icon
                   name="chevron-right"
-                  class="w-4 h-4 text-gray-600 dark:text-gray-400"
+                  class="w-4 h-4 text-muted-foreground"
                 />
               </template>
               <template #content>

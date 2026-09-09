@@ -19,9 +19,7 @@
           <FeatherIcon
             name="calendar"
             class="me-2 w-4 h-4 shrink-0"
-            :class="
-              showMandatory ? 'text-red-600' : 'text-muted-foreground'
-            "
+            :class="showMandatory ? 'text-red-600' : 'text-muted-foreground'"
           />
           <span v-if="!isEmpty" class="truncate text-foreground">
             {{ formattedValue }}
@@ -126,17 +124,16 @@ export default defineComponent({
     onTimeInput(_value: string) {},
     focus(): void {
       const trigger = this.$refs.trigger as unknown as
-        | { $el?: unknown }
-        | undefined;
+        { $el?: unknown } | undefined;
       const el = trigger?.$el;
       if (el instanceof HTMLElement) {
         el.focus();
         return;
       }
 
-      const fallback = (
-        this.$el as HTMLElement | undefined
-      )?.querySelector?.('button');
+      const fallback = (this.$el as HTMLElement | undefined)?.querySelector?.(
+        'button'
+      );
       fallback?.focus();
     },
   },

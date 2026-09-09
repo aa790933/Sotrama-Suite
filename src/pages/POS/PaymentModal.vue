@@ -12,7 +12,8 @@
         "
       />
       <div class="grid grid-cols-2 gap-6">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           v-for="method in paymentMethods"
           :key="method"
           class="w-full py-5 bg-teal-500"
@@ -145,7 +146,8 @@
 
       <div class="grid grid-cols-2 gap-4 bottom-8">
         <div class="col-span-1">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full"
             :style="{
               backgroundColor: fyo.singles.Defaults?.submitButtonColour,
@@ -162,7 +164,8 @@
         </div>
 
         <div class="col-span-1">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full"
             :style="{
               backgroundColor: fyo.singles.Defaults?.cancelButtonColour,
@@ -179,7 +182,8 @@
         </div>
 
         <div class="col-span-1">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full"
             :style="{ backgroundColor: fyo.singles.Defaults?.payButtonColour }"
             style="padding: 1.35rem"
@@ -194,7 +198,8 @@
         </div>
 
         <div class="col-span-1">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full"
             :style="{
               backgroundColor: fyo.singles.Defaults?.payAndPrintButtonColour,

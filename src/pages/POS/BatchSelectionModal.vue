@@ -1,6 +1,6 @@
 <template>
   <Modal class="h-auto w-96" :set-close-listener="false">
-    <p class="text-center font-semibold py-3 text-gray-800 dark:text-gray-200">
+    <p class="text-center font-semibold py-3 text-foreground">
       {{ t`Select the Batch` }}
     </p>
 
@@ -22,7 +22,8 @@
       />
 
       <div class="mt-8 mb-6 grid grid-cols-2 gap-4">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           class="w-full bg-green-500 dark:bg-green-700"
           style="padding: 1.35rem"
           :disabled="!selectedBatch"
@@ -33,7 +34,8 @@
           </p>
         </Button>
 
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           class="w-full bg-red-500 dark:bg-red-700"
           style="padding: 1.35rem"
           @click="closeModal"

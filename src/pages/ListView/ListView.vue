@@ -17,22 +17,28 @@
         "
         class="relative"
       >
-        <Button class="w-40" variant="secondary" @click="toggleDropdown"> Create </Button>
+        <Button class="w-40" variant="secondary" @click="toggleDropdown">
+          Create
+        </Button>
         <div
           v-if="showDropdown"
-          class="absolute top-full mt-1 bg-white border border-gray-300 rounded shadow-lg z-10 w-40"
+          class="absolute top-full mt-1 bg-card border border-border rounded shadow-lg z-10 w-40"
         >
           <div
             v-for="option in actionOptions"
             :key="option.value"
-            class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+            class="px-4 py-2 hover:bg-accent cursor-pointer text-sm"
             @click="createInvoice(option.value)"
           >
             {{ option.label }}
           </div>
         </div>
       </div>
-      <Button ref="exportButton" variant="secondary" @click="openExportModal = true">
+      <Button
+        ref="exportButton"
+        variant="secondary"
+        @click="openExportModal = true"
+      >
         {{ t`Export` }}
       </Button>
       <FilterDropdown

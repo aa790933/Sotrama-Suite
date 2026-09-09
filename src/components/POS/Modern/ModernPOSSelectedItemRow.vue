@@ -340,7 +340,10 @@ export default defineComponent({
       }
 
       return (
-        (await getQuantity(fyo, {item: this.row.item as string, batch: this.row.batch})) ?? 0
+        (await getQuantity(fyo, {
+          item: this.row.item as string,
+          batch: this.row.batch,
+        })) ?? 0
       );
     },
     async setBatch(batch: string) {

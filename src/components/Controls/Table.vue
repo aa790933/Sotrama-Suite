@@ -91,7 +91,15 @@
 </template>
 
 <script>
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow as UiTableRow } from 'src/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow as UiTableRow,
+} from 'src/components/ui/table';
 import { fyo } from 'src/initFyo';
 import { nextTick } from 'vue';
 import Base from './Base.vue';

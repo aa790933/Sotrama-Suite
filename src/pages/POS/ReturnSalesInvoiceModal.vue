@@ -1,26 +1,26 @@
 <template>
   <Modal class="h-auto w-auto p-5" :set-close-listener="false">
-    <p class="text-center font-semibold dark:text-gray-400">
+    <p class="text-center font-semibold">
       {{ t`Invoices` }}
     </p>
 
-    <hr class="mt-2 dark:border-gray-800" />
+    <hr class="mt-2 border-border" />
 
     <div class="mt-4">
       <input
         v-model="invoiceSearchTerm"
         type="text"
         placeholder="Search by Invoice Name"
-        class="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-0"
+        class="w-full p-2 border rounded-md dark:text-white focus:outline-none focus:ring-0"
         @keydown.enter="handleSearchEnter"
       />
     </div>
 
-    <hr class="mt-2 dark:border-gray-800" />
+    <hr class="mt-2 border-border" />
 
     <Row
       :ratio="ratio"
-      class="border flex items-center mt-2 px-2 w-full rounded-t-md text-gray-600 dark:border-gray-800 dark:text-gray-400"
+      class="border flex items-center mt-2 px-2 w-full rounded-t-md text-muted-foreground border-border"
     >
       <div
         v-for="df in tableFields"
@@ -40,7 +40,7 @@
         :key="row.name"
         :ratio="ratio"
         :border="true"
-        class="border-b border-l border-r dark:border-gray-800 dark:bg-gray-890 flex group h-row-mid hover:bg-gray-25 items-center justify-center px-2 w-full"
+        class="border-b border-l border-r border-border flex group h-row-mid hover:bg-accent items-center justify-center px-2 w-full"
         @click="returnInvoice(row as SalesInvoice)"
       >
         <FormControl
@@ -64,7 +64,8 @@
 
     <div class="row-start-6 grid grid-cols-2 gap-4 mt-1">
       <div class="col-span-2">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           class="w-full p-5 bg-red-500 dark:bg-red-700"
           @click="$emit('toggleModal', 'SavedInvoice')"
         >

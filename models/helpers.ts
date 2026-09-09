@@ -256,9 +256,17 @@ export function getMakePaymentAction(fyo: Fyo): Action {
       await payment?.set('referenceType', schemaName);
       const currentRoute = router.currentRoute.value.fullPath;
       payment.once('afterSync', async () => {
-        await payment.submit();
-        await doc.load();
-        await router.push(currentRoute);
+        // Deferred handler: runs after the payment form syncs, outside the
+        // dropdown click handler, so failures here need their own dialog —
+        // otherwise a failed auto-submit is an unhandled rejection.
+        try {
+          await payment.submit();
+          await doc.load();
+          await router.push(currentRoute);
+        } catch (error) {
+          const { handleErrorWithDialog } = await import('src/errorHandling');
+          await handleErrorWithDialog(error, payment);
+        }
       });
 
       const hideFields = ['party', 'for'];
@@ -1352,7 +1360,9 @@ export async function batchPricingRuleDocNames(
     },
   })) as { parent: string; item: string; unit: string }[];
   return pairs.map((p) =>
-    rows.filter((row) => row.item === p.item && row.unit === p.unit).map((row) => row.parent)
+    rows
+      .filter((row) => row.item === p.item && row.unit === p.unit)
+      .map((row) => row.parent)
   );
 }
 

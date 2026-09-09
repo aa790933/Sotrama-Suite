@@ -627,6 +627,10 @@ export class Payment extends Transactional {
 
         const paymentMethodDoc = await this.paymentMethodDoc();
 
+        if (!paymentMethodDoc) {
+          return accountsMap[AccountTypeEnum.Cash]?.[0] ?? null;
+        }
+
         if (paymentMethodDoc.type === 'Cash') {
           return accountsMap[AccountTypeEnum.Cash]?.[0] ?? null;
         }
@@ -647,6 +651,10 @@ export class Payment extends Transactional {
         }
 
         const paymentMethodDoc = await this.paymentMethodDoc();
+
+        if (!paymentMethodDoc) {
+          return accountsMap[AccountTypeEnum.Cash]?.[0] ?? null;
+        }
 
         if (paymentMethodDoc.account) {
           return paymentMethodDoc.get('account');

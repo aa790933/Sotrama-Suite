@@ -7,10 +7,7 @@
         paddingRight: dataSlice.length > 13 ? 'var(--w-scrollbar)' : '',
       }"
     >
-      <div
-        v-if="!isSelectionMode"
-        class="w-8 text-end me-2 text-gray-700 dark:text-gray-400"
-      >
+      <div v-if="!isSelectionMode" class="w-8 text-end me-2 text-foreground">
         #
       </div>
       <div v-else class="w-8 flex justify-end me-2">
@@ -26,7 +23,7 @@
         />
       </div>
       <Row
-        class="flex-1 text-gray-700 dark:text-gray-400 h-row-mid"
+        class="flex-1 text-foreground h-row-mid"
         :column-count="columns.length"
         gap="1rem"
       >
@@ -43,7 +40,7 @@
         </div>
       </Row>
     </div>
-    <hr class="dark:border-gray-800" />
+    <hr class="border-border" />
 
     <!-- Data Rows -->
     <div
@@ -52,10 +49,10 @@
     >
       <div v-for="(row, i) in dataSlice" :key="row.name as string">
         <!-- Row Content -->
-        <div class="flex hover:bg-gray-50 dark:hover:bg-gray-850 items-center">
+        <div class="flex hover:bg-accent items-center">
           <div
             v-if="!isSelectionMode"
-            class="w-8 text-end me-2 text-gray-700 dark:text-gray-400"
+            class="w-8 text-end me-2 text-foreground"
           >
             {{ i + pageStart + 1 }}
           </div>
@@ -74,7 +71,7 @@
 
           <Row
             gap="1rem"
-            class="cursor-pointer text-gray-900 dark:text-gray-300 flex-1 h-row-mid"
+            class="cursor-pointer text-foreground flex-1 h-row-mid"
             :column-count="columns.length"
             @click="isSelectionMode ? null : $emit('openDoc', row.name)"
           >
@@ -93,14 +90,14 @@
         </div>
         <hr
           v-if="!(i === dataSlice.length - 1 && i > 13)"
-          class="dark:border-gray-800"
+          class="border-border"
         />
       </div>
     </div>
 
     <!-- Pagination Footer -->
     <div v-if="data?.length" class="mt-auto">
-      <hr class="dark:border-gray-800" />
+      <hr class="border-border" />
       <Paginator
         :item-count="data.length"
         class="px-4"
@@ -114,7 +111,7 @@
       class="flex flex-col items-center justify-center my-auto"
     >
       <img :src="emptyStateUrl" alt="" class="w-24" />
-      <p class="my-3 text-gray-800 dark:text-gray-200">
+      <p class="my-3 text-foreground">
         {{ t`No entries found` }}
       </p>
       <Button v-if="canCreate" @click="$emit('makeNewDoc')">

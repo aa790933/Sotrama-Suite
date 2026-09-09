@@ -5,7 +5,7 @@
       <!--Title Row -->
       <div
         ref="titlerow"
-        class="w-full overflow-x-hidden flex items-center dark:text-gray-25 border-b dark:border-gray-800 px-4"
+        class="w-full overflow-x-hidden flex items-center border-b border-border px-4"
         :style="{
           height: `${hconst}px`,
           paddingRight: 'calc(var(--w-scrollbar) + 1rem)',
@@ -36,10 +36,8 @@
               minWidth: `calc(var(--w-desk) - var(--w-scrollbar))`,
             }"
             :class="[
-              r !== pageEnd - 1 ? 'border-b dark:border-gray-800' : '',
-              row.isGroup
-                ? 'hover:bg-gray-50 dark:hover:bg-gray-890 cursor-pointer'
-                : '',
+              r !== pageEnd - 1 ? 'border-b border-border' : '',
+              row.isGroup ? 'hover:bg-accent cursor-pointer' : '',
             ]"
             @click="() => onRowClick(row, r)"
           >
@@ -58,10 +56,7 @@
       </WithScroll>
       <!-- Report Rows Container -->
     </div>
-    <p
-      v-else
-      class="w-full text-center mt-20 text-gray-800 dark:text-gray-100 text-base"
-    >
+    <p v-else class="w-full text-center mt-20 text-foreground text-base">
       {{ report.loading ? t`Loading Report...` : t`No Values to be Displayed` }}
     </p>
 
@@ -194,23 +189,23 @@ export default defineComponent({
       }
 
       if (!cell.rawValue) {
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-muted-foreground';
       }
 
       if (typeof cell.rawValue !== 'number') {
-        return 'text-gray-900 dark:text-gray-100';
+        return 'text-foreground';
       }
 
       if (cell.rawValue === 0) {
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-muted-foreground';
       }
 
       const prec = this.fyo?.singles?.displayPrecision ?? 2;
       if (Number(cell.rawValue.toFixed(prec)) === 0) {
-        return 'text-gray-600 dark:text-gray-500';
+        return 'text-muted-foreground';
       }
 
-      return 'text-gray-900 dark:text-gray-300';
+      return 'text-foreground';
     },
   },
 });

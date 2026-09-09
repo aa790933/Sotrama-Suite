@@ -100,8 +100,7 @@ export default defineComponent({
       // does not render — without this override, keyboard focus into Select
       // fields dies silently.
       const trigger = this.$refs.trigger as unknown as
-        | { $el?: unknown }
-        | undefined;
+        { $el?: unknown } | undefined;
       const el = trigger?.$el;
       if (el instanceof HTMLElement) {
         el.focus();

@@ -103,7 +103,7 @@ export default {
             {
               component: markRaw({
                 template:
-                  '<span class="text-gray-600 dark:text-gray-400">{{ t`No results found, disable filters` }}</span>',
+                  '<span class="text-muted-foreground">{{ t`No results found, disable filters` }}</span>',
               }),
               action: () => this.disableFiltering(),
               actionOnly: true,
@@ -114,7 +114,7 @@ export default {
             {
               component: markRaw({
                 template:
-                  '<span class="text-gray-600 dark:text-gray-400">{{ t`No results found` }}</span>',
+                  '<span class="text-muted-foreground">{{ t`No results found` }}</span>',
               }),
               action: () => {},
               actionOnly: true,

@@ -1,10 +1,10 @@
 <template>
   <Modal :open-modal="openModal" class="w-3/6 p-4">
-    <h1 class="text-xl font-semibold text-center dark:text-gray-100 pb-4">
+    <h1 class="text-xl font-semibold text-center pb-4">
       {{ t`Close POS Shift` }}
     </h1>
 
-    <h2 class="mt-4 mb-2 text-lg font-medium dark:text-gray-100">
+    <h2 class="mt-4 mb-2 text-lg font-medium">
       {{ t`Closing Cash` }}
     </h2>
     <Table
@@ -18,9 +18,7 @@
       @row-change="setClosingCashAmount"
     />
 
-    <h2 class="mt-6 mb-2 text-lg dark:text-gray-100 font-medium">
-      Closing Amounts
-    </h2>
+    <h2 class="mt-6 mb-2 text-lg font-medium">Closing Amounts</h2>
     <Table
       v-if="isValuesSeeded"
       class="text-base"
@@ -33,7 +31,8 @@
     />
 
     <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-      <Button variant="secondary"
+      <Button
+        variant="secondary"
         class="w-full py-5 bg-red-500 dark:bg-red-700"
         @click="$emit('toggleModal', 'ShiftClose', false)"
       >
@@ -44,7 +43,8 @@
         </slot>
       </Button>
 
-      <Button variant="secondary"
+      <Button
+        variant="secondary"
         class="w-full py-5 bg-green-500 dark:bg-green-700"
         @click="handleSubmit"
       >
@@ -136,7 +136,9 @@ export default defineComponent({
         return;
       }
 
-      this.transactedAmount = await getPOSTransactedAmount(fyo, fromDate,
+      this.transactedAmount = await getPOSTransactedAmount(
+        fyo,
+        fromDate,
         new Date()
       );
     },

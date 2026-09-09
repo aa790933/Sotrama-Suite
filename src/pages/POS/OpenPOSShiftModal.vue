@@ -1,12 +1,12 @@
 <template>
   <Modal class="w-3/6 p-4">
-    <h1 class="text-xl font-semibold text-center dark:text-gray-100 pb-4">
+    <h1 class="text-xl font-semibold text-center pb-4">
       {{ t`Open POS Shift` }}
     </h1>
 
     <div class="grid grid-cols-12 gap-6">
       <div class="col-span-6">
-        <h2 class="text-lg font-medium dark:text-gray-100">
+        <h2 class="text-lg font-medium">
           {{ t`Cash In Denominations` }}
         </h2>
 
@@ -22,7 +22,7 @@
       </div>
 
       <div class="col-span-6">
-        <h2 class="text-lg font-medium dark:text-gray-100">
+        <h2 class="text-lg font-medium">
           {{ t`Opening Amount` }}
         </h2>
 
@@ -39,7 +39,8 @@
         />
 
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full py-5 bg-red-500 dark:bg-red-700"
             @click="$router.back()"
           >
@@ -50,7 +51,8 @@
             </slot>
           </Button>
 
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full py-5 bg-green-500 dark:bg-green-700"
             @click="handleSubmit"
           >

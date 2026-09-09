@@ -1,8 +1,8 @@
 <template>
   <Modal class="h-96 w-96" :set-close-listener="false">
-    <p class="text-center py-4 dark:text-gray-100">Redeem Loyalty Points</p>
+    <p class="text-center py-4">Redeem Loyalty Points</p>
 
-    <hr class="dark:border-gray-800" />
+    <hr class="border-border" />
 
     <div class="flex gap-2 p-3 justify-end pt-10">
       <svg
@@ -36,7 +36,8 @@
 
     <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto mb-2 px-10">
       <div class="col-span-2">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           class="w-full bg-green-500 dark:bg-green-700"
           style="padding: 1.35rem"
           :disabled="validationError"
@@ -53,7 +54,8 @@
 
     <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto px-10">
       <div class="col-span-2">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           class="w-full bg-red-500 dark:bg-red-700"
           style="padding: 1.35rem"
           @click="cancelLoyaltyProgram"

@@ -2,7 +2,7 @@
   <Modal class="h-auto w-96" :set-close-listener="false">
     <p class="text-center font-semibold py-3">{{ t`Apply Price List` }}</p>
     <div class="px-10">
-      <hr class="dark:border-gray-800" />
+      <hr class="border-border" />
       <div class="flex justify-center pt-10">
         <div class="flex justify-between w-full mb-20">
           <div class="w-full">
@@ -28,7 +28,8 @@
 
       <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto mb-2">
         <div class="col-span-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full bg-green-500 dark:bg-green-700"
             style="padding: 1.35rem"
             @click="setPriceList"
@@ -44,7 +45,8 @@
 
       <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto mb-8">
         <div class="col-span-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full bg-red-500 dark:bg-red-700"
             style="padding: 1.35rem"
             @click="cancelPriceList"

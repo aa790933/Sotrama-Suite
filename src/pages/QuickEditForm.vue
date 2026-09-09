@@ -1,13 +1,11 @@
 <template>
-  <div
-    class="border-s dark:border-gray-800 h-full overflow-auto w-quick-edit bg-white dark:bg-gray-850"
-  >
+  <div class="border-s border-border h-full overflow-auto w-quick-edit bg-card">
     <!-- Quick edit Tool bar -->
     <div
-      class="flex items-center justify-between px-4 h-row-largest sticky top-0 bg-white dark:bg-gray-850"
+      class="flex items-center justify-between px-4 h-row-largest sticky top-0 bg-card"
       style="z-index: 1"
     >
-      <!-- Close Button  -->
+      <!-- Close Button -->
       <Button size="icon" variant="ghost" @click="routeToPrevious">
         <feather-icon name="x" class="w-4 h-4" />
       </Button>
@@ -16,11 +14,7 @@
       <Button v-if="doc?.canSave" size="icon" @click="sync">
         {{ t`Save` }}
       </Button>
-      <Button
-        v-else-if="doc?.canSubmit"
-        size="icon"
-        @click="submit"
-      >
+      <Button v-else-if="doc?.canSubmit" size="icon" @click="submit">
         {{ t`Submit` }}
       </Button>
     </div>
@@ -28,7 +22,7 @@
     <!-- Name and image -->
     <div
       v-if="doc && (titleField || imageField)"
-      class="items-center border-b border-t dark:border-gray-800"
+      class="items-center border-b border-t border-border"
       :class="imageField ? 'grid' : 'flex justify-center'"
       :style="{
         height: `calc(var(--h-row-mid) * ${!!imageField ? '2 + 1px' : '1'})`,

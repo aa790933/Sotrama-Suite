@@ -154,9 +154,13 @@ export default defineComponent({
     async setInitialScreen(): Promise<void> {
       this.hostRole = normalizeHostRole(fyo.config.get('hostRole'));
       // Prefer lastSelectedConnectionId (safe, main-owned), fallback to legacy lastSelectedFilePath
-      const lastId = fyo.config.get('lastSelectedConnectionId' as never) as string | null | undefined;
-      const lastPath = fyo.config.get('lastSelectedFilePath', null) as string | null;
-      const toUse = (typeof lastId === 'string' && lastId.length ? lastId : null) || lastPath;
+      const lastId = fyo.config.get('lastSelectedConnectionId' as never) as
+        string | null | undefined;
+      const lastPath = fyo.config.get('lastSelectedFilePath', null) as
+        string | null;
+      const toUse =
+        (typeof lastId === 'string' && lastId.length ? lastId : null) ||
+        lastPath;
 
       if (typeof toUse !== 'string' || !toUse.length) {
         this.activeScreen = Screen.HostSetup;
@@ -185,9 +189,13 @@ export default defineComponent({
     },
     newDatabase() {
       this.hostRole = normalizeHostRole(fyo.config.get('hostRole'));
-      const lastId = fyo.config.get('lastSelectedConnectionId' as never) as string | null | undefined;
-      const lastPath = fyo.config.get('lastSelectedFilePath', null) as string | null;
-      const hasHost = (typeof lastId === 'string' && lastId.length > 0) || (typeof lastPath === 'string' && lastPath.length > 0);
+      const lastId = fyo.config.get('lastSelectedConnectionId' as never) as
+        string | null | undefined;
+      const lastPath = fyo.config.get('lastSelectedFilePath', null) as
+        string | null;
+      const hasHost =
+        (typeof lastId === 'string' && lastId.length > 0) ||
+        (typeof lastPath === 'string' && lastPath.length > 0);
 
       if (!hasHost) {
         this.activeScreen = Screen.HostSetup;
@@ -204,14 +212,23 @@ export default defineComponent({
     async fileSelected(filePath: string): Promise<void> {
       fyo.config.set('lastSelectedFilePath', filePath);
       try {
-        const conns = fyo.config.get('connections' as never) as PersistedConnection[] | undefined;
+        const conns = fyo.config.get('connections' as never) as
+          PersistedConnection[] | undefined;
         if (conns?.some((c) => c.id === filePath)) {
-          fyo.config.set('lastSelectedConnectionId' as never, filePath as never);
+          fyo.config.set(
+            'lastSelectedConnectionId' as never,
+            filePath as never
+          );
         } else {
-          const { parseMariaDBConfigString } = await import('utils/mariadb-types');
+          const { parseMariaDBConfigString } =
+            await import('utils/mariadb-types');
           const cfg = parseMariaDBConfigString(filePath);
           const found = conns?.find((c) => equalsConnection(c, cfg));
-          if (found) fyo.config.set('lastSelectedConnectionId' as never, found.id as never);
+          if (found)
+            fyo.config.set(
+              'lastSelectedConnectionId' as never,
+              found.id as never
+            );
         }
       } catch {}
       const access = await ipc.checkDbAccess(filePath);
@@ -239,13 +256,19 @@ export default defineComponent({
       }
       const filePath = base;
       fyo.config.set('lastSelectedFilePath', filePath);
-      const wizard = (this.$refs as { setupWizard?: { setLoading: (v: boolean) => void } }).setupWizard;
+      const wizard = (
+        this.$refs as { setupWizard?: { setLoading: (v: boolean) => void } }
+      ).setupWizard;
       try {
         await setupInstance(filePath, setupWizardOptions, fyo);
         await this.setDesk(filePath);
       } catch (error) {
-        const rawMessage = error instanceof Error ? error.message : String(error);
-        const safeMessage = rawMessage.replace(/password[^,\n}]*/gi, 'password: <redacted>');
+        const rawMessage =
+          error instanceof Error ? error.message : String(error);
+        const safeMessage = rawMessage.replace(
+          /password[^,\n}]*/gi,
+          'password: <redacted>'
+        );
         const safeDetail = getSafeConfigDetail(filePath);
         const shouldRetry = await showDialog({
           title: this.t`Setup failed`,
@@ -355,6 +378,11 @@ export default defineComponent({
         route = localStorage.getItem('lastRoute') || '/';
       }
 
+      // Never restore a stale translated pageTitle segment or an unknown
+      // path: the router's catch-all redirects those to '/' anyway, so
+      // normalize here to keep navigation canonical across language switches.
+      route = sanitizeRestoredRoute(route);
+
       await routeTo(route);
     },
     async showDbSelector(): Promise<void> {
@@ -373,5 +401,26 @@ export default defineComponent({
 
 function getLanguageDirection(language: string): 'rtl' | 'ltr' {
   return RTL_LANGUAGES.includes(language) ? 'rtl' : 'ltr';
+}
+
+/**
+ * Keep restored navigation canonical: strip display-only list pageTitle
+ * segments and reject non-in-app paths. i18n translation applies to
+ * presentation labels only, never to route matching.
+ */
+function sanitizeRestoredRoute(route: string): string {
+  if (typeof route !== 'string' || !route.startsWith('/')) {
+    return '/';
+  }
+  if (route.includes('index.html')) {
+    return '/';
+  }
+  const [path, query] = route.split('?');
+  const segments = path.split('/');
+  if (segments.length >= 4 && segments[1] === 'list') {
+    const canonical = segments.slice(0, 3).join('/');
+    return query ? `${canonical}?${query}` : canonical;
+  }
+  return route;
 }
 </script>

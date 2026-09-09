@@ -84,12 +84,10 @@
     />
 
     <div
-      class="bg-gray-25 dark:bg-gray-875 grid grid-cols-12 gap-2 p-4"
+      class="bg-muted grid grid-cols-12 gap-2 p-4"
       style="height: calc(100vh - var(--h-row-largest))"
     >
-      <div
-        class="col-span-5 bg-white border rounded-md dark:border-gray-800 dark:bg-gray-850"
-      >
+      <div class="col-span-5 bg-card border rounded-md border-border">
         <div class="rounded-md p-4 col-span-5">
           <div class="flex gap-x-2">
             <!-- Item Search -->
@@ -99,7 +97,7 @@
               third-link="itemCode"
               :df="{
                 label: t`Search Item (Name or
-            Barcode)`,
+ Barcode)`,
                 fieldtype: 'Link',
                 fieldname: 'item',
                 target: 'Item',
@@ -165,9 +163,7 @@
 
       <div class="col-span-7">
         <div class="flex flex-col gap-3" style="height: calc(100vh - 6rem)">
-          <div
-            class="p-4 bg-white border rounded-md grow h-full dark:border-gray-800 dark:bg-gray-850"
-          >
+          <div class="p-4 bg-card border rounded-md grow h-full border-border">
             <!-- Customer Search -->
             <MultiLabelLink
               v-if="sinvDoc?.fieldMap"
@@ -190,9 +186,7 @@
             />
           </div>
 
-          <div
-            class="p-3 bg-white border rounded-md dark:border-gray-800 dark:bg-gray-850"
-          >
+          <div class="p-3 bg-card border rounded-md border-border">
             <div class="w-full grid grid-cols-2 gap-y-2 gap-x-3">
               <div class="flex flex-col justify-end">
                 <div class="grid grid-cols-2 gap-2">
@@ -250,7 +244,8 @@
               </div>
               <div class="w-full">
                 <div class="w-full flex gap-2">
-                  <Button variant="secondary"
+                  <Button
+                    variant="secondary"
                     class="w-full"
                     :style="{
                       backgroundColor:
@@ -266,7 +261,8 @@
                       </p>
                     </slot>
                   </Button>
-                  <Button variant="secondary"
+                  <Button
+                    variant="secondary"
                     class="w-full"
                     :style="{
                       backgroundColor:
@@ -287,7 +283,8 @@
                   class="w-full flex gap-2"
                   :class="`${isReturnInvoiceEnabledReturn ? 'mt-2' : 'mt-4'}`"
                 >
-                  <Button variant="secondary"
+                  <Button
+                    variant="secondary"
                     class="w-full"
                     :style="{
                       backgroundColor:
@@ -304,7 +301,8 @@
                     </slot>
                   </Button>
 
-                  <Button variant="secondary"
+                  <Button
+                    variant="secondary"
                     v-if="isReturnInvoiceEnabledReturn"
                     class="w-full py-5"
                     :style="{
@@ -322,7 +320,8 @@
                       </p>
                     </slot>
                   </Button>
-                  <Button variant="secondary"
+                  <Button
+                    variant="secondary"
                     v-else
                     class="w-full"
                     :style="{
@@ -340,7 +339,8 @@
                     </slot>
                   </Button>
                 </div>
-                <Button variant="secondary"
+                <Button
+                  variant="secondary"
                   v-if="isReturnInvoiceEnabledReturn"
                   class="w-full mt-2 py-5"
                   :style="{

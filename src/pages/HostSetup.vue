@@ -30,28 +30,48 @@
           <div
             data-testid="role-host"
             class="p-4 rounded-lg border-2 cursor-pointer transition-colors hover:bg-accent"
-            :class="role === 'host' ? 'border-primary bg-accent' : 'border-border'"
+            :class="
+              role === 'host' ? 'border-primary bg-accent' : 'border-border'
+            "
             @click="selectRole('host')"
           >
-            <p class="text-sm font-medium text-foreground">{{ t`This is the office/server computer (Host)` }}</p>
-            <p class="text-xs text-muted-foreground mt-1">{{ t`MariaDB will be installed here. Other computers on the office network will connect to this machine.` }}</p>
+            <p class="text-sm font-medium text-foreground">
+              {{ t`This is the office/server computer (Host)` }}
+            </p>
+            <p class="text-xs text-muted-foreground mt-1">
+              {{
+                t`MariaDB will be installed here. Other computers on the office network will connect to this machine.`
+              }}
+            </p>
           </div>
           <div
             data-testid="role-client"
             class="p-4 rounded-lg border-2 cursor-pointer transition-colors hover:bg-accent"
-            :class="role === 'client' ? 'border-primary bg-accent' : 'border-border'"
+            :class="
+              role === 'client' ? 'border-primary bg-accent' : 'border-border'
+            "
             @click="selectRole('client')"
           >
-            <p class="text-sm font-medium text-foreground">{{ t`This computer is a client` }}</p>
-            <p class="text-xs text-muted-foreground mt-1">{{ t`Do not install MariaDB here. Connect to the Sotrama host already running on the local network.` }}</p>
+            <p class="text-sm font-medium text-foreground">
+              {{ t`This computer is a client` }}
+            </p>
+            <p class="text-xs text-muted-foreground mt-1">
+              {{
+                t`Do not install MariaDB here. Connect to the Sotrama host already running on the local network.`
+              }}
+            </p>
           </div>
         </div>
 
         <template v-else>
           <div class="flex items-center justify-between text-xs">
             <span class="text-muted-foreground">
-              <Badge variant="secondary">{{ role === 'host' ? t`Host mode` : t`Client mode` }}</Badge>
-              <span v-if="lanIp && role === 'host'" class="ms-2 font-mono">({{ lanIp }})</span>
+              <Badge variant="secondary">{{
+                role === 'host' ? t`Host mode` : t`Client mode`
+              }}</Badge>
+              <span v-if="lanIp && role === 'host'" class="ms-2 font-mono"
+                >({{ lanIp }})</span
+              >
             </span>
             <Button
               variant="link"
@@ -76,10 +96,9 @@
                 :disabled="installing"
                 class="accent-primary"
               />
-              <span
-                class="text-sm font-medium text-foreground"
-                >{{ t`Express setup (install locally)` }}</span
-              >
+              <span class="text-sm font-medium text-foreground">{{
+                t`Express setup (install locally)`
+              }}</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input
@@ -90,277 +109,258 @@
                 :disabled="installing"
                 class="accent-primary"
               />
-              <span
-                class="text-sm font-medium text-foreground"
-                >{{ t`Advanced (existing server)` }}</span
-              >
+              <span class="text-sm font-medium text-foreground">{{
+                t`Advanced (existing server)`
+              }}</span>
             </label>
           </div>
           <div v-else class="mt-4 pb-3 border-b border-border">
-            <p class="text-sm font-medium text-foreground">{{ t`Connect to office host` }}</p>
-            <p class="text-xs text-muted-foreground mt-1">{{ t`Enter the host address shown on the server computer.` }}</p>
+            <p class="text-sm font-medium text-foreground">
+              {{ t`Connect to office host` }}
+            </p>
+            <p class="text-xs text-muted-foreground mt-1">
+              {{ t`Enter the host address shown on the server computer.` }}
+            </p>
           </div>
 
           <!-- Option A: Express install (host only) -->
           <template v-if="role === 'host' && mode === 'express' && !done">
-          <div class="mt-4 space-y-4">
-            <p class="text-xs text-muted-foreground leading-relaxed">
-              {{
-                t`Requires internet access to download and run the MariaDB installer. Only Windows can install fully offline when the bundled MSI is present; macOS (Homebrew) and Linux (apt/dnf) both require live internet access on the host at install time.`
-              }}
-            </p>
-
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`Port` }}</label
-              >
-              <Input
-                v-model.number="port"
-                type="number"
-                :disabled="installing"
-                class="mt-1"
-              />
-              <p
-                v-if="portMessage"
-                class="text-xs text-amber-600 dark:text-amber-400 mt-1"
-              >
-                {{ portMessage }}
-              </p>
-            </div>
-
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`Database name` }}</label
-              >
-              <Input
-                v-model="database"
-                placeholder="sotrama"
-                :disabled="installing"
-                class="mt-1"
-              />
-              <p class="text-xs text-muted-foreground mt-1">
+            <div class="mt-4 space-y-4">
+              <p class="text-xs text-muted-foreground leading-relaxed">
                 {{
-                  t`Sotrama Suite will generate and manage dedicated credentials automatically.`
+                  t`Requires internet access to download and run the MariaDB installer. Only Windows can install fully offline when the bundled MSI is present; macOS (Homebrew) and Linux (apt/dnf) both require live internet access on the host at install time.`
                 }}
               </p>
-            </div>
 
-            <Button
-              :disabled="installing || !port || !database"
-              class="w-full mt-2"
-              @click="expressInstall"
-            >
-              {{ installLabel }}
-            </Button>
-
-            <div
-              v-if="installStage"
-              class="mt-2 text-xs text-muted-foreground flex items-center gap-2"
-            >
-              <span
-                class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"
-              ></span>
-              <span>{{ installStage }}</span>
-            </div>
-          </div>
-        </template>
-
-        <!-- Option B: Advanced connection -->
-        <template v-else-if="mode === 'advanced' && !done">
-          <div class="mt-4 space-y-3">
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`Host` }}</label
-              >
-              <Input
-                v-model="host"
-                placeholder="127.0.0.1"
-                data-testid="host-input"
-                class="mt-1"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`Port` }}</label
-              >
-              <Input
-                v-model.number="port"
-                data-testid="port-input"
-                type="number"
-                class="mt-1"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`Database name` }}</label
-              >
-              <Input
-                v-model="database"
-                placeholder="sotrama"
-                data-testid="database-input"
-                class="mt-1"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`User` }}</label
-              >
-              <Input
-                v-model="user"
-                data-testid="user-input"
-                class="mt-1"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-sm font-medium text-foreground"
-                >{{ t`Password` }}</label
-              >
-              <Input
-                v-model="password"
-                type="password"
-                data-testid="password-input"
-                class="mt-1"
-              />
-            </div>
-
-            <Button
-              :disabled="testing || !host || !port || !database || !user"
-              class="w-full mt-2"
-              @click="advancedTest"
-              data-testid="test-connection-button"
-            >
-              {{ testing ? t`Testing…` : t`Test connection` }}
-            </Button>
-
-            <p
-              v-if="testOk && dbExistsChecked && dbExists"
-              class="text-sm font-medium text-green-600 dark:text-green-400"
-            >
-              {{ t`Connection successful — database ready. Press Continue below.` }}
-            </p>
-            <p
-              v-else-if="testDone && !testOk"
-              class="text-sm text-destructive"
-            >
-              {{ testError }}
-            </p>
-            <div v-if="testDone && dbExistsChecked" class="mt-2 text-sm">
-              <p v-if="dbExists" class="text-green-600 dark:text-green-400">
-                {{ t`Database exists and is accessible.` }}
-              </p>
-              <div v-else class="flex items-center gap-3">
-                <p class="text-amber-600 dark:text-amber-400">
-                  {{ t`Database does not exist on this server.` }}
-                </p>
-                <Button
-                  size="sm"
-                  :disabled="creatingDb"
-                  data-testid="create-db-button"
-                  @click="createTargetDatabase"
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`Port`
+                }}</label>
+                <Input
+                  v-model.number="port"
+                  type="number"
+                  :disabled="installing"
+                  class="mt-1"
+                />
+                <p
+                  v-if="portMessage"
+                  class="text-xs text-amber-600 dark:text-amber-400 mt-1"
                 >
-                  {{ creatingDb ? t`Creating…` : t`Create database` }}
-                </Button>
+                  {{ portMessage }}
+                </p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`Database name`
+                }}</label>
+                <Input
+                  v-model="database"
+                  placeholder="sotrama"
+                  :disabled="installing"
+                  class="mt-1"
+                />
+                <p class="text-xs text-muted-foreground mt-1">
+                  {{
+                    t`Sotrama Suite will generate and manage dedicated credentials automatically.`
+                  }}
+                </p>
+              </div>
+
+              <Button
+                :disabled="installing || !port || !database"
+                class="w-full mt-2"
+                @click="expressInstall"
+              >
+                {{ installLabel }}
+              </Button>
+
+              <div
+                v-if="installStage"
+                class="mt-2 text-xs text-muted-foreground flex items-center gap-2"
+              >
+                <span
+                  class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"
+                ></span>
+                <span>{{ installStage }}</span>
               </div>
             </div>
-          </div>
-        </template>
+          </template>
 
-        <!-- Summary card (express) -->
-        <Card
-          v-if="done"
-          class="mt-4 bg-muted/50"
-        >
-          <CardContent class="pt-6">
-          <div class="flex items-center gap-2 mb-3">
-            <Badge variant="secondary">{{ t`Setup complete` }}</Badge>
-          </div>
+          <!-- Option B: Advanced connection -->
+          <template v-else-if="mode === 'advanced' && !done">
+            <div class="mt-4 space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`Host`
+                }}</label>
+                <Input
+                  v-model="host"
+                  placeholder="127.0.0.1"
+                  data-testid="host-input"
+                  class="mt-1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`Port`
+                }}</label>
+                <Input
+                  v-model.number="port"
+                  data-testid="port-input"
+                  type="number"
+                  class="mt-1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`Database name`
+                }}</label>
+                <Input
+                  v-model="database"
+                  placeholder="sotrama"
+                  data-testid="database-input"
+                  class="mt-1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`User`
+                }}</label>
+                <Input v-model="user" data-testid="user-input" class="mt-1" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-foreground">{{
+                  t`Password`
+                }}</label>
+                <Input
+                  v-model="password"
+                  type="password"
+                  data-testid="password-input"
+                  class="mt-1"
+                />
+              </div>
 
-          <dl
-            class="space-y-2 text-sm"
+              <Button
+                :disabled="testing || !host || !port || !database || !user"
+                class="w-full mt-2"
+                @click="advancedTest"
+                data-testid="test-connection-button"
+              >
+                {{ testing ? t`Testing…` : t`Test connection` }}
+              </Button>
+
+              <p
+                v-if="testOk && dbExistsChecked && dbExists"
+                class="text-sm font-medium text-green-600 dark:text-green-400"
+              >
+                {{
+                  t`Connection successful — database ready. Press Continue below.`
+                }}
+              </p>
+              <p
+                v-else-if="testDone && !testOk"
+                class="text-sm text-destructive"
+              >
+                {{ testError }}
+              </p>
+              <div v-if="testDone && dbExistsChecked" class="mt-2 text-sm">
+                <p v-if="dbExists" class="text-green-600 dark:text-green-400">
+                  {{ t`Database exists and is accessible.` }}
+                </p>
+                <div v-else class="flex items-center gap-3">
+                  <p class="text-amber-600 dark:text-amber-400">
+                    {{ t`Database does not exist on this server.` }}
+                  </p>
+                  <Button
+                    size="sm"
+                    :disabled="creatingDb"
+                    data-testid="create-db-button"
+                    @click="createTargetDatabase"
+                  >
+                    {{ creatingDb ? t`Creating…` : t`Create database` }}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Summary card (express) -->
+          <Card v-if="done" class="mt-4 bg-muted/50">
+            <CardContent class="pt-6">
+              <div class="flex items-center gap-2 mb-3">
+                <Badge variant="secondary">{{ t`Setup complete` }}</Badge>
+              </div>
+
+              <dl class="space-y-2 text-sm">
+                <div class="flex justify-between pt-2">
+                  <dt class="text-muted-foreground">{{ t`Host` }}</dt>
+                  <dd class="font-medium text-foreground">
+                    {{ lanIp || '127.0.0.1' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between pt-2">
+                  <dt class="text-muted-foreground">
+                    {{ t`Allocated port` }}
+                  </dt>
+                  <dd class="font-medium text-foreground">
+                    {{ summary?.port }}
+                  </dd>
+                </div>
+                <div class="flex justify-between pt-2">
+                  <dt class="text-muted-foreground">
+                    {{ t`Database` }}
+                  </dt>
+                  <dd class="font-medium text-foreground">
+                    {{ summary?.database }}
+                  </dd>
+                </div>
+                <div class="flex justify-between pt-2">
+                  <dt class="text-muted-foreground">
+                    {{ t`App user` }}
+                  </dt>
+                  <dd class="font-medium text-foreground">sotrama_app</dd>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                  <dt class="text-muted-foreground">
+                    {{ t`App password` }}
+                  </dt>
+                  <dd class="flex items-center gap-2">
+                    <span
+                      class="font-mono text-xs text-foreground break-all bg-muted px-2 py-1 rounded"
+                    >
+                      {{ summary?.appPassword }}
+                    </span>
+                    <Button variant="link" size="sm" @click="copyPassword">
+                      {{ copied ? t`Copied!` : t`Copy` }}
+                    </Button>
+                  </dd>
+                </div>
+              </dl>
+
+              <div class="mt-4 pt-3 border-t border-border space-y-2">
+                <p class="text-xs text-muted-foreground">
+                  {{
+                    t`Share the app credentials above with LAN clients — they must never use root.`
+                  }}
+                </p>
+                <p class="text-xs text-muted-foreground leading-relaxed">
+                  {{
+                    t`Security: bind-address is set to 0.0.0.0. Inbound access is restricted to your local network via OS Firewall rules and SQL grant privileges.`
+                  }}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button
+            v-if="canContinue"
+            class="w-full mt-6"
+            @click="finish"
+            data-testid="continue-button"
           >
-            <div class="flex justify-between pt-2">
-              <dt class="text-muted-foreground">{{ t`Host` }}</dt>
-              <dd class="font-medium text-foreground">
-                {{ lanIp || '127.0.0.1' }}
-              </dd>
-            </div>
-            <div class="flex justify-between pt-2">
-              <dt class="text-muted-foreground">
-                {{ t`Allocated port` }}
-              </dt>
-              <dd class="font-medium text-foreground">
-                {{ summary?.port }}
-              </dd>
-            </div>
-            <div class="flex justify-between pt-2">
-              <dt class="text-muted-foreground">
-                {{ t`Database` }}
-              </dt>
-              <dd class="font-medium text-foreground">
-                {{ summary?.database }}
-              </dd>
-            </div>
-            <div class="flex justify-between pt-2">
-              <dt class="text-muted-foreground">
-                {{ t`App user` }}
-              </dt>
-              <dd class="font-medium text-foreground">
-                sotrama_app
-              </dd>
-            </div>
-            <div class="flex justify-between items-center pt-2">
-              <dt class="text-muted-foreground">
-                {{ t`App password` }}
-              </dt>
-              <dd class="flex items-center gap-2">
-                <span
-                  class="font-mono text-xs text-foreground break-all bg-muted px-2 py-1 rounded"
-                >
-                  {{ summary?.appPassword }}
-                </span>
-                <Button
-                  variant="link"
-                  size="sm"
-                  @click="copyPassword"
-                >
-                  {{ copied ? t`Copied!` : t`Copy` }}
-                </Button>
-              </dd>
-            </div>
-          </dl>
-
-          <div
-            class="mt-4 pt-3 border-t border-border space-y-2"
-          >
-            <p class="text-xs text-muted-foreground">
-              {{
-                t`Share the app credentials above with LAN clients — they must never use root.`
-              }}
-            </p>
-            <p class="text-xs text-muted-foreground leading-relaxed">
-              {{
-                t`Security: bind-address is set to 0.0.0.0. Inbound access is restricted to your local network via OS Firewall rules and SQL grant privileges.`
-              }}
-            </p>
-          </div>
-          </CardContent>
-        </Card>
-
-        <Button
-          v-if="canContinue"
-          class="w-full mt-6"
-          @click="finish"
-          data-testid="continue-button"
-        >
-          {{ t`Continue to company setup` }}
-        </Button>
+            {{ t`Continue to company setup` }}
+          </Button>
         </template>
       </CardContent>
     </Card>
@@ -406,7 +406,10 @@ async function withIpcTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     return await Promise.race([
       promise,
       new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`Request timed out after ${ms / 1000}s.`)), ms);
+        timer = setTimeout(
+          () => reject(new Error(`Request timed out after ${ms / 1000}s.`)),
+          ms
+        );
       }),
     ]);
   } finally {
@@ -620,7 +623,9 @@ export default defineComponent({
           this.testOk = true;
           this.testError = '';
         } else {
-          this.testError = res.error || 'Failed to create database. Check that the user has CREATE privilege.';
+          this.testError =
+            res.error ||
+            'Failed to create database. Check that the user has CREATE privilege.';
         }
       } catch (err) {
         this.testError = (err as Error).message || String(err);

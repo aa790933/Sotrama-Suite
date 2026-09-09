@@ -64,17 +64,16 @@ export default defineComponent({
     },
     focus(): void {
       const checkbox = this.$refs.checkbox as unknown as
-        | { $el?: unknown }
-        | undefined;
+        { $el?: unknown } | undefined;
       const el = checkbox?.$el;
       if (el instanceof HTMLElement) {
         el.focus();
         return;
       }
 
-      const fallback = (
-        this.$el as HTMLElement | undefined
-      )?.querySelector?.('button');
+      const fallback = (this.$el as HTMLElement | undefined)?.querySelector?.(
+        'button'
+      );
       fallback?.focus();
     },
   },

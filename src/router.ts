@@ -137,6 +137,13 @@ const routes: RouteRecordRaw[] = [
       edit: (route) => route.query,
     },
   },
+  // Canonical catch-all: unknown paths (e.g. a stale translated pageTitle
+  // persisted as lastRoute across a language switch) redirect to Dashboard
+  // instead of rendering a blank view.
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/',
+  },
 ];
 
 const router = createRouter({ routes, history: createWebHistory() });
@@ -147,6 +154,12 @@ router.afterEach(({ fullPath }) => {
   historyState.back = !!state.back;
 
   if (fullPath.includes('index.html')) {
+    return;
+  }
+
+  // Persist only canonical in-app routes so a language switch never
+  // restores a stale translated pageTitle segment on reload.
+  if (!fullPath.startsWith('/')) {
     return;
   }
 

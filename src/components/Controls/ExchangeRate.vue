@@ -1,56 +1,45 @@
 <template>
   <div
-    class="flex items-center bg-gray-50 dark:bg-gray-890 dark:border-gray-800 rounded-md text-sm p-1 border"
+    class="flex items-center bg-muted border-border rounded-md text-sm p-1 border"
   >
     <div
       class="rate-container gap-2"
-      :class="
-        disabled
-          ? 'bg-gray-100 dark:bg-gray-850'
-          : 'bg-gray-25 dark:bg-gray-890'
-      "
+      :class="disabled ? 'bg-muted' : 'bg-muted'"
     >
       <input
-        class="text-right dark:text-gray-400 border-transparent focus:border-gray-500 focus:outline-none dark:focus:ring-1 focus:ring-gray-600 bg-gray-50 border"
+        class="text-right border-transparent focus:border-ring focus:outline-none dark:focus:ring-1 focus:ring-ring bg-muted border"
         v-model="fromValue"
         type="number"
         :disabled="disabled"
         min="0"
       />
 
-      <span class="dark:text-gray-400">{{ left }}</span>
+      <span class="dark:text-muted-foreground">{{ left }}</span>
     </div>
 
-    <p class="mx-1 text-gray-600 dark:text-gray-400">=</p>
+    <p class="mx-1 text-muted-foreground">=</p>
 
     <div
       class="rate-container gap-2"
-      :class="
-        disabled
-          ? 'bg-gray-100 dark:bg-gray-850'
-          : 'bg-gray-25 dark:bg-gray-890'
-      "
+      :class="disabled ? 'bg-muted' : 'bg-muted'"
     >
       <input
-        class="text-right dark:text-gray-400 border-transparent focus:border-gray-500 focus:outline-none dark:focus:ring-1 focus:ring-gray-600 bg-gray-50 border"
+        class="text-right border-transparent focus:border-ring focus:outline-none dark:focus:ring-1 focus:ring-ring bg-muted border"
         type="number"
         :value="isSwapped ? fromValue / exchangeRate : exchangeRate * fromValue"
         :disabled="disabled"
         min="0"
         @change="rightChange"
       />
-      <span class="dark:text-gray-400">{{ right }}</span>
+      <span class="dark:text-muted-foreground">{{ right }}</span>
     </div>
 
     <button
       v-if="!disabled"
-      class="bg-green-100 dark:bg-green-600 px-2 ms-1 -me-0.5 h-full border-s dark:border-gray-800"
+      class="bg-green-100 dark:bg-green-600 px-2 ms-1 -me-0.5 h-full border-s border-border"
       @click="swap"
     >
-      <feather-icon
-        name="refresh-cw"
-        class="w-3 h-3 text-gray-600 dark:text-gray-400"
-      />
+      <feather-icon name="refresh-cw" class="w-3 h-3 text-muted-foreground" />
     </button>
   </div>
 </template>
@@ -113,10 +102,10 @@ input[type='number'] {
 }
 
 .rate-container {
-  @apply flex items-center rounded-md  border-gray-100 text-gray-900 text-sm  px-1  focus-within:border-gray-200 bg-transparent;
+  @apply flex items-center rounded-md border-border text-foreground text-sm px-1 focus-within:border-border bg-transparent;
 }
 
 .rate-container > p {
-  @apply text-xs text-gray-600;
+  @apply text-xs text-muted-foreground;
 }
 </style>

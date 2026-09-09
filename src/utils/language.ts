@@ -41,6 +41,16 @@ export async function setLanguageMap(
   let success = true;
   if (code === 'en') {
     setLanguageMapOnTranslationString(undefined);
+    // Switching back to English must also reset schema labels when a
+    // database is connected; otherwise French/etc. labels persist.
+    // Pre-connect (renderer startup) there is nothing to reset.
+    if (fyo.db.isConnected) {
+      try {
+        await fyo.db.translateSchemaMap(undefined);
+      } catch {
+        success = false;
+      }
+    }
   } else {
     success = await fetchAndSetLanguageMap(code);
   }
@@ -51,9 +61,36 @@ export async function setLanguageMap(
   }
 
   if (!dontReload && success && initLanguage !== oldLanguage) {
+    // Canonicalize the persisted route before the full window reload so
+    // the restored navigation never contains a stale translated pageTitle
+    // segment (routes are canonical/slug-based; i18n is visual only).
+    try {
+      const lastRoute = localStorage.getItem('lastRoute');
+      if (lastRoute) {
+        localStorage.setItem('lastRoute', canonicalizeRoute(lastRoute));
+      }
+    } catch {
+      // localStorage may be unavailable; reload still proceeds.
+    }
     ipc.reloadWindow();
   }
   return success;
+}
+
+/**
+ * Strip the optional display-only `:pageTitle` segment from list routes.
+ * `/list/Payment/Sales Payments` -> `/list/Payment`. All other routes pass
+ * through unchanged. Keeps navigation canonical across language switches.
+ */
+export function canonicalizeRoute(fullPath: string): string {
+  const [path, query] = fullPath.split('?');
+  const segments = path.split('/');
+  // ['', 'list', schemaName, pageTitle?, ...rest]
+  if (segments.length >= 4 && segments[1] === 'list') {
+    const canonical = segments.slice(0, 3).join('/');
+    return query ? `${canonical}?${query}` : canonical;
+  }
+  return fullPath;
 }
 
 function getLanguageCode(initLanguage: string, oldLanguage: string) {

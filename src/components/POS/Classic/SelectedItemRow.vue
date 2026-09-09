@@ -1,7 +1,7 @@
 <template>
   <feather-icon
     :name="isExapanded ? 'chevron-up' : 'chevron-down'"
-    class="w-4 h-4 inline-flex cursor-pointer text-gray-700 dark:text-gray-200"
+    class="w-4 h-4 inline-flex cursor-pointer text-foreground"
     @click="toggleExpand"
   />
 
@@ -42,12 +42,12 @@
     <div class="flex flex-col ml-1">
       <feather-icon
         name="chevron-up"
-        class="w-3 h-3 cursor-pointer hover:text-blue-500 text-gray-700 dark:text-gray-200"
+        class="w-3 h-3 cursor-pointer hover:text-blue-500 text-foreground"
         @click="adjustQuantity(1)"
       />
       <feather-icon
         name="chevron-down"
-        class="w-3 h-3 cursor-pointer hover:text-blue-500 text-gray-700 dark:text-gray-200"
+        class="w-3 h-3 cursor-pointer hover:text-blue-500 text-foreground"
         @click="adjustQuantity(-1)"
       />
     </div>
@@ -533,7 +533,10 @@ export default defineComponent({
       }
 
       return (
-        (await getQuantity(fyo, {item: this.row.item as string, batch: this.row.batch})) ?? 0
+        (await getQuantity(fyo, {
+          item: this.row.item as string,
+          batch: this.row.batch,
+        })) ?? 0
       );
     },
 

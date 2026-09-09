@@ -951,16 +951,29 @@ export abstract class Invoice extends Transactional {
   formulas: FormulaMap = {
     account: {
       formula: async () => {
-        return (await this.fyo.getValue(
+        // Guard: a fresh (unsaved) invoice has no party yet. Querying the
+        // link with an undefined name would reject and surface as a DB
+        // error instead of a clean required-field validation.
+        if (!this.party) {
+          return '';
+        }
+        const account = (await this.fyo.getValue(
           'Party',
-          this.party!,
+          this.party,
           'defaultAccount'
         )) as string;
+        // Never propagate a missing link as an empty-string FK: leave the
+        // field empty so required-field validation fires instead of a SQL
+        // constraint rejection on insert/submit.
+        return account ?? '';
       },
       dependsOn: ['party'],
     },
     loyaltyProgram: {
       formula: async () => {
+        if (!this.party) {
+          return '';
+        }
         const partyDoc = await this.fyo.doc.getDoc(
           ModelNameEnum.Party,
           this.party
@@ -1003,9 +1016,12 @@ export abstract class Invoice extends Transactional {
     },
     currency: {
       formula: async () => {
+        if (!this.party) {
+          return this.fyo.singles.SystemSettings!.currency as string;
+        }
         const currency = (await this.fyo.getValue(
           'Party',
-          this.party!,
+          this.party,
           'currency'
         )) as string;
 

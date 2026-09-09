@@ -1,17 +1,17 @@
 <template>
   <div
-    class="w-quick-edit bg-white dark:bg-gray-850 border-l dark:border-gray-800 overflow-y-auto custom-scroll custom-scroll-thumb2"
+    class="w-quick-edit bg-card border-l border-border overflow-y-auto custom-scroll custom-scroll-thumb2"
   >
     <!-- Page Header -->
     <div
-      class="flex items-center justify-between px-4 h-row-largest sticky top-0 bg-white dark:bg-gray-850"
+      class="flex items-center justify-between px-4 h-row-largest sticky top-0 bg-card"
       style="z-index: 1"
     >
       <div class="flex items-center justify-between w-full">
         <Button size="icon" variant="ghost" @click="$emit('close')">
           <feather-icon name="x" class="w-4 h-4" />
         </Button>
-        <p class="text-xl font-semibold text-gray-600 dark:text-gray-400">
+        <p class="text-xl font-semibold text-muted-foreground">
           {{ t`Linked Entries` }}
         </p>
       </div>
@@ -20,12 +20,12 @@
     <!-- Linked Entry List -->
     <div
       v-if="sequence.length"
-      class="w-full overflow-y-auto custom-scroll custom-scroll-thumb2 border-t dark:border-gray-800"
+      class="w-full overflow-y-auto custom-scroll custom-scroll-thumb2 border-t border-border"
     >
       <div
         v-for="sn of sequence"
         :key="sn"
-        class="border-b dark:border-gray-800 p-4 overflow-auto"
+        class="border-b border-border p-4 overflow-auto"
       >
         <!-- Header with count and schema label -->
         <div
@@ -33,9 +33,7 @@
           :class="entries[sn].collapsed ? '' : 'pb-4'"
           @click="entries[sn].collapsed = !entries[sn].collapsed"
         >
-          <h2
-            class="text-base text-gray-600 dark:text-gray-400 font-semibold select-none"
-          >
+          <h2 class="text-base text-muted-foreground font-semibold select-none">
             {{ fyo.schemaMap[sn]?.label ?? sn
             }}<span class="font-normal">{{
               ` – ${entries[sn].details.length}`
@@ -43,30 +41,30 @@
           </h2>
           <feather-icon
             :name="entries[sn].collapsed ? 'chevron-up' : 'chevron-down'"
-            class="w-4 h-4 text-gray-600 dark:text-gray-400"
+            class="w-4 h-4 text-muted-foreground"
           />
         </div>
 
         <!-- Entry list -->
         <div
           v-show="!entries[sn].collapsed"
-          class="entry-container rounded-md border dark:border-gray-800 overflow-hidden"
+          class="entry-container rounded-md border border-border overflow-hidden"
         >
           <!-- Entry -->
           <div
             v-for="e of entries[sn].details"
             :key="String(e.name) + sn"
-            class="p-2 text-sm cursor-pointer border-b last:border-0 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-875"
+            class="p-2 text-sm cursor-pointer border-b last:border-0 border-border hover:bg-accent"
             @click="routeTo(sn, String(e.name))"
           >
             <div class="flex justify-between">
               <!-- Name -->
-              <p class="font-semibold dark:text-gray-25">
+              <p class="font-semibold">
                 {{ e.name }}
               </p>
 
               <!-- Date -->
-              <p v-if="e.date" class="text-xs text-gray-600 dark:text-gray-400">
+              <p v-if="e.date" class="text-xs text-muted-foreground">
                 {{ fyo.format(e.date, 'Date') }}
               </p>
             </div>
@@ -151,7 +149,7 @@
         </div>
       </div>
     </div>
-    <p v-else class="p-4 text-sm text-gray-600 dark:text-gray-400">
+    <p v-else class="p-4 text-sm text-muted-foreground">
       {{ t`No linked entries found` }}
     </p>
   </div>

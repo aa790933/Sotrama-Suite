@@ -2,8 +2,8 @@
   <Modal class="h-auto w-96" :set-close-listener="false">
     <p class="text-center font-semibold py-3">Apply Coupon Code</p>
     <div class="px-10">
-      <hr class="dark:border-gray-800" />
-      <p v-if="appliedCoupons.length" class="text-xs m-2 text-gray-500">
+      <hr class="border-border" />
+      <p v-if="appliedCoupons.length" class="text-xs m-2 text-muted-foreground">
         {{ t`Applied Coupon Codes` }}
       </p>
       <div
@@ -16,7 +16,7 @@
           :key="index"
           :ratio="ratio"
           :border="true"
-          class="border-b border-l border-r dark:border-gray-800 relative group h-coupon-mid hover:bg-gray-25 dark:bg-gray-890 items-center justify-center"
+          class="border-b border-l border-r border-border relative group h-coupon-mid hover:bg-accent items-center justify-center"
         >
           <div class="flex flex-row w-full items-center">
             <div class="flex flex-row">
@@ -62,7 +62,8 @@
 
       <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto mb-2">
         <div class="col-span-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full bg-green-500 dark:bg-green-700"
             style="padding: 1.35rem"
             :disabled="validationError"
@@ -79,7 +80,8 @@
 
       <div class="row-start-6 grid grid-cols-2 gap-4 mt-auto mb-8">
         <div class="col-span-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             class="w-full bg-red-500 dark:bg-red-700"
             style="padding: 1.35rem"
             @click="cancelApplyCouponCode()"

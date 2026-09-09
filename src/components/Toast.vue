@@ -3,7 +3,7 @@
     <Transition>
       <div
         v-if="open"
-        class="inner text-gray-900 dark:text-gray-25 shadow-lg px-3 py-2 flex items-center mb-3 w-toast z-30 bg-white dark:bg-gray-850 rounded-lg border"
+        class="inner text-foreground shadow-lg px-3 py-2 flex items-center mb-3 w-toast z-30 bg-card rounded-lg border"
         :class="[config.containerBorder]"
         style="pointer-events: auto"
       >
@@ -16,7 +16,7 @@
           <p class="text-base">{{ message }}</p>
           <button
             v-if="actionText"
-            class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200"
+            class="text-sm text-foreground hover:text-foreground"
           >
             {{ actionText }}
           </button>
@@ -24,7 +24,7 @@
         <div class="ms-auto flex items-center">
           <svg
             v-if="isPersistent"
-            class="animate-spin h-4 w-4 text-gray-600 dark:text-gray-400"
+            class="animate-spin h-4 w-4 text-muted-foreground"
             viewBox="0 0 24 24"
           >
             <circle
@@ -46,7 +46,7 @@
           <feather-icon
             v-else
             name="x"
-            class="w-4 h-4 ms-auto text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-800 dark:hover:text-gray-200"
+            class="w-4 h-4 ms-auto text-muted-foreground cursor-pointer hover:text-foreground"
             @click="closeToast"
           />
         </div>

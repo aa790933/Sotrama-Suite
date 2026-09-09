@@ -9,12 +9,8 @@
       }"
     >
       <div
-        class="text-sm flex focus:outline-none hover:text-gray-800 dark:hover:text-gray-100 focus:text-gray-800 dark:focus:text-gray-100 items-center py-1 rounded-md leading-relaxed cursor-pointer"
-        :class="
-          !value
-            ? 'text-gray-600 dark:text-gray-500'
-            : 'text-gray-900 dark:text-gray-300'
-        "
+        class="text-sm flex focus:outline-none hover:text-foreground focus:text-foreground dark:focus:text-foreground items-center py-1 rounded-md leading-relaxed cursor-pointer"
+        :class="!value ? 'text-muted-foreground' : 'text-foreground'"
         tabindex="0"
         @click="toggleDropdown()"
         @keydown.down="highlightItemDown"
