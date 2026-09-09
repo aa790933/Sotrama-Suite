@@ -185,7 +185,7 @@ export default defineComponent({
         'companyName'
       )) as string;
       await this.setSearcher();
-      updateConfigFiles(fyo);
+      await updateConfigFiles(fyo);
     },
     newDatabase() {
       this.hostRole = normalizeHostRole(fyo.config.get('hostRole'));

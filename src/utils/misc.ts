@@ -77,7 +77,7 @@ export function getSetupWizardDoc(languageMap?: LanguageMap) {
   );
 }
 
-export function updateConfigFiles(fyo: Fyo): ConfigFile {
+export async function updateConfigFiles(fyo: Fyo): Promise<ConfigFile> {
   const configFiles = fyo.config.get('files', []) as ConfigFile[];
   const companyName = fyo.singles.AccountingSettings!.companyName as string;
   const id = fyo.singles.SystemSettings!.instanceId as string;
@@ -85,54 +85,56 @@ export function updateConfigFiles(fyo: Fyo): ConfigFile {
   const openCount = fyo.singles.Misc!.openCount as number;
 
   // Main-owned credential custody — store full config in connections, keep files for migration
-  // Try to handle as MariaDB JSON or as existing connection ID
+  // Try to handle as MariaDB JSON or as existing connection ID.
+  // Connection rows are persisted via the main process (ipc.upsertConnection):
+  // the preload `store.set` guard rejects direct renderer writes to
+  // `connections`, which previously crashed boot with
+  // "connections must be set via main process".
   let dbPathForFile: string = rawDbPath;
   let isMariaDB = false;
   try {
-    const { parseMariaDBConfigString } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
+    const { parseMariaDBConfigString } =
+      require('utils/mariadb-types') as typeof import('utils/mariadb-types');
     const cfg = parseMariaDBConfigString(rawDbPath);
     isMariaDB = true;
-    // Upsert into connections store (main-owned)
-    const connections = (fyo.config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined) ?? [];
-    const { equalsConnection } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
-    let conn = connections.find((c) => c.id === id) || connections.find((c) => equalsConnection(c, cfg));
-    if (conn) {
-      conn.companyName = companyName;
-      conn.host = cfg.host;
-      conn.port = cfg.port;
-      conn.user = cfg.user;
-      conn.database = cfg.database;
-      conn.password = cfg.password;
-      conn.openCount = openCount;
-    } else {
-      const { fromMariaDBConfigToPersisted } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
-      conn = fromMariaDBConfigToPersisted(id, companyName, cfg, openCount);
-      connections.push(conn);
+    const res = await ipc.upsertConnection({
+      companyName,
+      config: cfg,
+      openCount,
+    });
+    if (!res.ok || !res.id) {
+      throw new Error(res.error ?? 'upsert-connection failed');
     }
-    fyo.config.set('connections' as never, connections as never);
-    fyo.config.set('lastSelectedConnectionId' as never, conn.id as never);
+    const connId = res.id;
+    fyo.config.set('lastSelectedConnectionId' as never, connId as never);
     // For files, store ID instead of JSON to avoid password in the files list
-    dbPathForFile = conn.id;
-    // Replace renderer’s in-memory dbPath with ID so password is not retained in Vue state
-    // Keep original JSON in a non-reactive holder for potential retry, but clear from reactive state
-    (fyo.db as unknown as { _rawDbPath?: string })._rawDbPath = rawDbPath;
-    fyo.db.dbPath = conn.id;
+    dbPathForFile = connId;
+    // Replace renderer's in-memory dbPath with ID so password is not retained in Vue state
+    fyo.db.dbPath = connId;
   } catch {
-    // rawDbPath may already be a known connection ID
-    const connections = (fyo.config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined) ?? [];
-    const byId = connections.find((c) => c.id === rawDbPath);
-    if (byId) {
-      isMariaDB = true;
-      byId.companyName = companyName;
-      byId.openCount = openCount;
-      fyo.config.set('connections' as never, connections as never);
-      fyo.config.set('lastSelectedConnectionId' as never, byId.id as never);
-      dbPathForFile = byId.id;
-    }
+    // rawDbPath may already be a known connection ID — touch its metadata
+    // main-side (best effort; boot must never crash on metadata sync).
+    try {
+      const res = await ipc.upsertConnection({
+        companyName,
+        connectionId: rawDbPath,
+        openCount,
+      });
+      if (res.ok && res.id) {
+        isMariaDB = true;
+        fyo.config.set('lastSelectedConnectionId' as never, res.id as never);
+        dbPathForFile = res.id;
+      }
+    } catch {}
   }
 
   const fileIndex = configFiles.findIndex((f) => f.id === id);
-  let newFile = { id, companyName, dbPath: dbPathForFile, openCount } as ConfigFile;
+  let newFile = {
+    id,
+    companyName,
+    dbPath: dbPathForFile,
+    openCount,
+  } as ConfigFile;
 
   if (fileIndex === -1) {
     configFiles.push(newFile);

@@ -41,6 +41,7 @@ export enum IPC_ACTIONS {
   GET_LAN_IP = 'get-lan-ip',
   CHECK_DB_EXISTS = 'check-db-exists',
   CREATE_DATABASE = 'create-database',
+  UPSERT_CONNECTION = 'upsert-connection',
   DB_CREATE = 'db-create',
   DB_CONNECT = 'db-connect',
   DB_CALL = 'db-call',

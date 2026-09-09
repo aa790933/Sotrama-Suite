@@ -21,6 +21,11 @@ export interface ConnectionStore {
   getMetadata(): ConnectionMetadata[];
   upsert(companyName: string, config: MariaDBConfig): PersistedConnection;
   deleteById(id: string): void;
+  /** Patch display metadata (companyName/openCount) on an existing row. Returns false when unknown. */
+  setMeta(
+    id: string,
+    patch: { companyName?: string; openCount?: number }
+  ): boolean;
   getDbList(): Promise<unknown>;
   setLastSelected(id: string): void;
   /** Resolve a connection id or JSON string to its config, persisting as needed. */
@@ -32,36 +37,67 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
   findById(id: string): PersistedConnection | undefined {
     // Lazy import to avoid pulling electron-store at module load time in tests
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { findConnectionById } = require('../helpers') as typeof import('../helpers');
+    const { findConnectionById } =
+      require('../helpers') as typeof import('../helpers');
     return findConnectionById(id);
   }
 
   getAll(): PersistedConnection[] {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getPersistedConnections } = require('../helpers') as typeof import('../helpers');
+    const { getPersistedConnections } =
+      require('../helpers') as typeof import('../helpers');
     return getPersistedConnections();
   }
 
   getMetadata(): ConnectionMetadata[] {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getConnectionsMetadata } = require('../helpers') as typeof import('../helpers');
+    const { getConnectionsMetadata } =
+      require('../helpers') as typeof import('../helpers');
     return getConnectionsMetadata();
   }
 
   upsert(companyName: string, config: MariaDBConfig): PersistedConnection {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { upsertConnectionFromConfig } = require('../helpers') as typeof import('../helpers');
+    const { upsertConnectionFromConfig } =
+      require('../helpers') as typeof import('../helpers');
     return upsertConnectionFromConfig(companyName, config);
   }
 
   deleteById(id: string): void {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getPersistedConnections } = require('../helpers') as typeof import('../helpers');
+    const { getPersistedConnections } =
+      require('../helpers') as typeof import('../helpers');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { default: config } = require('utils/config') as typeof import('utils/config');
+    const { default: config } =
+      require('utils/config') as typeof import('utils/config');
     const conns = getPersistedConnections();
     const filtered = conns.filter((c) => c.id !== id);
     config.set('connections' as never, filtered as never);
+  }
+
+  setMeta(
+    id: string,
+    patch: { companyName?: string; openCount?: number }
+  ): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getPersistedConnections } =
+      require('../helpers') as typeof import('../helpers');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { default: config } =
+      require('utils/config') as typeof import('utils/config');
+    const conns = getPersistedConnections();
+    const conn = conns.find((c) => c.id === id);
+    if (!conn) {
+      return false;
+    }
+    if (typeof patch.companyName === 'string' && patch.companyName) {
+      conn.companyName = patch.companyName;
+    }
+    if (typeof patch.openCount === 'number') {
+      conn.openCount = patch.openCount;
+    }
+    config.set('connections' as never, conns as never);
+    return true;
   }
 
   getDbList(): Promise<unknown> {
@@ -83,7 +119,8 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
 
   setLastSelected(id: string): void {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { default: config } = require('utils/config') as typeof import('utils/config');
+    const { default: config } =
+      require('utils/config') as typeof import('utils/config');
     config.set('lastSelectedConnectionId' as never, id as never);
   }
 
@@ -102,7 +139,8 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     const cfg = parseMariaDBConfigString(input);
     sanitizeDatabaseName(cfg.database);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { upsertConnectionFromConfig } = require('../helpers') as typeof import('../helpers');
+    const { upsertConnectionFromConfig } =
+      require('../helpers') as typeof import('../helpers');
     const conn = upsertConnectionFromConfig(cfg.database, cfg);
     this.setLastSelected(conn.id);
     return cfg;
@@ -140,7 +178,11 @@ export class InMemoryConnectionStore implements ConnectionStore {
       existing.openCount = (existing.openCount ?? 0) + 1;
       return existing;
     }
-    const id = `${companyName}-${config.host}-${config.port}-${config.database}-${Date.now()}`.replace(/\s+/g, '_');
+    const id =
+      `${companyName}-${config.host}-${config.port}-${config.database}-${Date.now()}`.replace(
+        /\s+/g,
+        '_'
+      );
     const created = fromMariaDBConfigToPersisted(id, companyName, config, 1);
     this.conns.set(id, created);
     return created;
@@ -148,6 +190,23 @@ export class InMemoryConnectionStore implements ConnectionStore {
 
   deleteById(id: string): void {
     this.conns.delete(id);
+  }
+
+  setMeta(
+    id: string,
+    patch: { companyName?: string; openCount?: number }
+  ): boolean {
+    const conn = this.conns.get(id);
+    if (!conn) {
+      return false;
+    }
+    if (typeof patch.companyName === 'string' && patch.companyName) {
+      conn.companyName = patch.companyName;
+    }
+    if (typeof patch.openCount === 'number') {
+      conn.openCount = patch.openCount;
+    }
+    return true;
   }
 
   getDbList(): Promise<unknown> {

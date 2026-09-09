@@ -209,6 +209,11 @@ export class StockTransferItem extends TransferItem {
     },
     rate: {
       formula: async () => {
+        // Guard: a fresh row has no item yet; querying the link with an
+        // undefined name would reject instead of validating cleanly.
+        if (!this.item) {
+          return this.rate ?? this.fyo.pesa(0);
+        }
         const rate = (await this.fyo.getValue(
           'Item',
           this.item as string,
@@ -224,12 +229,21 @@ export class StockTransferItem extends TransferItem {
       dependsOn: ['item'],
     },
     account: {
-      formula: () => {
+      formula: async () => {
+        if (!this.item) {
+          return '';
+        }
         let accountType = 'expenseAccount';
         if (this.isSales) {
           accountType = 'incomeAccount';
         }
-        return this.fyo.getValue('Item', this.item as string, accountType);
+        return (
+          ((await this.fyo.getValue(
+            'Item',
+            this.item as string,
+            accountType
+          )) as string) ?? ''
+        );
       },
       dependsOn: ['item'],
     },

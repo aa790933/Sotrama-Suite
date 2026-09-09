@@ -21,7 +21,7 @@
         <div class="min-w-0">
           <h6
             data-testid="company-name"
-            class="truncate text-sm font-semibold text-foreground select-none"
+            class="truncate text-sm font-semibold tracking-tight text-foreground select-none"
           >
             {{ companyName || 'Sotrama Suite' }}
           </h6>

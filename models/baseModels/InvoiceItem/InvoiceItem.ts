@@ -155,21 +155,29 @@ export abstract class InvoiceItem extends Doc {
 
   formulas: FormulaMap = {
     description: {
-      formula: async () =>
-        (await this.fyo.getValue(
+      formula: async () => {
+        if (!this.item) {
+          return '';
+        }
+        return (await this.fyo.getValue(
           'Item',
           this.item as string,
           'description'
-        )) as string,
+        )) as string;
+      },
       dependsOn: ['item'],
     },
     itemCode: {
-      formula: async () =>
-        (await this.fyo.getValue(
+      formula: async () => {
+        if (!this.item) {
+          return '';
+        }
+        return (await this.fyo.getValue(
           'Item',
           this.item as string,
           'itemCode'
-        )) as string,
+        )) as string;
+      },
       dependsOn: ['item'],
     },
     rate: {
@@ -226,12 +234,16 @@ export abstract class InvoiceItem extends Doc {
       ],
     },
     unit: {
-      formula: async () =>
-        (await this.fyo.getValue(
+      formula: async () => {
+        if (!this.item) {
+          return '';
+        }
+        return (await this.fyo.getValue(
           'Item',
           this.item as string,
           'unit'
-        )) as string,
+        )) as string;
+      },
       dependsOn: ['item'],
     },
     transferUnit: {
@@ -354,17 +366,29 @@ export abstract class InvoiceItem extends Doc {
       dependsOn: ['transferUnit', 'qty'],
     },
     account: {
-      formula: () => {
+      formula: async () => {
+        if (!this.item) {
+          return '';
+        }
         let accountType = 'expenseAccount';
         if (this.isSales) {
           accountType = 'incomeAccount';
         }
-        return this.fyo.getValue('Item', this.item as string, accountType);
+        return (
+          ((await this.fyo.getValue(
+            'Item',
+            this.item as string,
+            accountType
+          )) as string) ?? ''
+        );
       },
       dependsOn: ['item'],
     },
     tax: {
       formula: async () => {
+        if (!this.item) {
+          return '';
+        }
         const itemTax = (await this.fyo.getValue(
           'Item',
           this.item as string,

@@ -1,9 +1,7 @@
 <template>
   <div class="h-screen" style="width: var(--w-desk)">
     <PageHeader :title="t`Dashboard`">
-      <div
-        class="border border-border rounded bg-muted flex items-center"
-      >
+      <div class="border border-border rounded bg-muted flex items-center">
         <PeriodSelector
           class="px-3"
           :value="period"
@@ -18,6 +16,11 @@
       style="height: calc(100vh - var(--h-row-largest) - 1px)"
     >
       <div style="min-width: var(--w-desk-fixed)" class="overflow-auto">
+        <DashboardMetrics
+          :common-period="period"
+          @period-change="handlePeriodChange"
+        />
+        <hr class="border-border" />
         <Cashflow
           class="p-4"
           :common-period="period"
@@ -65,6 +68,7 @@
 import PageHeader from 'src/components/PageHeader.vue';
 import UnpaidInvoices from './UnpaidInvoices.vue';
 import Cashflow from './Cashflow.vue';
+import DashboardMetrics from './DashboardMetrics.vue';
 import Expenses from './Expenses.vue';
 import PeriodSelector from './PeriodSelector.vue';
 import ProfitAndLoss from './ProfitAndLoss.vue';
@@ -75,6 +79,7 @@ export default {
   components: {
     PageHeader,
     Cashflow,
+    DashboardMetrics,
     ProfitAndLoss,
     Expenses,
     PeriodSelector,

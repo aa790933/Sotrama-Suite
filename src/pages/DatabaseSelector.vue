@@ -367,7 +367,7 @@ export default defineComponent({
           }
         );
 
-        updateConfigFiles(fyo);
+        await updateConfigFiles(fyo);
         await fyo.purgeCache();
         await this.setFiles();
 

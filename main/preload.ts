@@ -21,6 +21,7 @@ import type {
 import type {
   HostProvisionConfig,
   InstallResult,
+  MariaDBConfig,
   PingOptions,
   PingResult,
 } from 'utils/mariadb-types';
@@ -121,6 +122,23 @@ const ipc = {
     )) as { ok: boolean; error?: string };
   },
 
+  /**
+   * Main-process-owned connection persistence. The preload `store.set`
+   * guard rejects direct `connections` writes from the renderer (password
+   * custody); connection upserts go through this channel instead.
+   */
+  async upsertConnection(payload: {
+    companyName: string;
+    config?: MariaDBConfig;
+    connectionId?: string;
+    openCount?: number;
+  }) {
+    return (await ipcRenderer.invoke(
+      IPC_ACTIONS.UPSERT_CONNECTION,
+      payload
+    )) as { ok: boolean; id?: string; error?: string };
+  },
+
   async checkForUpdates() {
     await ipcRenderer.invoke(IPC_ACTIONS.CHECK_FOR_UPDATES);
   },
@@ -182,18 +200,30 @@ const ipc = {
     return (await ipcRenderer.invoke(IPC_ACTIONS.GET_LAN_IP)) as string | null;
   },
 
-  async checkDbExists(options: { host: string; port: number; user: string; password: string; database: string }) {
-    return (await ipcRenderer.invoke(
-      IPC_ACTIONS.CHECK_DB_EXISTS,
-      options
-    )) as { exists: boolean; error?: string };
+  async checkDbExists(options: {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    database: string;
+  }) {
+    return (await ipcRenderer.invoke(IPC_ACTIONS.CHECK_DB_EXISTS, options)) as {
+      exists: boolean;
+      error?: string;
+    };
   },
 
-  async createDatabase(options: { host: string; port: number; user: string; password: string; database: string }) {
-    return (await ipcRenderer.invoke(
-      IPC_ACTIONS.CREATE_DATABASE,
-      options
-    )) as { ok: boolean; error?: string };
+  async createDatabase(options: {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    database: string;
+  }) {
+    return (await ipcRenderer.invoke(IPC_ACTIONS.CREATE_DATABASE, options)) as {
+      ok: boolean;
+      error?: string;
+    };
   },
 
   async provisionMariaDB(options: HostProvisionConfig) {
@@ -309,26 +339,28 @@ const ipc = {
       const value = config.get(key);
       // Never expose raw connections with passwords to renderer; return safe metadata
       if (key === 'connections' && Array.isArray(value)) {
-        return (value as unknown as import('utils/mariadb-types').PersistedConnection[]).map(
-          (c) => ({
-            id: c.id,
-            companyName: c.companyName,
-            host: c.host,
-            port: c.port,
-            user: c.user,
-            database: c.database,
-            openCount: c.openCount,
-            display: toSafeDisplay(c),
-          })
-        ) as unknown as ConfigMap[K];
+        return (
+          value as unknown as import('utils/mariadb-types').PersistedConnection[]
+        ).map((c) => ({
+          id: c.id,
+          companyName: c.companyName,
+          host: c.host,
+          port: c.port,
+          user: c.user,
+          database: c.database,
+          openCount: c.openCount,
+          display: toSafeDisplay(c),
+        })) as unknown as ConfigMap[K];
       }
       if (key === 'lastSelectedFilePath' && typeof value === 'string') {
         // If it's a MariaDB JSON, don't expose raw password to renderer via store; return ID if available
         try {
-          const { parseMariaDBConfigString } = require('utils/mariadb-types') as typeof import('utils/mariadb-types');
+          const { parseMariaDBConfigString } =
+            require('utils/mariadb-types') as typeof import('utils/mariadb-types');
           const parsed = parseMariaDBConfigString(value);
           // It's a MariaDB JSON — try to map to connection ID
-          const conns = config.get('connections' as never) as import('utils/mariadb-types').PersistedConnection[] | undefined;
+          const conns = config.get('connections' as never) as
+            import('utils/mariadb-types').PersistedConnection[] | undefined;
           const found = conns?.find((c) => equalsConnection(c, parsed));
           if (found) return found.id as unknown as ConfigMap[K];
         } catch {}

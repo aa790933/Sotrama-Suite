@@ -3,11 +3,21 @@
     class="relative window-drag flex items-center border-b border-border bg-card text-card-foreground h-10 select-none"
   >
     <div class="ms-3 flex items-center gap-2">
-      <img :src="logoUrl" alt="Sotrama" class="h-5 w-5 object-contain" />
-      <p v-if="companyName" class="text-sm font-semibold truncate max-w-48">
+      <div
+        class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-primary text-primary-foreground"
+      >
+        <Layers class="h-3 w-3" />
+      </div>
+      <p
+        v-if="companyName"
+        class="text-sm font-semibold tracking-tight text-foreground truncate max-w-48"
+      >
         {{ companyName }}
       </p>
-      <p v-else class="text-sm font-semibold text-muted-foreground">
+      <p
+        v-else
+        class="text-sm font-semibold tracking-tight text-muted-foreground"
+      >
         Sotrama Suite
       </p>
       <span
@@ -49,11 +59,11 @@
 </template>
 
 <script>
-import logoSrc from '../assets/img/app-logo.png';
+import { Layers } from '@lucide/vue';
 
 export default {
   name: 'WindowsTitleBar',
-  components: {},
+  components: { Layers },
   props: {
     dbPath: String,
     companyName: String,
@@ -65,9 +75,6 @@ export default {
     };
   },
   computed: {
-    logoUrl() {
-      return logoSrc;
-    },
     routeCrumb() {
       const path = this.$route?.path ?? '';
       return path.replace(/^\//, '').replace(/\//g, ' / ');
