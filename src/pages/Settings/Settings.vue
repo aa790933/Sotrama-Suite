@@ -63,19 +63,19 @@
         <div>
           Sotrama Suite — based on
           <a
-            href="https://github.com/frappe/books"
+            href="https://github.com/aa790933/Sotrama-Suite"
             target="_blank"
             rel="noopener noreferrer"
             class="underline hover:text-foreground"
-            >Frappe Books</a
+            >Sotrama Suite</a
           >
           by
           <a
-            href="https://frappe.io"
+            href="https://github.com/aa790933"
             target="_blank"
             rel="noopener noreferrer"
             class="underline hover:text-foreground"
-            >Frappe Technologies Pvt. Ltd.</a
+            >aa790933</a
           >
           , licensed under AGPL-3.0-only.
         </div>

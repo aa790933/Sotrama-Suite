@@ -9,11 +9,11 @@
 
 **Modern Accounting Made Simple**
 
-> Sotrama Suite is a fork of [Frappe Books](https://github.com/frappe/books) by [Frappe Technologies Pvt. Ltd.](https://frappe.io), licensed under AGPL-3.0-only.
+> Sotrama Suite is an open-source accounting software by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/frappe/books)](https://github.com/aa790933/Sotrama-Suite/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/aa790933/Sotrama-Suite)](https://github.com/aa790933/Sotrama-Suite/releases)
 ![Platforms](https://img.shields.io/badge/platform-mac%2C%20windows%2C%20linux-yellowgreen)
-[![Publish](https://github.com/frappe/books/actions/workflows/publish.yml/badge.svg)](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml)
+[![Publish](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml/badge.svg)](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml)
 
 </div>
 
@@ -22,9 +22,9 @@
 </div>
 <br />
 <div align="center">
-	<a href="https://frappe.io/books">Website</a>
+	<a href="https://github.com/aa790933/Sotrama-Suite">Website</a>
 	-
-	<a href="https://docs.frappe.io/books">Documentation</a>
+	<a href="https://aa790933.github.io/Sotrama-Suite">Documentation</a>
 </div>
 
 ## Sotrama Suite
@@ -76,18 +76,17 @@ Sotrama Suite addresses a market gap where small businesses face expensive, comp
 
 ### Manual
 
-Download and install the latest release for your platform from the [releases
-page](https://github.com/frappe/books/releases) .
+Download and install the latest release for your platform from the [releases page](https://github.com/aa790933/Sotrama-Suite/releases) .
 
 ### Using Homebrew (for MacOS and Linux)
 
 ```zsh
-brew install --cask frappe-books
+brew install --cask sotrama-suite
 ```
 
 ### Via Flatpak (Linux)
 
-<a href='https://flathub.org/apps/io.frappe.books'>
+<a href='https://flathub.org/apps/io.github.aa790933.sotrama-suite'>
     <img width='120' alt='Get it on Flathub' src='https://flathub.org/api/badge?locale=en'/>
 </a>
 
@@ -95,7 +94,7 @@ brew install --cask frappe-books
 
 ### Pre-requisites
 
-To get the dev environment up and running you need to first set up Node.js `v20.18.1` and npm. For this, we suggest using
+To get the dev environment up and running you need to first set up Node.js `v22.12.0` and npm. For this, we suggest using
 [nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 Next, you will need to install [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable).
@@ -107,10 +106,10 @@ setup Sotrama Suite for development and building:
 
 ```bash
 # clone the repository
-git clone https://github.com/frappe/books.git
+git clone https://github.com/aa790933/Sotrama-Suite.git
 
 # change directory
-cd books
+cd Sotrama-Suite
 
 # install dependencies
 yarn
@@ -158,10 +157,10 @@ So to build for linux you could use the `--linux` flag like so: `yarn build --li
 
 ## Want to Just Try Out or Contribute?
 
-If you want to contribute to Sotrama Suite, please check our [Contribution Guidelines](https://github.com/frappe/books/blob/master/.github/CONTRIBUTING.md). There are many ways you can contribute even if you don't code:
+If you want to contribute to Sotrama Suite, please check our [Contribution Guidelines](.github/CONTRIBUTING.md). There are many ways you can contribute even if you don't code:
 
-1. If you find any issues, no matter how small (even typos), you can [raise an issue](https://github.com/frappe/books/issues/new) to inform us.
-2. You can help us with language support by [contributing translations](https://github.com/frappe/books/wiki/Contributing-Translations).
+1. If you find any issues, no matter how small (even typos), you can [raise an issue](https://github.com/aa790933/Sotrama-Suite/issues/new) to inform us.
+2. You can help us with language support by [contributing translations](https://github.com/aa790933/Sotrama-Suite/wiki/Contributing-Translations).
 3. If you're an ardent user you can tell us what you would like to see.
 4. If you have accounting requirements, you can become an ardent user. 🙂
 
@@ -169,8 +168,8 @@ If you want to contribute code then you can fork this repo, make changes and rai
 
 ## Credits
 
-Sotrama Suite is built on [Frappe Books](https://github.com/frappe/books) by [Frappe Technologies Pvt. Ltd.](https://frappe.io).  
-Original project: https://github.com/frappe/books  
+Sotrama Suite is built by [aa790933](https://github.com/aa790933).
+Original project: https://github.com/frappe/books (forked)
 License: [AGPL-3.0-only](LICENSE)
 
 ## Translation Contributors
@@ -197,6 +196,6 @@ License: [AGPL-3.0-only](LICENSE)
 
 ## Learn and connect
 
-- [Telegram Group](https://t.me/frappebooks): Used for discussions and decisions regarding everything Sotrama Suite.
-- [GitHub Discussions](https://github.com/frappe/books/discussions): Used for discussions around a specific topic.
-- [Documentation](https://docs.frappe.io/books): Official documentation for more details.
+- [Telegram Group](https://t.me/sotrama_suite): Used for discussions and decisions regarding everything Sotrama Suite.
+- [GitHub Discussions](https://github.com/aa790933/Sotrama-Suite/discussions): Used for discussions around a specific topic.
+- [Documentation](https://aa790933.github.io/Sotrama-Suite): Official documentation for more details.

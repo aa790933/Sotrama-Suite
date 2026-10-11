@@ -1,13 +1,13 @@
 # Contributing to Sotrama Suite
 
-> Sotrama Suite is a fork of [Frappe Books](https://github.com/frappe/books) by [Frappe Technologies Pvt. Ltd.](https://frappe.io), licensed under AGPL-3.0-only.
+> Sotrama Suite is an open-source accounting software by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
 If you are a Sotrama Suite user and want to contribute to improving it _without
 writing code_, there are several things you can do:
 
-- **Inform us of issues** you face while using Sotrama Suite by [raising issues](https://github.com/frappe/books/issues/new).
-- **Add a language** you would like to use Sotrama Suite in by [contributing translation](https://github.com/frappe/books/wiki/Contributing-Translations).
-- **Share your thoughts** on Sotrama Suite by joining our [Telegram group](https://t.me/frappebooks).
+- **Inform us of issues** you face while using Sotrama Suite by [raising issues](https://github.com/aa790933/Sotrama-Suite/issues/new).
+- **Add a language** you would like to use Sotrama Suite in by [contributing translation](https://github.com/aa790933/Sotrama-Suite/wiki/Contributing-Translations).
+- **Share your thoughts** on Sotrama Suite by joining our [Telegram group](https://t.me/sotrama_suite).
 - **Use Sotrama Suite** for your accounting requirements and tell people about it.
 
 ---
