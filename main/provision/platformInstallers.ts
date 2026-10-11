@@ -206,6 +206,7 @@ class MacInstaller implements PlatformInstaller {
     port: number,
     _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
+    _onProgress?.({ stage: 'Locating MariaDB configuration…', percent: 10 });
     const brewPrefix = await brewCellarDir();
     if (!brewPrefix) {
       return { ok: false, error: 'Could not locate MariaDB config directory.' };
@@ -213,19 +214,24 @@ class MacInstaller implements PlatformInstaller {
     const cfgPath = path.join(brewPrefix, 'my.cnf');
     const exists = await fs.pathExists(cfgPath);
     if (!exists) {
+      _onProgress?.({ stage: 'Configuration not found, skipping…', percent: 20 });
       return { ok: true };
     }
+    _onProgress?.({ stage: 'Applying bind-address…', percent: 40 });
     const content = await fs.readFile(cfgPath, 'utf-8');
     const updated = ensureBindAddress(content, port);
     if (updated === null) {
+      _onProgress?.({ stage: 'Bind-address already correct', percent: 60 });
       return { ok: true };
     }
     await fs.writeFile(cfgPath, updated, 'utf-8');
+    _onProgress?.({ stage: 'Restarting MariaDB service…', percent: 80 });
     const brew = await brewBin();
     if (!brew) {
       return { ok: false, error: 'Homebrew not found after install.' };
     }
     await runCommand(brew, ['services', 'restart', 'mariadb']);
+    _onProgress?.({ stage: 'Service restarted', percent: 100 });
     return { ok: true };
   }
 
@@ -328,6 +334,7 @@ class LinuxInstaller implements PlatformInstaller {
     port: number,
     _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
+    _onProgress?.({ stage: 'Locating MariaDB configuration…', percent: 10 });
     const cfgPaths = [
       '/etc/mysql/mariadb.conf.d/50-server.cnf',
       '/etc/my.cnf.d/server.cnf',
@@ -336,9 +343,11 @@ class LinuxInstaller implements PlatformInstaller {
 
     for (const cfgPath of cfgPaths) {
       if (await fs.pathExists(cfgPath)) {
+        _onProgress?.({ stage: 'Applying bind-address…', percent: 40 });
         const content = await fs.readFile(cfgPath, 'utf-8');
         const updated = ensureBindAddress(content, port);
         if (updated === null) {
+          _onProgress?.({ stage: 'Bind-address already correct', percent: 60 });
           return { ok: true };
         }
 
@@ -357,6 +366,7 @@ class LinuxInstaller implements PlatformInstaller {
       }
     }
 
+    _onProgress?.({ stage: 'Restarting MariaDB service…', percent: 80 });
     const restartRes = await runElevated('systemctl', ['restart', 'mariadb']);
     if (restartRes.code !== 0) {
       return {
@@ -364,7 +374,7 @@ class LinuxInstaller implements PlatformInstaller {
         error: `Failed to restart MariaDB service: ${restartRes.stderr}`,
       };
     }
-
+    _onProgress?.({ stage: 'Service restarted', percent: 100 });
     return { ok: true };
   }
 
