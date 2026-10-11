@@ -55,7 +55,9 @@ export async function provision(
     return installed;
   }
 
+  onProgress?.({ stage: 'Waiting for MariaDB to initialize…', percent: 35 });
   await new Promise((r) => setTimeout(r, 4000));
+  onProgress?.({ stage: 'MariaDB initialized', percent: 40 });
 
   if (config.hostMode) {
     onProgress?.({ stage: 'Configuring host mode…' });
@@ -67,7 +69,7 @@ export async function provision(
           'Could not detect LAN subnet. Ensure the machine has an active network interface.',
       };
     }
-    const svc = await installer.configureService(port);
+    const svc = await installer.configureService(port, onProgress);
     if (!svc.ok) {
       return {
         ok: false,
@@ -83,7 +85,7 @@ export async function provision(
   }
 
   onProgress?.({ stage: 'Creating application user…' });
-  const user = await createAppUser(port, config, installer);
+  const user = await createAppUser(port, config, installer, onProgress);
   if (!user.ok) {
     return {
       ok: false,
@@ -318,7 +320,8 @@ function tcpProbe(host: string, port: number): Promise<boolean> {
 async function createAppUser(
   port: number,
   config: HostProvisionConfig,
-  installer: PlatformInstaller
+  installer: PlatformInstaller,
+  onProgress?: (event: InstallProgress) => void
 ): Promise<OpResult> {
   const safeDb = config.database.replace(/[^a-zA-Z0-9_\-]/g, '').replace(/`/g, '');
   if (!safeDb) {
@@ -341,6 +344,7 @@ async function createAppUser(
   return installer.createAppUser(
     port,
     config.rootPassword,
-    appUserStatements(safeDb, config.appPassword, scope)
+    appUserStatements(safeDb, config.appPassword, scope),
+    onProgress
   );
 }

@@ -338,6 +338,7 @@ export class IpcRouter {
    * `connections` (password custody); it calls this instead of
    * `config.set('connections', …)`, which the preload guard rejects.
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async upsertConnection(payload: {
     companyName: string;
     config?: MariaDBConfig;

@@ -6,6 +6,7 @@ import sudo from '@vscode/sudo-prompt';
 import { downloadFile, ensureCacheDir, sha256 } from '../../utils/packages';
 import type {
   DownloadProgressEvent,
+  InstallProgress,
   InstallResult,
   Platform,
 } from '../../utils/mariadb-types';
@@ -22,12 +23,16 @@ export interface PlatformInstaller {
     port: number,
     onProgress?: (event: DownloadProgressEvent) => void
   ): Promise<InstallResult>;
-  configureService(port: number): Promise<OpResult>;
+  configureService(
+    port: number,
+    onProgress?: (event: InstallProgress) => void
+  ): Promise<OpResult>;
   configureFirewall(port: number, subnet: string): Promise<OpResult>;
   createAppUser(
     port: number,
     rootPassword: string,
-    sql: string
+    sql: string,
+    onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult>;
 }
 
@@ -70,21 +75,30 @@ class WindowsInstaller implements PlatformInstaller {
     return { ok: true };
   }
 
-  async configureService(port: number): Promise<OpResult> {
+  async configureService(
+    port: number,
+    onProgress?: (event: InstallProgress) => void
+  ): Promise<OpResult> {
+    onProgress?.({ stage: 'Locating MariaDB configuration…', percent: 10 });
     const cfgPath = await resolveWindowsMariadbConfig();
     if (!cfgPath) {
+      onProgress?.({ stage: 'Configuration not found, skipping…', percent: 20 });
       return { ok: true };
     }
+    onProgress?.({ stage: 'Applying bind-address…', percent: 40 });
     const content = await fs.readFile(cfgPath, 'utf-8');
     const updated = ensureBindAddress(content, port);
     if (updated === null) {
+      onProgress?.({ stage: 'Bind-address already correct', percent: 60 });
       return { ok: true };
     }
     await fs.writeFile(cfgPath, updated, 'utf-8');
+    onProgress?.({ stage: 'Restarting MariaDB service…', percent: 80 });
     await runElevated('cmd.exe', [
       '/c',
       'net stop MariaDB && net start MariaDB',
     ]);
+    onProgress?.({ stage: 'Service restarted', percent: 100 });
     return { ok: true };
   }
 
@@ -110,10 +124,13 @@ class WindowsInstaller implements PlatformInstaller {
   async createAppUser(
     port: number,
     rootPassword: string,
-    sql: string
+    sql: string,
+    onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
+    onProgress?.({ stage: 'Connecting as root to create app user…', percent: 50 });
     return createAppUserViaDriver(port, rootPassword, sql);
   }
+}
 }
 
 class MacInstaller implements PlatformInstaller {
@@ -186,7 +203,10 @@ class MacInstaller implements PlatformInstaller {
     return { ok: true };
   }
 
-  async configureService(port: number): Promise<OpResult> {
+  async configureService(
+    port: number,
+    _onProgress?: (event: InstallProgress) => void
+  ): Promise<OpResult> {
     const brewPrefix = await brewCellarDir();
     if (!brewPrefix) {
       return { ok: false, error: 'Could not locate MariaDB config directory.' };
@@ -231,7 +251,8 @@ class MacInstaller implements PlatformInstaller {
   async createAppUser(
     _port: number,
     _rootPassword: string,
-    sql: string
+    sql: string,
+    _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
     void _port;
     void _rootPassword;
@@ -303,7 +324,10 @@ class LinuxInstaller implements PlatformInstaller {
     return { ok: true };
   }
 
-  async configureService(port: number): Promise<OpResult> {
+  async configureService(
+    port: number,
+    _onProgress?: (event: InstallProgress) => void
+  ): Promise<OpResult> {
     const cfgPaths = [
       '/etc/mysql/mariadb.conf.d/50-server.cnf',
       '/etc/my.cnf.d/server.cnf',
@@ -385,7 +409,8 @@ class LinuxInstaller implements PlatformInstaller {
   async createAppUser(
     port: number,
     rootPassword: string,
-    sql: string
+    sql: string,
+    _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
     return createAppUserViaDriver(port, rootPassword, sql);
   }
@@ -511,15 +536,21 @@ export function appUserStatements(
   host: string
 ): string {
   const safeAppPw = appPassword.replace(/'/g, "''").replace(/\r|\n/g, '');
-  return [
+  const hosts = host === 'localhost' ? [host] : [host, 'localhost'];
+  const stmts: string[] = [
     `CREATE DATABASE IF NOT EXISTS \`${database}\`;`,
     `CREATE DATABASE IF NOT EXISTS \`demo\`;`,
-    `CREATE USER IF NOT EXISTS 'sotrama_app'@'${host}' IDENTIFIED BY '${safeAppPw}';`,
-    `ALTER USER 'sotrama_app'@'${host}' IDENTIFIED BY '${safeAppPw}';`,
-    `GRANT ALL PRIVILEGES ON \`${database}\`.* TO 'sotrama_app'@'${host}';`,
-    `GRANT ALL PRIVILEGES ON \`demo\`.* TO 'sotrama_app'@'${host}';`,
-    `FLUSH PRIVILEGES;`,
-  ].join('\n');
+  ];
+  for (const h of hosts) {
+    stmts.push(
+      `CREATE USER IF NOT EXISTS 'sotrama_app'@'${h}' IDENTIFIED BY '${safeAppPw}';`,
+      `ALTER USER 'sotrama_app'@'${h}' IDENTIFIED BY '${safeAppPw}';`,
+      `GRANT ALL PRIVILEGES ON \`${database}\`.* TO 'sotrama_app'@'${h}';`,
+      `GRANT ALL PRIVILEGES ON \`demo\`.* TO 'sotrama_app'@'${h}';`
+    );
+  }
+  stmts.push('FLUSH PRIVILEGES;');
+  return stmts.join('\n');
 }
 
 type RunResult = {
