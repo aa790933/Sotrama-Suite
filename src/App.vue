@@ -238,6 +238,7 @@ export default defineComponent({
           type: 'error',
           detail: access.error || getSafeConfigDetail(filePath),
         });
+        this.activeScreen = Screen.DatabaseSelector;
         return;
       }
 
@@ -301,7 +302,7 @@ export default defineComponent({
       }
     },
     async showSetupWizardOrDesk(filePath: string): Promise<void> {
-      const { countryCode } = await connectToDatabase(this.fyo, filePath);
+      const { countryCode } = await connectToDatabase(fyo, filePath);
 
       const setupComplete = await fyo.getValue(
         ModelNameEnum.AccountingSettings,

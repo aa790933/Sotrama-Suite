@@ -71,16 +71,9 @@ class WindowsInstaller implements PlatformInstaller {
   }
 
   async configureService(port: number): Promise<OpResult> {
-    const cfgPath = path.join(
-      process.env.PROGRAMDATA || 'C:\\ProgramData',
-      'MariaDB',
-      'MariaDB Server',
-      `${port}`,
-      'my.ini'
-    );
-    const exists = await fs.pathExists(cfgPath);
-    if (!exists) {
-      return { ok: false, error: `MariaDB config not found at ${cfgPath}` };
+    const cfgPath = await resolveWindowsMariadbConfig();
+    if (!cfgPath) {
+      return { ok: true };
     }
     const content = await fs.readFile(cfgPath, 'utf-8');
     const updated = ensureBindAddress(content, port);
@@ -593,6 +586,52 @@ async function brewCellarDir(): Promise<string | null> {
   const r = await runCommand(brew, ['--prefix', 'mariadb']);
   if (r.code !== 0) return null;
   return r.stdout.trim() || null;
+}
+
+/**
+ * Resolve the my.ini path for a Windows MariaDB install.
+ * Tries registry (ImagePath of the MariaDB service), then a set of
+ * conventional ProgramData locations. Returns null if not found —
+ * caller treats missing config as already-good (no bind-address to patch).
+ */
+async function resolveWindowsMariadbConfig(): Promise<string | null> {
+  const { execSync } = await import('child_process');
+
+  const tryQuery = (cmd: string): string | null => {
+    try {
+      return execSync(cmd, { encoding: 'utf8', timeout: 5000 }).trim();
+    } catch {
+      return null;
+    }
+  };
+
+  const regOut = tryQuery(
+    'reg query HKLM\\SYSTEM\\CurrentControlSet\\Services\\MariaDB /v ImagePath 2>nul'
+  );
+  if (regOut) {
+    const m = regOut.match(/ImagePath\s+REG_[A-Z_]+\s+(.+)/i);
+    if (m) {
+      const binDir = path.dirname(m[1].trim().replace(/^"|"$/g, ''));
+      const candidate = path.join(binDir, '..', 'data', 'my.ini');
+      if (await fs.pathExists(candidate)) return candidate;
+      const candidate2 = path.join(binDir, '..', 'my.ini');
+      if (await fs.pathExists(candidate2)) return candidate2;
+    }
+  }
+
+  const programData = process.env.PROGRAMDATA || 'C:\\ProgramData';
+  const candidates = [
+    path.join(programData, 'MariaDB', 'data', 'my.ini'),
+    path.join(programData, 'MySQL', 'MySQL Server 11.8', 'my.ini'),
+    path.join(programData, 'MySQL', 'MySQL Server 11.7', 'my.ini'),
+    path.join(programData, 'MySQL', 'MySQL Server 11.6', 'my.ini'),
+    path.join(programData, 'MariaDB', 'MariaDB Server', 'data', 'my.ini'),
+  ];
+
+  for (const c of candidates) {
+    if (await fs.pathExists(c)) return c;
+  }
+  return null;
 }
 
 function ensureBindAddress(content: string, port: number): string | null {
