@@ -16,7 +16,12 @@ test('detect LAN subnet from os.networkInterfaces', (t) => {
   if (subnet) {
     t.ok(subnet, `Detected subnet: ${subnet}`);
     const octets = subnet.split('.');
-    t.equal(octets.length, 3, 'Subnet has three octets');
+    // Subnet length depends on netmask: /24 → 3 octets, /16 → 2 octets, etc.
+    // Accept 2 or 3 octets as both are valid network prefixes.
+    t.ok(
+      octets.length === 2 || octets.length === 3,
+      `Subnet has ${octets.length} octets (expected 2 or 3)`
+    );
   } else {
     t.skip('No non-internal IPv4 interface found — skipping LAN test');
   }
