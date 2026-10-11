@@ -131,7 +131,6 @@ class WindowsInstaller implements PlatformInstaller {
     return createAppUserViaDriver(port, rootPassword, sql);
   }
 }
-}
 
 class MacInstaller implements PlatformInstaller {
   async install(rootPassword: string): Promise<InstallResult> {
@@ -254,6 +253,7 @@ class MacInstaller implements PlatformInstaller {
     sql: string,
     _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
+    _onProgress?.({ stage: 'Creating application user…', percent: 50 });
     void _port;
     void _rootPassword;
     const r = await runCommand('mariadb', ['-u', 'root', '-e', sql]);
@@ -412,6 +412,7 @@ class LinuxInstaller implements PlatformInstaller {
     sql: string,
     _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
+    _onProgress?.({ stage: 'Connecting as root to create app user…', percent: 50 });
     return createAppUserViaDriver(port, rootPassword, sql);
   }
 }
