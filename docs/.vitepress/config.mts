@@ -46,10 +46,7 @@ export default defineConfig({
   title: 'Sotrama Suite',
   description: 'Open-source desktop accounting software for small and medium businesses',
   lang: 'en',
-  base: '/Sotrama-Suite/',
-  // VitePress defaults publicDir to `docs/public`; the workflow and checked-in
-  // site icon live under `.vitepress/public`, so make that directory explicit.
-  publicDir: './.vitepress/public',
+ base: '/Sotrama-Suite/',
 
   head: [
     ['meta', { name: 'theme-color', content: '#221166' }],
