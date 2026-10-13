@@ -58,10 +58,26 @@ for (const sourceFile of markdownFiles) {
   }
 }
 
+// VitePress navigation lives outside Markdown, so validate its local routes too.
+const configFile = path.join(docsRoot, '.vitepress', 'config.mts');
+const configSource = fs.readFileSync(configFile, 'utf8');
+const configuredReferences = [
+  ...configSource.matchAll(/\b(?:link|logo|src):\s*['"]([^'"]+)['"]/g),
+];
+for (const match of configuredReferences) {
+  const target = match[1].trim();
+  if (/^(?:https?:|mailto:|tel:|#|\/\/)/i.test(target)) continue;
+  if (!targetExists(target, configFile)) {
+    errors.push(`docs/.vitepress/config.mts: missing configured target ${target}`);
+  }
+}
+
 if (errors.length) {
   console.error(`Documentation link check failed (${errors.length} issue(s)):`);
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`Documentation link check passed (${markdownFiles.length} Markdown files).`);
+  console.log(
+    `Documentation link check passed (${markdownFiles.length} Markdown files, ${configuredReferences.length} VitePress config references inspected).`
+  );
 }

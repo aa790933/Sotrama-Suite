@@ -9,13 +9,13 @@ hero:
     alt: Sotrama Suite Logo
   actions:
     - theme: brand
-      text: Get Started
+      text: Install the desktop app
       link: /getting-started/installation
     - theme: alt
-      text: View on GitHub
+      text: Inspect the source code
       link: https://github.com/aa790933/Sotrama-Suite
     - theme: alt
-      text: Download
+      text: Download a release
       link: https://github.com/aa790933/Sotrama-Suite/releases
 
 features:
@@ -26,10 +26,10 @@ features:
     details: Integrated retail system with cash drawer, receipt printing, and multiple payment methods
     icon: 🛒
   - title: Invoicing & Billing
-    details: Professional invoices, recurring billing, payment tracking, and multi-currency support
+    details: Create sales and purchase invoices, record bills, and track payments
     icon: 🧾
   - title: Financial Reports
-    details: Profit & Loss, Balance Sheet, General Ledger, Cash Flow, and custom report builder
+    details: Profit & Loss, Balance Sheet, General Ledger, and Trial Balance reports
     icon: 📈
   - title: MariaDB storage
     details: Stores company records in MariaDB, either on the same computer or on a reachable LAN host
@@ -41,7 +41,7 @@ features:
     details: Choose a country and review the tax settings available in your installation before recording transactions
     icon: 🌍
   - title: Open Source
-    details: AGPL-3.0 licensed, community-driven, fully auditable codebase
+    details: Source code published under the AGPL-3.0-only license
     icon: 🔓
 ---
 
@@ -77,9 +77,9 @@ features:
 
 ## Community & Support
 
-- [GitHub Issues](https://github.com/aa790933/Sotrama-Suite/issues) — Bug reports & feature requests
-- [GitHub Discussions](https://github.com/aa790933/Sotrama-Suite/discussions) — Questions & community chat
-- [Telegram](https://t.me/sotrama_suite) — Real-time discussions
+- [GitHub Issues](https://github.com/aa790933/Sotrama-Suite/issues): bug reports and feature requests
+- [GitHub Discussions](https://github.com/aa790933/Sotrama-Suite/discussions): questions and community chat
+- [Telegram](https://t.me/sotrama_suite): community discussion
 
 ## License
 

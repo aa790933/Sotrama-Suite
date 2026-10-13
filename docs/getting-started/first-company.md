@@ -22,20 +22,20 @@ After installation, the **Setup Wizard** guides you through creating your first 
 
 Choose a template:
 
-- **Standard** — Generic chart for any business
-- **Service Business** — Optimized for consulting, agencies
-- **Retail/POS** — Includes inventory & COGS accounts
-- **Manufacturing** — Work-in-progress, raw materials
-- **Non-Profit** — Fund accounting structure
-- **Custom** — Start with minimal accounts
+- **Standard**: generic chart for any business
+- **Service Business**: chart for consulting and agencies
+- **Retail/POS**: includes inventory and COGS accounts
+- **Manufacturing**: work-in-progress and raw materials
+- **Non-Profit**: fund accounting structure
+- **Custom**: start with minimal accounts
 
 > **Tip:** You can modify the chart of accounts later in Settings → Accounting.
 
 ### Step 3: Fiscal Year
 
-- **Start Date** — When your financial year begins
-- **End Date** — Auto-calculated (12 months)
-- **Naming Series** — Document numbering pattern (e.g., `INV-.YYYY.-`)
+- **Start Date**: when your financial year begins
+- **End Date**: automatically calculated as 12 months
+- **Naming Series**: document numbering pattern (for example, `INV-.YYYY.-`)
 
 ### Step 4: Administrator Account
 
@@ -90,7 +90,7 @@ For exploration, load sample data:
 2. Choose: Retail Demo / Service Demo / Manufacturing Demo
 3. Explore pre-built transactions, reports, and POS
 
-> **Warning:** Sample data cannot be removed — create a new company if needed.
+> **Warning:** Sample data cannot be removed. Create a new company if needed.
 
 ---
 
@@ -98,8 +98,8 @@ For exploration, load sample data:
 
 Sotrama Suite supports multiple companies in one installation:
 
-1. **File → New Company** — Creates separate database
-2. **File → Switch Company** — Switch between companies
+1. **File → New Company**: creates a separate database
+2. **File → Switch Company**: switches between companies
 3. Each company has independent:
    - Chart of accounts
    - Transactions

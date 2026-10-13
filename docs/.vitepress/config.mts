@@ -44,7 +44,7 @@ const sidebar = [
 
 export default defineConfig({
   title: 'Sotrama Suite',
-  description: 'Modern Accounting Made Simple — open-source desktop accounting software',
+  description: 'Open-source desktop accounting software for small and medium businesses',
   lang: 'en',
   base: '/Sotrama-Suite/',
 

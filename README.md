@@ -29,7 +29,7 @@
 
 ## Sotrama Suite
 
-Sotrama Suite is an open-source accounting software aimed at simplifying financial management for businesses. With its clean and user-friendly interface, it streamlines accounting tasks for small and medium-sized enterprises, offering a seamless solution for modern businesses to manage their finances with ease.
+Sotrama Suite is open-source desktop accounting software for small businesses. It includes bookkeeping, invoicing, payments, point-of-sale workflows, and financial reports, with company records stored in MariaDB.
 
 <details>
 <summary>Screenshots</summary>
@@ -44,33 +44,33 @@ Sotrama Suite is an open-source accounting software aimed at simplifying financi
 
 ### Motivation
 
-Sotrama Suite addresses a market gap where small businesses face expensive, complex accounting tools. It offers an intuitive, open-source solution that combines simplicity with essential features, empowering businesses to manage finances effectively—even offline.
+Each desktop installation connects to a MariaDB database. To share a company across PCs, configure every installation to use the same database host and company database; the application does not synchronize disconnected copies.
 
 ### Key Features
 
-- **Dashboard**: Provides an overview of key financial data and performance metrics.
-- **Point of Sale**: Simplifies retail transactions with an integrated POS system for easy sales processing.
-- **MariaDB storage**: Stores company records in a MariaDB database that can run locally or on a reachable LAN host. The application does not provide an offline synchronization engine.
-- **Double-entry accounting**: Ensures accurate financial tracking by recording each transaction in two accounts.
+- **Dashboard**: Shows key financial data for the selected company.
+- **Point of Sale**: Supports retail sales through the integrated POS workflow.
+- **MariaDB storage**: Stores company records in a database that can run locally or on a reachable LAN host.
+- **Double-entry accounting**: Records accounting transactions across debit and credit accounts.
 - **Entries**
-  - **Invoicing**: Allows businesses to create and manage professional invoices effortlessly.
-  - **Billing**: Billing processes by generating bills and tracking payments.
+  - **Invoicing**: Create and manage sales and purchase invoices.
+  - **Billing**: Record bills and track payments.
   - **Payments**: Records and tracks payments received and made.
-  - **Journal Entries**: Records financial transactions in the general ledger with detailed notes and adjustments.
+  - **Journal Entries**: Record adjustments and other general-ledger transactions.
 - **Financial Reports**
-  - **General Ledger**: Centralized record of all financial transactions, providing a comprehensive view of accounts.
-  - **Profit and Loss Statement**: Summarizes revenues, costs, and expenses to show business profitability.
-  - **Balance Sheet**: Displays a company’s assets, liabilities, and equity at a specific point in time.
-  - **Trial Balance**: Verifies the accuracy of accounting records by ensuring that debits and credits are balanced.
+  - **General Ledger**: Review posted transactions by account.
+  - **Profit and Loss Statement**: Review income and expenses for a period.
+  - **Balance Sheet**: Review assets, liabilities, and equity at a point in time.
+  - **Trial Balance**: Compare debit and credit balances across accounts.
     <br/>
 
 ### Under the Hood
 
-- **Vue.js**: Vue.js powers the front-end of Sotrama Suite, enabling a reactive and component-based UI. It ensures seamless interactions and dynamic updates, giving users a modern, responsive experience.
+- **Vue.js**: Renders the application's interface and components.
 
-- **Electron**: Electron is used to package Sotrama Suite as a standalone desktop application, allowing it to run offline and provide a native-like experience across Windows, macOS, and Linux.
+- **Electron**: Packages the desktop application for Windows, macOS, and Linux.
 
-- **MariaDB**: Sotrama Suite uses MariaDB as its database backend. All financial data, transactions, and configurations are stored in a MariaDB database on the user's machine.
+- **MariaDB**: Stores company data in a database on the same computer or on a reachable LAN host.
 
 ## Production Setup
 

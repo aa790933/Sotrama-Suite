@@ -5,21 +5,29 @@ on:
     branches: [main, dev]
     paths:
       - 'rust-backend/**'
+      - 'main/ipc/**'
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
+      - 'backend/database/runPatch.ts'
+      - 'backend/database/types.ts'
       - 'backend/helpers.ts'
       - 'utils/version.ts'
+      - 'scripts/verify-rust-backend-package.mjs'
       - 'scripts/verify-rust-patch-parity.mjs'
       - '.github/workflows/rust-backend.yml'
   pull_request:
     paths:
       - 'rust-backend/**'
+      - 'main/ipc/**'
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
+      - 'backend/database/runPatch.ts'
+      - 'backend/database/types.ts'
       - 'backend/helpers.ts'
       - 'utils/version.ts'
+      - 'scripts/verify-rust-backend-package.mjs'
       - 'scripts/verify-rust-patch-parity.mjs'
       - '.github/workflows/rust-backend.yml'
   workflow_dispatch:
@@ -122,7 +130,7 @@ jobs:
           SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
         run: cargo run --locked -- --migrate
 
-      - name: Migration is idempotent
+      - name: Migration idempotency, backup, and patch recovery
         working-directory: rust-backend
         env:
           SOTRAMA_DB_HOST: ${{ env.TEST_DB_HOST }}
