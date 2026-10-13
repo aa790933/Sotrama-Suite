@@ -125,8 +125,8 @@ jobs:
             FLUSH PRIVILEGES;"
 
       - name: Verify MariaDB connectivity
-       working-directory: rust-backend
-       run: |
+        working-directory: rust-backend
+        run: |
           mariadb \
             --host="$TEST_DB_HOST" \
             --port="$TEST_DB_PORT" \
