@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Copy icon to VitePress public folder
+        run: cp build/icon.png docs/.vitepress/public/icon.png
+
       - name: Check documentation links and public assets
         run: node scripts/check-doc-links.mjs
 

@@ -166,9 +166,11 @@ fn abstract_combined(schemas: BTreeMap<String, Schema>) -> SchemaMap {
     // Abstract schemas that are NOT extended by anyone are kept as standalone.
     let unextended_abstracts: Vec<String> = abstract_names
         .iter()
-        .filter(|a| !extending_names.iter().any(|e| {
-            schemas.get(e).and_then(|s| s.extends.as_deref()) == Some(a)
-        }))
+        .filter(|a| {
+            !extending_names
+                .iter()
+                .any(|e| schemas.get(e).and_then(|s| s.extends.as_deref()) == Some(a))
+        })
         .cloned()
         .collect();
 
@@ -554,8 +556,15 @@ mod tests {
             "original tax field should remain"
         );
         // The custom field with same name should not create a duplicate
-        let tax_fields: Vec<_> = schema.fields.iter().filter(|f| f.fieldname == "tax").collect();
-        assert_eq!(tax_fields.len(), 1, "custom field should not duplicate existing field")
+        let tax_fields: Vec<_> = schema
+            .fields
+            .iter()
+            .filter(|f| f.fieldname == "tax")
+            .collect();
+        assert_eq!(
+            tax_fields.len(),
+            1,
+            "custom field should not duplicate existing field"
         );
 
         let bin = schema.field("binCode").expect("custom field not appended");
