@@ -2,6 +2,9 @@ name: Publish
 
 on: workflow_dispatch
 
+permissions:
+  contents: write
+
 jobs:
   build-macos:
     runs-on: macos-15-intel
@@ -33,7 +36,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Set Error Log Creds
         env:
@@ -111,7 +114,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Set Error Log Creds
         env:
@@ -193,7 +196,7 @@ jobs:
         run: corepack enable
         
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Set Error Log Creds
         env:
@@ -258,7 +261,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Set Error Log Creds
         env:

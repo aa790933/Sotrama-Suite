@@ -6,11 +6,19 @@ on:
     paths:
       - 'rust-backend/**'
       - 'schemas/**'
+      - 'backend/patches/**'
+      - 'backend/database/core.ts'
+      - 'backend/helpers.ts'
+      - 'utils/version.ts'
       - '.github/workflows/rust-backend.yml'
   pull_request:
     paths:
       - 'rust-backend/**'
       - 'schemas/**'
+      - 'backend/patches/**'
+      - 'backend/database/core.ts'
+      - 'backend/helpers.ts'
+      - 'utils/version.ts'
       - '.github/workflows/rust-backend.yml'
   workflow_dispatch:
 
@@ -194,7 +202,8 @@ jobs:
               (name, parent, parentSchemaName, parentFieldname, idx, label, fieldname, fieldtype, isRequired, createdBy, modifiedBy, created, modified)
             VALUES
               ('ci-custom-field', 'Item', 'CustomField', 'customFields', 0, 'CI Custom Field', 'ciCustomField', 'Data', 0, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))
-            ON DUPLICATE KEY UPDATE fieldname = VALUES(fieldname), fieldtype = VALUES(fieldtype);"
+            ON DUPLICATE KEY UPDATE fieldname = VALUES(fieldname), fieldtype = VALUES(fieldtype);
+            ALTER TABLE customfield DROP COLUMN \`references\`;"
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"db.connect","params":[]}' \
             '{"jsonrpc":"2.0","id":2,"method":"db.call","params":["count","Item",{}]}' \
@@ -220,6 +229,22 @@ jobs:
             .[5].jsonrpc == "2.0" and .[5].id == 6 and
             (.[5].result.data.Item.fields | any(.fieldname == "ciCustomField" and .isCustom == true))
           ' protocol.jsonl
+
+          # Separate sidecar processes model two PCs requesting the same
+          # series concurrently; row locking must allocate distinct values.
+          printf '%s\n' '{"jsonrpc":"2.0","id":7,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+            | ./target/debug/sotrama-backend --serve --no-migrate > series-a.jsonl &
+          first_pid=$!
+          printf '%s\n' '{"jsonrpc":"2.0","id":8,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+            | ./target/debug/sotrama-backend --serve --no-migrate > series-b.jsonl &
+          second_pid=$!
+          wait "$first_pid"
+          wait "$second_pid"
+          jq -s -e '
+            length == 2 and
+            .[0].result.data != .[1].result.data and
+            ([.[].result.data] | sort) == [3, 4]
+          ' series-a.jsonl series-b.jsonl
 
   build:
     name: build (${{ matrix.os }})

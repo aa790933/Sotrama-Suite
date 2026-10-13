@@ -72,10 +72,10 @@ async fn fetch_rows(
 
 /// Reads `customfield`. A missing table means a first run, not a failure.
 pub async fn load_custom_fields(pool: &sqlx::MySqlPool) -> Result<Vec<RawCustomField>, DbError> {
-    let sql = "SELECT `parent`, `label`, `fieldname`, `fieldtype`, `isRequired` AS is_required, \
-               `section`, `tab`, `options`, `target`, `references`, `default` \
-               FROM `customfield`";
-    let rows = sqlx::query(sql)
+    // Select the available columns so an older populated installation can
+    // still start far enough to run schema migration. Optional columns were
+    // added over time and may legitimately be absent before that migration.
+    let rows = sqlx::query("SELECT * FROM `customfield`")
         .fetch_all(pool)
         .await
         .map_err(DbError::from)?;
@@ -85,16 +85,10 @@ pub async fn load_custom_fields(pool: &sqlx::MySqlPool) -> Result<Vec<RawCustomF
         // A malformed custom-field row must fail connection setup. Silently
         // dropping it creates a schema that differs between clients on the LAN.
         let parent = row.try_get("parent").map_err(DbError::from)?;
-        let label = row
-            .try_get::<Option<String>, _>("label")
-            .map_err(DbError::from)?
-            .unwrap_or_default();
+        let label = optional_custom_field_string(row, "label")?.unwrap_or_default();
         let fieldname = row.try_get("fieldname").map_err(DbError::from)?;
         let fieldtype = row.try_get("fieldtype").map_err(DbError::from)?;
-        let is_required = row
-            .try_get::<Option<i8>, _>("is_required")
-            .map_err(DbError::from)?
-            .map(|value| value != 0);
+        let is_required = optional_custom_field_flag(row, "isRequired")?.map(|value| value != 0);
 
         fields.push(RawCustomField {
             parent,
@@ -102,15 +96,39 @@ pub async fn load_custom_fields(pool: &sqlx::MySqlPool) -> Result<Vec<RawCustomF
             fieldname,
             fieldtype,
             is_required,
-            section: row.try_get("section").map_err(DbError::from)?,
-            tab: row.try_get("tab").map_err(DbError::from)?,
-            options: row.try_get("options").map_err(DbError::from)?,
-            target: row.try_get("target").map_err(DbError::from)?,
-            references: row.try_get("references").map_err(DbError::from)?,
-            default: row.try_get("default").map_err(DbError::from)?,
+            section: optional_custom_field_string(row, "section")?,
+            tab: optional_custom_field_string(row, "tab")?,
+            options: optional_custom_field_string(row, "options")?,
+            target: optional_custom_field_string(row, "target")?,
+            references: optional_custom_field_string(row, "references")?,
+            default: optional_custom_field_string(row, "default")?,
         });
     }
     Ok(fields)
+}
+
+fn optional_custom_field_string(
+    row: &sqlx::mysql::MySqlRow,
+    column: &str,
+) -> Result<Option<String>, DbError> {
+    match row.try_get::<Option<String>, _>(column) {
+        Ok(value) => Ok(value),
+        // Old schemas may not have optional custom-field columns yet. A
+        // decoding error on a column that does exist is not treated as NULL.
+        Err(sqlx::Error::ColumnNotFound(_)) => Ok(None),
+        Err(error) => Err(DbError::from(error)),
+    }
+}
+
+fn optional_custom_field_flag(
+    row: &sqlx::mysql::MySqlRow,
+    column: &str,
+) -> Result<Option<i8>, DbError> {
+    match row.try_get::<Option<i8>, _>(column) {
+        Ok(value) => Ok(value),
+        Err(sqlx::Error::ColumnNotFound(_)) => Ok(None),
+        Err(error) => Err(DbError::from(error)),
+    }
 }
 
 /// `get(schema, name, fields)`: one row plus its child tables.
@@ -874,6 +892,20 @@ pub async fn next_series_value(
     prefix: &str,
     schema_name: &str,
 ) -> Result<i64, BackendError> {
+    // Establish the row before reading it. SELECT ... FOR UPDATE cannot be
+    // relied on to serialize two transactions that both observe an absent key;
+    // both could otherwise choose the same initial number. The upsert takes
+    // the unique-key lock, then the locked read observes the committed counter.
+    sqlx::query(
+        "INSERT INTO `numberseries` (`name`, `current`, `start`, `padZeros`) \
+         VALUES (?, 0, 1, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)",
+    )
+    .bind(prefix)
+    .bind(pad_default())
+    .execute(&mut *conn)
+    .await
+    .map_err(db_err)?;
+
     let row = sqlx::query(
         "SELECT `current`, `start`, `padZeros` FROM `numberseries` \
          WHERE `name` = ? FOR UPDATE",
@@ -883,36 +915,23 @@ pub async fn next_series_value(
     .await
     .map_err(|e| BackendError::from(DbError::from(e)))?;
 
-    let (current, start, pad_zeros) = match row {
-        Some(r) => (
-            r.try_get::<Option<i64>, _>("current").ok().flatten(),
-            r.try_get::<Option<i64>, _>("start")
-                .ok()
-                .flatten()
-                .unwrap_or(1),
-            r.try_get::<Option<i32>, _>("padZeros")
-                .ok()
-                .flatten()
-                .unwrap_or(4),
-        ),
-        None => {
-            sqlx::query(
-                "INSERT INTO `numberseries` (`name`, `current`, `start`, `padZeros`) \
-                 VALUES (?, 0, 0, ?) ON DUPLICATE KEY UPDATE `name` = `name`",
-            )
-            .bind(prefix)
-            .bind(pad_default())
-            .execute(conn)
-            .await
-            .map_err(db_err)?;
-            (None, 1, pad_default())
-        }
-    };
+    let row = row.ok_or_else(|| {
+        BackendError::Db(DbError::new(format!(
+            "number series `{prefix}` disappeared after it was created"
+        )))
+    })?;
+    let current: Option<i64> = row.try_get("current").map_err(db_err)?;
+    let start: Option<i64> = row.try_get("start").map_err(db_err)?;
+    let pad_zeros: Option<i32> = row.try_get("padZeros").map_err(db_err)?;
+    let start = start.unwrap_or(1);
+    let pad_zeros = pad_zeros.unwrap_or_else(pad_default);
 
     let pad_zeros = if pad_zeros > 0 { pad_zeros as usize } else { 4 };
     let start = start.max(0);
     let mut candidate = match current {
-        Some(c) if c != 0 => c + 1,
+        Some(c) if c != 0 => c.checked_add(1).ok_or_else(|| {
+            BackendError::InvalidArgument(format!("number series `{prefix}` exhausted its integer range"))
+        })?,
         _ => start,
     };
 
@@ -928,7 +947,9 @@ pub async fn next_series_value(
         if !exists {
             break;
         }
-        candidate += 1;
+        candidate = candidate.checked_add(1).ok_or_else(|| {
+            BackendError::InvalidArgument(format!("number series `{prefix}` exhausted its integer range"))
+        })?;
     }
 
     sqlx::query("UPDATE `numberseries` SET `current` = ? WHERE `name` = ?")
