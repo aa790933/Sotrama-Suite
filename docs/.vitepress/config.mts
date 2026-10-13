@@ -51,7 +51,7 @@ export default defineConfig({
   head: [
     ['meta', { name: 'theme-color', content: '#221166' }],
     ['meta', { property: 'og:title', content: 'Sotrama Suite' }],
-    ['meta', { property: 'og:description', content: 'Modern Accounting Made Simple' }],
+    ['meta', { property: 'og:description', content: 'Open-source desktop accounting backed by MariaDB.' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://aa790933.github.io/Sotrama-Suite/' }],
   ],

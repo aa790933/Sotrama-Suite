@@ -550,4 +550,15 @@ mod tests {
         assert!(SCHEMA_DIR.get_file("app/Item.json").is_some());
         assert!(SCHEMA_DIR.get_file("meta/base.json").is_some());
     }
+
+    #[test]
+    fn abstract_field_markers_are_booleans() {
+        let field: Field = serde_json::from_value(serde_json::json!({
+            "fieldname": "party",
+            "abstract": true
+        }))
+        .expect("abstract marker should match schema JSON");
+        assert_eq!(field.abstract_, Some(true));
+        assert!(field.fieldtype.is_empty());
+    }
 }

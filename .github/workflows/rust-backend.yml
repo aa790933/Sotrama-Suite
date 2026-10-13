@@ -252,7 +252,7 @@ jobs:
             '{"jsonrpc":"2.0","id":4,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
             '{"jsonrpc":"2.0","id":5,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
             '{"jsonrpc":"2.0","id":6,"method":"db.schema","params":[]}' \
-            '{"jsonrpc":"2.0","id":9,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"HSN-LEGACY"}]}' \
+            '{"jsonrpc":"2.0","id":9,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"HSN-LEGACY","trackItem":true}]}' \
             '{"jsonrpc":"2.0","id":12,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","uomConversions":[{"name":"ci-uom-child","uom":"Unit","conversionFactor":2}]}]}' \
             '{"jsonrpc":"2.0","id":13,"method":"db.call","params":["get","Item","legacy-item-fixture",["name","uomConversions"]]}' \
             '{"jsonrpc":"2.0","id":14,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","uomConversions":[{"name":"ci-uom-child","uom":"Unit","conversionFactor":3}]}]}' \
@@ -260,10 +260,14 @@ jobs:
             '{"jsonrpc":"2.0","id":16,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","uomConversions":[]}]}' \
             '{"jsonrpc":"2.0","id":17,"method":"db.call","params":["get","Item","legacy-item-fixture",["name","uomConversions"]]}' \
             '{"jsonrpc":"2.0","id":10,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"MUST-ROLLBACK","uomConversions":[null]}]}' \
-            '{"jsonrpc":"2.0","id":11,"method":"db.call","params":["get","Item","legacy-item-fixture",["hsnCode"]]}' \
+            '{"jsonrpc":"2.0","id":11,"method":"db.call","params":["get","Item","legacy-item-fixture",["hsnCode","trackItem"]]}' \
+            '{"jsonrpc":"2.0","id":18,"method":"db.call","params":["getAll","Item",{"fields":["name","trackItem"],"filters":{"trackItem":true},"orderBy":["name"],"order":"asc","limit":10}]}' \
+            '{"jsonrpc":"2.0","id":19,"method":"db.call","params":["exists","Item","legacy-item-fixture"]}' \
+            '{"jsonrpc":"2.0","id":20,"method":"db.call","params":["exists","Item","ci-missing-item"]}' \
+            '{"jsonrpc":"2.0","id":21,"method":"db.call","params":["count","Item",{"filters":{"trackItem":true}}]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 15 and
+            length == 19 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -292,8 +296,19 @@ jobs:
             .[13].jsonrpc == "2.0" and .[13].id == 10 and
             (.[13].result.error.message | contains("must be an object")) and
             .[14].jsonrpc == "2.0" and .[14].id == 11 and
-            .[14].result.data.hsnCode == "HSN-LEGACY"
+            .[14].result.data.hsnCode == "HSN-LEGACY" and
+            .[14].result.data.trackItem == true and
+            .[15].jsonrpc == "2.0" and .[15].id == 18 and
+            (.[15].result.data | any(.name == "legacy-item-fixture" and .trackItem == true)) and
+            .[16].jsonrpc == "2.0" and .[16].id == 19 and .[16].result.data == true and
+            .[17].jsonrpc == "2.0" and .[17].id == 20 and .[17].result.data == false and
+            .[18].jsonrpc == "2.0" and .[18].id == 21 and .[18].result.data >= 1
           ' protocol.jsonl
+
+          # Confirm the failed transaction left the original values in MariaDB,
+          # independently of the sidecar's error envelope and subsequent read.
+          rollback_state=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(hsnCode, ':', trackItem) FROM item WHERE name='legacy-item-fixture'")
+          test "$rollback_state" = "HSN-LEGACY:1"
 
           child_rows=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM uomconversionitem WHERE parent='legacy-item-fixture'")
           test "$child_rows" = "0"

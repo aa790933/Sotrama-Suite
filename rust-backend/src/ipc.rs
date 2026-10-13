@@ -10,7 +10,7 @@ use tracing::{debug, warn};
 
 use crate::database::crud;
 use crate::database::Db;
-use crate::error::{BackendError, WireResponse};
+use crate::error::{BackendError, DbError, WireResponse};
 use crate::schemas::Registry;
 use crate::types::{DatabaseMethod, GetAllOptions};
 
@@ -162,12 +162,12 @@ impl IpcServer {
             .inner()
             .acquire()
             .await
-            .map_err(BackendError::from)?;
-        let mut tx = conn.begin().await.map_err(BackendError::from)?;
+            .map_err(DbError::from)?;
+        let mut tx = conn.begin().await.map_err(DbError::from)?;
 
         match call_with(&mut tx, self.db.registry(), method, rest).await {
             Ok(value) => {
-                tx.commit().await.map_err(BackendError::from)?;
+                tx.commit().await.map_err(DbError::from)?;
                 Ok(value)
             }
             Err(e) => {
@@ -189,7 +189,7 @@ async fn call_with(
     let result = match method {
         DatabaseMethod::Insert => {
             let (name, values) = schema_and_map(args)?;
-            crud::insert(conn, &registry, &name, &values).await?
+            Value::Object(crud::insert(conn, &registry, &name, &values).await?)
         }
         DatabaseMethod::Update => {
             let (name, values) = schema_and_map(args)?;
@@ -200,7 +200,7 @@ async fn call_with(
             let name = arg_str(args, 0)?;
             let key = arg_str(args, 1).unwrap_or_default();
             let fields = args.get(2).map(|v| GetAllOptions::as_list(Some(v)));
-            crud::get(conn, &registry, &name, &key, fields.as_deref()).await?
+            Value::Object(crud::get(conn, &registry, &name, &key, fields.as_deref()).await?)
         }
         DatabaseMethod::GetAll => {
             let name = arg_str(args, 0)?;

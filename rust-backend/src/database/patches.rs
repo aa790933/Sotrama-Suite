@@ -5,7 +5,7 @@ use sqlx::{MySqlConnection, Row};
 use tracing::warn;
 
 use crate::database::crud;
-use crate::database::{Db, MigrationReport};
+use crate::database::MigrationReport;
 use crate::error::{BackendError, DbError};
 
 #[derive(Clone, Copy)]
@@ -110,7 +110,6 @@ pub async fn has_pending(
 /// A failed patch is recorded and stops the migration; continuing could expose a
 /// half-upgraded database to other LAN clients.
 pub async fn run_phase(
-    db: &Db,
     conn: &mut MySqlConnection,
     app_version: &str,
     phase: Phase,
@@ -147,7 +146,7 @@ pub async fn run_phase(
     due.sort_by(|a, b| b.priority.cmp(&a.priority));
 
     for patch in due {
-        let result = execute(patch.name, db, conn).await;
+        let result = execute(patch.name, conn).await;
         record_result(conn, patch, app_version, result.is_err()).await?;
         match result {
             Ok(()) => report.patches_run.push(patch.name.to_string()),
@@ -163,7 +162,7 @@ pub async fn run_phase(
     Ok(())
 }
 
-async fn execute(name: &str, db: &Db, conn: &mut MySqlConnection) -> Result<(), BackendError> {
+async fn execute(name: &str, conn: &mut MySqlConnection) -> Result<(), BackendError> {
     match name {
         "testPatch" => Ok(()),
         "updateSchemas" => update_schemas(conn).await,
@@ -194,7 +193,7 @@ async fn record_result(
     .bind(patch.name)
     .bind(failed)
     .bind(app_version)
-    .execute(conn)
+    .execute(&mut *conn)
     .await
     .map_err(crud::db_err)?;
     Ok(())
@@ -226,10 +225,10 @@ async fn update_schemas(conn: &mut MySqlConnection) -> Result<(), BackendError> 
     .is_some();
     if exists {
         sqlx::query("UPDATE `singlevalue` SET `value` = '0.5.0-beta.0', `modified` = NOW(6), `modifiedBy` = '__SYSTEM__' WHERE `fieldname` = 'version' AND `parent` = 'SystemSettings'")
-            .execute(conn).await.map_err(crud::db_err)?;
+            .execute(&mut *conn).await.map_err(crud::db_err)?;
     } else {
         sqlx::query("INSERT INTO `singlevalue` (`name`, `parent`, `fieldname`, `value`, `createdBy`, `modifiedBy`, `created`, `modified`) VALUES (?, 'SystemSettings', 'version', '0.5.0-beta.0', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))")
-            .bind(crud::random_name()).execute(conn).await.map_err(crud::db_err)?;
+            .bind(crud::random_name()).execute(&mut *conn).await.map_err(crud::db_err)?;
     }
     Ok(())
 }
@@ -332,7 +331,7 @@ async fn set_payment_reference_type(conn: &mut MySqlConnection) -> Result<(), Ba
     sqlx::query("UPDATE `payment` SET `referenceType` = 'PurchaseInvoice' WHERE `referenceType` IS NULL AND `paymentType` = 'Pay'")
         .execute(&mut *conn).await.map_err(crud::db_err)?;
     sqlx::query("UPDATE `payment` SET `referenceType` = 'SalesInvoice' WHERE `referenceType` IS NULL AND `paymentType` = 'Receive'")
-        .execute(conn).await.map_err(crud::db_err)?;
+        .execute(&mut *conn).await.map_err(crud::db_err)?;
     Ok(())
 }
 
@@ -365,7 +364,7 @@ async fn fix_item_hsn_field(conn: &mut MySqlConnection) -> Result<(), BackendErr
         .any(|column| column.name.eq_ignore_ascii_case("hsnCode"))
     {
         sqlx::query("ALTER TABLE `item` MODIFY COLUMN `hsnCode` TEXT")
-            .execute(conn)
+            .execute(&mut *conn)
             .await
             .map_err(crud::db_err)?;
     }

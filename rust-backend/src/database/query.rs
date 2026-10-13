@@ -152,19 +152,19 @@ impl Condition {
 
 /// Turns a renderer filter map into conditions like core.ts #getFiltersArray.
 /// Unknown operators and third pairs are rejected instead of silently dropped.
-pub fn conditions(
+fn conditions(
     filters: &serde_json::Map<String, Value>,
 ) -> Result<Vec<Condition>, BackendError> {
     let mut out = Vec::new();
 
     for (field, value) in filters {
-        let pairs: Vec<(&Value, &Value)> = match value {
+        let pairs: Vec<(String, Value)> = match value {
             Value::Array(items) if items.len() >= 2 && items[0].is_string() => items
                 .chunks(2)
                 .filter(|c| c.len() == 2)
-                .map(|c| (&c[0], &c[1]))
+                .map(|c| (c[0].as_str().unwrap_or_default().to_string(), c[1].clone()))
                 .collect(),
-            _ => vec![(&Value::from("="), value)],
+            _ => vec![("=".to_string(), value.clone())],
         };
 
         if let Value::Array(items) = value {
@@ -186,16 +186,8 @@ pub fn conditions(
             }
         }
 
-        for (op_value, operand) in pairs {
-            let mut operator = op_value
-                .as_str()
-                .ok_or_else(|| {
-                    BackendError::InvalidArgument(format!(
-                        "filter on `{field}`: operator must be a string"
-                    ))
-                })?
-                .trim()
-                .to_lowercase();
+        for (op_value, mut operand) in pairs {
+            let mut operator = op_value.trim().to_lowercase();
             if operator == "includes" {
                 operator = "like".to_string();
             }
@@ -206,7 +198,6 @@ pub fn conditions(
                 )));
             }
 
-            let mut operand = operand.clone();
             if operator == "like" && !matches!(operand, Value::Array(_)) {
                 if let Value::String(s) = &operand {
                     if !s.contains('%') {
@@ -363,6 +354,7 @@ pub fn build_delete(
 pub fn build_update_by_name(
     table: &str,
     assignments: &[String],
+    mut params: Vec<Bind>,
     name: &str,
 ) -> Result<Statement, BackendError> {
     if assignments.is_empty() {
@@ -370,7 +362,6 @@ pub fn build_update_by_name(
             "update requires at least one column".into(),
         ));
     }
-    let mut params = Vec::new();
     let set = assignments
         .iter()
         .map(|c| format!("{} = ?", ident(c)?))
@@ -409,6 +400,7 @@ mod tests {
 
     #[test]
     fn rejects_identifiers_that_are_not_plain() {
+        let too_long = "x".repeat(65);
         for bad in [
             "",
             "a b",
@@ -417,7 +409,7 @@ mod tests {
             "a.b",
             "a-b",
             "tab\there",
-            &"x".repeat(65),
+            too_long.as_str(),
         ] {
             assert!(
                 ident(bad).is_err(),
@@ -467,6 +459,61 @@ mod tests {
         let sql = where_clause(&filters(json!({ "party": "CUST-1" })), &mut params).unwrap();
         assert_eq!(sql, " WHERE `party` = ?");
         assert_eq!(params, vec![Bind::Text("CUST-1".into())]);
+    }
+
+    #[test]
+    fn select_parameters_follow_placeholder_order() {
+        let stmt = build_select(
+            "item",
+            &["name".to_string()],
+            &filters(json!({ "name": "item-1" })),
+            &[],
+            &["name".to_string()],
+            Some("asc"),
+            Some(10),
+            Some(5),
+        )
+        .unwrap();
+
+        assert_eq!(
+            stmt.params,
+            vec![Bind::Text("item-1".into()), Bind::Int(10), Bind::Int(5)]
+        );
+        assert!(stmt.sql.ends_with("ORDER BY `name` ASC LIMIT ? OFFSET ?"));
+    }
+
+    #[test]
+    fn update_parameters_follow_set_then_where_placeholders() {
+        let stmt = build_update_by_name(
+            "item",
+            &["hsnCode".to_string(), "trackItem".to_string()],
+            vec![Bind::Text("HSN-1".into()), Bind::Int(1)],
+            "item-1",
+        )
+        .unwrap();
+
+        assert_eq!(
+            stmt.params,
+            vec![
+                Bind::Text("HSN-1".into()),
+                Bind::Int(1),
+                Bind::Text("item-1".into())
+            ]
+        );
+        assert_eq!(
+            stmt.sql,
+            "UPDATE `item` SET `hsnCode` = ?, `trackItem` = ? WHERE `name` = ?"
+        );
+    }
+
+    #[test]
+    fn filter_operator_must_be_a_supported_string() {
+        for filter in [
+            json!({ "name": [1, "item-1"] }),
+            json!({ "name": ["union", "item-1"] }),
+        ] {
+            assert!(where_clause(&filters(filter), &mut Vec::new()).is_err());
+        }
     }
 
     #[test]

@@ -61,6 +61,7 @@ for (const sourceFile of markdownFiles) {
 // VitePress navigation lives outside Markdown, so validate its local routes too.
 const configFile = path.join(docsRoot, '.vitepress', 'config.mts');
 const configSource = fs.readFileSync(configFile, 'utf8');
+const builtOutput = process.argv.includes('--built');
 const configuredReferences = [
   ...configSource.matchAll(/\b(?:link|logo|src):\s*['"]([^'"]+)['"]/g),
 ];
@@ -69,6 +70,78 @@ for (const match of configuredReferences) {
   if (/^(?:https?:|mailto:|tel:|#|\/\/)/i.test(target)) continue;
   if (!targetExists(target, configFile)) {
     errors.push(`docs/.vitepress/config.mts: missing configured target ${target}`);
+  }
+}
+
+if (builtOutput) {
+  const distRoot = path.join(docsRoot, '.vitepress', 'dist');
+  const base = configSource.match(/\bbase:\s*['"]([^'"]+)['"]/i)?.[1];
+  if (!fs.existsSync(distRoot) || !base) {
+    errors.push('built output check requires docs/.vitepress/dist and a configured VitePress base');
+  } else {
+    const normalizedBase = `/${base.split('/').filter(Boolean).join('/')}/`;
+    const htmlFiles = [];
+    const cssFiles = [];
+    const walkBuilt = (directory) => {
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const fullPath = path.join(directory, entry.name);
+        if (entry.isDirectory()) walkBuilt(fullPath);
+        else if (entry.isFile() && entry.name.endsWith('.html')) htmlFiles.push(fullPath);
+        else if (entry.isFile() && entry.name.endsWith('.css')) cssFiles.push(fullPath);
+      }
+    };
+    const insideDist = (candidate) =>
+      candidate === distRoot || candidate.startsWith(`${distRoot}${path.sep}`);
+    const builtTargetExists = (target, sourceFile) => {
+      const clean = decodeURIComponent(target.split(/[?#]/, 1)[0]);
+      if (!clean || /^(?:data:|javascript:|mailto:|tel:|#|\/\/)/i.test(clean)) return true;
+      if (/^[a-z][a-z\d+.-]*:/i.test(clean)) return true;
+
+      let candidate;
+      if (clean.startsWith('/')) {
+        if (!clean.startsWith(normalizedBase)) return false;
+        candidate = path.resolve(distRoot, clean.slice(normalizedBase.length));
+      } else {
+        candidate = path.resolve(path.dirname(sourceFile), clean);
+      }
+      if (!insideDist(candidate)) return false;
+
+      const candidates = [candidate];
+      if (!path.extname(candidate)) {
+        candidates.push(`${candidate}.html`, path.join(candidate, 'index.html'));
+      }
+      if (clean.endsWith('/')) candidates.push(path.join(candidate, 'index.html'));
+      return candidates.some((item) => insideDist(item) && fs.existsSync(item) && fs.statSync(item).isFile());
+    };
+
+    walkBuilt(distRoot);
+    for (const sourceFile of htmlFiles) {
+      const source = fs.readFileSync(sourceFile, 'utf8');
+      for (const match of source.matchAll(/\b(?:href|src|poster)=["']([^"']+)["']/gi)) {
+        const target = match[1].trim();
+        if (!builtTargetExists(target, sourceFile)) {
+          errors.push(`${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken built reference ${target}`);
+        }
+      }
+      for (const match of source.matchAll(/\bsrcset=["']([^"']+)["']/gi)) {
+        for (const candidate of match[1].split(',').map((part) => part.trim().split(/\s+/)[0])) {
+          if (candidate && !builtTargetExists(candidate, sourceFile)) {
+            errors.push(`${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken srcset reference ${candidate}`);
+          }
+        }
+      }
+    }
+    for (const sourceFile of cssFiles) {
+      const source = fs.readFileSync(sourceFile, 'utf8');
+      for (const match of source.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi)) {
+        const target = match[2].trim();
+        if (target && !builtTargetExists(target, sourceFile)) {
+          errors.push(`${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken CSS asset ${target}`);
+        }
+      }
+    }
+    if (!htmlFiles.length) errors.push('built output contains no HTML pages');
+    else console.log(`Built output: inspected ${htmlFiles.length} HTML pages and ${cssFiles.length} CSS files using base ${normalizedBase}`);
   }
 }
 

@@ -2,7 +2,7 @@
 layout: home
 hero:
   name: Sotrama Suite
-  text: Modern Accounting Made Simple
+  text: Desktop accounting backed by MariaDB
   tagline: Open-source desktop accounting software for small and medium businesses
   image:
     src: /icon.png
@@ -34,8 +34,8 @@ features:
   - title: MariaDB storage
     details: Stores company records in MariaDB, either on the same computer or on a reachable LAN host
     icon: 💾
-  - title: Cross-Platform
-    details: Native desktop apps for Windows, macOS (Intel & Apple Silicon), and Linux
+  - title: Desktop application
+    details: Check the release page for installers currently available for your operating system
     icon: 🖥️
   - title: Country and tax settings
     details: Choose a country and review the tax settings available in your installation before recording transactions
@@ -57,8 +57,8 @@ features:
 
 <div class="custom-block tip" style="padding: 1.5rem;">
 <h3>📚 User Guides</h3>
-<p>Step-by-step tutorials for all features</p>
-<a href="/guides/" class="vp-button-brand">Browse Guides</a>
+<p>Database connection and backup guidance</p>
+<a href="/guides/" class="vp-button-brand">Open user guides</a>
 </div>
 
 <div class="custom-block tip" style="padding: 1.5rem;">

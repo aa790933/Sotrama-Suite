@@ -38,7 +38,7 @@ impl Db {
         };
         // Only a missing table is expected on first run. Permission, connection,
         // and decoding failures must not silently disable custom fields.
-        let custom_fields = custom_fields_or_error(crud::load_custom_fields(&pool).await)?;
+        let custom_fields = custom_fields_or_error(crud::load_custom_fields(pool.inner()).await)?;
         let registry = Registry::build(&country_code, &custom_fields)?;
         Ok(Self {
             pool,

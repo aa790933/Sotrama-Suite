@@ -69,7 +69,12 @@
 
 /* Navigation improvements */
 .VPNav {
-  backdrop-filter: blur(8px);
+  backdrop-filter: none;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
 }
 
 /* Mobile responsive */

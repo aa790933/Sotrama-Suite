@@ -84,9 +84,9 @@ async fn run_locked(db: &Db, conn: &mut MySqlConnection) -> Result<MigrationRepo
         run_schema_pass(db, conn, &mut report).await?;
     }
 
-    patches::run_phase(db, conn, &version, Phase::BeforeMigrate, &mut report).await?;
+    patches::run_phase(conn, &version, Phase::BeforeMigrate, &mut report).await?;
     run_schema_pass(db, conn, &mut report).await?;
-    patches::run_phase(db, conn, &version, Phase::AfterMigrate, &mut report).await?;
+    patches::run_phase(conn, &version, Phase::AfterMigrate, &mut report).await?;
     info!(
         "migrate: {} tables, {} columns added, {} retyped, {} indexes, {} foreign keys",
         report.tables_created.len(),
@@ -326,6 +326,6 @@ fn confirm_drop(column: &str) -> bool {
 }
 
 async fn exec(conn: &mut MySqlConnection, sql: &str) -> Result<(), BackendError> {
-    sqlx::query(sql).execute(conn).await.map_err(crud::db_err)?;
+    sqlx::query(sql).execute(&mut *conn).await.map_err(crud::db_err)?;
     Ok(())
 }

@@ -92,6 +92,7 @@ impl std::str::FromStr for FieldType {
 #[serde(rename_all = "camelCase")]
 pub struct Field {
     pub fieldname: String,
+    #[serde(default)]
     pub fieldtype: String,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -126,7 +127,7 @@ pub struct Field {
     pub tab: Option<String>,
     /// The JSON key is `abstract`, a Rust keyword.
     #[serde(default, rename = "abstract", skip_serializing_if = "Option::is_none")]
-    pub abstract_: Option<String>,
+    pub abstract_: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_custom: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

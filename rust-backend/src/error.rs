@@ -55,7 +55,7 @@ impl From<sqlx::Error> for DbError {
     fn from(e: sqlx::Error) -> Self {
         match &e {
             sqlx::Error::Database(db) => {
-                let mysql = db.downcast_ref::<sqlx::mysql::MySqlDatabaseError>();
+                let mysql = db.try_downcast_ref::<sqlx::mysql::MySqlDatabaseError>();
                 Self {
                     // code() is the SQLSTATE string; errno lives on the MySQL type.
                     errno: mysql.map(|m| m.number()),
@@ -90,9 +90,9 @@ impl From<sqlx::Error> for DbError {
 impl fmt::Display for DbError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match (&self.errno, &self.sql_state) {
-            (Some(e), Some(s)) => write!(f, "[{s}/{}] {}", e, self.message),
+            (Some(e), Some(s)) => write!(f, "[{e}/{s}] {}", self.message),
             (Some(e), None) => write!(f, "[{}] {}", e, self.message),
-            (None, Some(s)) => write!(f, "[{s}] {}", s, self.message),
+            (None, Some(s)) => write!(f, "[{s}] {}", self.message),
             (None, None) => f.write_str(&self.message),
         }
     }
@@ -183,7 +183,7 @@ impl DbError {
                 errno: d.errno,
                 sql_state: d.sql_state.clone(),
                 fatal: d.fatal,
-                message: d.to_string(),
+                message: d.message.clone(),
             },
             other => DbError::new(other.to_string()),
         }
@@ -258,5 +258,54 @@ mod tests {
         assert_eq!(value["error"]["name"], "ValueError");
         assert_eq!(value["error"]["message"], "bad request");
         assert!(value.get("data").is_none());
+    }
+
+    #[test]
+    fn database_error_display_keeps_errno_before_sql_state() {
+        let error = DbError {
+            errno: Some(1045),
+            sql_state: Some("28000".into()),
+            fatal: Some(false),
+            message: "access denied".into(),
+        };
+        assert_eq!(error.to_string(), "[1045/28000] access denied");
+    }
+
+    #[test]
+    fn renderer_error_classification_uses_driver_errno() {
+        let duplicate = DbError {
+            errno: Some(1062),
+            sql_state: Some("23000".into()),
+            fatal: Some(false),
+            message: "duplicate".into(),
+        };
+        let duplicate_backend = BackendError::Db(DbError {
+            errno: Some(1062),
+            sql_state: Some("23000".into()),
+            fatal: Some(false),
+            message: "duplicate".into(),
+        });
+        assert_eq!(name_for(&duplicate, &duplicate_backend), "DuplicateEntryError");
+
+        let missing = DbError {
+            errno: Some(1146),
+            sql_state: Some("42S02".into()),
+            fatal: Some(false),
+            message: "missing table".into(),
+        };
+        let missing_backend = BackendError::Db(DbError {
+            errno: Some(1146),
+            sql_state: Some("42S02".into()),
+            fatal: Some(false),
+            message: "missing table".into(),
+        });
+        assert_eq!(name_for(&missing, &missing_backend), "NotFoundError");
+    }
+
+    #[test]
+    fn pool_acquisition_timeout_is_classified_as_retriable() {
+        let error = DbError::from(sqlx::Error::PoolTimedOut);
+        assert_eq!(error.fatal, Some(false));
+        assert!(error.message.contains("timed out waiting for a free connection"));
     }
 }

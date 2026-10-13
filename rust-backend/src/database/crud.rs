@@ -20,7 +20,7 @@ macro_rules! stmt {
                 Bind::Null => q.bind(Option::<String>::None),
                 Bind::Int(v) => q.bind(*v),
                 Bind::Float(v) => q.bind(*v),
-                Bind::Text(v) => q.bind(v.as_str()),
+                Bind::Text(v) => q.bind(v.clone()),
             };
         }
         q
@@ -63,7 +63,7 @@ async fn fetch_rows(
     st: &Statement,
     schema: Option<&Schema>,
 ) -> Result<Vec<RowMap>, BackendError> {
-    let rows = stmt!(&st.sql, &st.params).fetch_all(conn).await;
+    let rows = stmt!(&st.sql, &st.params).fetch_all(&mut *conn).await;
     match rows {
         Ok(rows) => Ok(rows.iter().map(|r| decode_row(r, schema)).collect()),
         Err(e) => Err(DbError::from(e).into()),
@@ -156,10 +156,14 @@ pub async fn get(
             .map(|f| f.fieldname.clone())
             .collect(),
     };
-    let (columns, child_fields): (Vec<String>, Vec<&Field>) = requested
-        .iter()
-        .map(|f| (f.clone(), schema.field(f)))
-        .partition(|(_, f)| !f.map(|f| f.fieldtype == "Table").unwrap_or(false));
+    let mut columns = Vec::with_capacity(requested.len());
+    let mut child_fields: Vec<&Field> = Vec::new();
+    for fieldname in &requested {
+        match schema.field(fieldname) {
+            Some(field) if field.fieldtype == "Table" => child_fields.push(field),
+            _ => columns.push(fieldname.clone()),
+        }
+    }
 
     let mut out = Map::new();
     if !columns.is_empty() {
@@ -257,7 +261,7 @@ pub async fn count(
     schema_of(registry, schema_name)?;
     let st = query::build_count(&table_of(schema_name)?, filters)?;
     let row = stmt!(&st.sql, &st.params)
-        .fetch_one(conn)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|e| BackendError::from(DbError::from(e)))?;
     row.try_get::<i64, _>(0)
@@ -279,7 +283,7 @@ pub async fn exists(
     if schema.is_single() {
         let found = sqlx::query("SELECT 1 FROM `singlevalue` WHERE `parent` = ? LIMIT 1")
             .bind(schema_name)
-            .fetch_optional(conn)
+            .fetch_optional(&mut *conn)
             .await
             .map_err(|e| BackendError::from(DbError::from(e)))?;
         return Ok(found.is_some());
@@ -294,7 +298,7 @@ pub async fn exists(
         q = q.bind(n);
     }
 
-    match q.fetch_optional(conn).await {
+    match q.fetch_optional(&mut *conn).await {
         Ok(found) => Ok(found.is_some()),
         Err(e) => {
             // core.ts swallows 1146 here, which also swallows a dropped connection.
@@ -378,7 +382,7 @@ async fn insert_row(
         vec!["?"; columns.len()].join(", ")
     );
 
-    stmt!(&sql, &params).execute(conn).await.map_err(db_err)?;
+    stmt!(&sql, &params).execute(&mut *conn).await.map_err(db_err)?;
     Ok(())
 }
 
@@ -409,18 +413,17 @@ pub async fn update(
         .collect();
 
     if !assignments.is_empty() {
-        let mut params = Vec::with_capacity(assignments.len() + 1);
+        let mut params = Vec::with_capacity(assignments.len());
         for c in &assignments {
             params.push(encode_value(
                 values.get(c).unwrap_or(&Value::Null),
                 field_type_of(Some(schema), c),
             ));
         }
-        let st = query::build_update_by_name(&table_of(schema_name)?, &assignments, name)?;
-        params.extend(st.params);
+        let st = query::build_update_by_name(&table_of(schema_name)?, &assignments, params, name)?;
 
-        let result = stmt!(&st.sql, &params)
-            .execute(conn)
+        let result = stmt!(&st.sql, &st.params)
+            .execute(&mut *conn)
             .await
             .map_err(db_err)?;
         // MariaDB reports zero affected rows when the supplied values are
@@ -524,7 +527,7 @@ async fn crud_exists(
     );
     Ok(sqlx::query(&sql)
         .bind(name)
-        .fetch_optional(conn)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|e| BackendError::from(DbError::from(e)))?
         .is_some())
@@ -543,7 +546,7 @@ async fn update_row(
     if assignments.is_empty() {
         return Ok(());
     }
-    let mut params: Vec<Bind> = assignments
+    let params: Vec<Bind> = assignments
         .iter()
         .map(|c| {
             encode_value(
@@ -555,14 +558,14 @@ async fn update_row(
     let st = query::build_update_by_name(
         &table_of(&schema.name)?,
         &assignments,
+        params,
         values
             .get("name")
             .and_then(Value::as_str)
             .unwrap_or_default(),
     )?;
-    params.extend(st.params);
-    stmt!(&st.sql, &params)
-        .execute(conn)
+    stmt!(&st.sql, &st.params)
+        .execute(&mut *conn)
         .await
         .map_err(db_err)?;
     Ok(())
@@ -577,7 +580,7 @@ async fn prune_children(
     if keep.is_empty() {
         let sql = format!("DELETE FROM {} WHERE `parent` = ?", table_of(target)?);
         return stmt!(&sql, &[Bind::Text(parent.to_string())])
-            .execute(conn)
+            .execute(&mut *conn)
             .await
             .map(|_| ())
             .map_err(db_err);
@@ -591,7 +594,7 @@ async fn prune_children(
     );
     params.extend(keep.iter().map(|k| Bind::Text(k.clone())));
     stmt!(&sql, &params)
-        .execute(conn)
+        .execute(&mut *conn)
         .await
         .map(|_| ())
         .map_err(db_err)
@@ -611,7 +614,7 @@ pub async fn rename(
         &sql,
         &[Bind::Text(new_name.into()), Bind::Text(old_name.into())]
     )
-    .execute(conn)
+    .execute(&mut *conn)
     .await
     .map(|_| ())
     .map_err(db_err)
@@ -633,7 +636,7 @@ pub async fn delete(
             &sql,
             &[Bind::Text(schema_name.into()), Bind::Text(name.into())]
         )
-        .execute(conn)
+        .execute(&mut *conn)
         .await
         .map(|_| ())
         .map_err(db_err);
@@ -641,7 +644,7 @@ pub async fn delete(
 
     let sql = format!("DELETE FROM {} WHERE `name` = ?", table_of(schema_name)?);
     stmt!(&sql, &[Bind::Text(name.to_string())])
-        .execute(conn)
+        .execute(&mut *conn)
         .await
         .map_err(db_err)?;
 
@@ -651,7 +654,7 @@ pub async fn delete(
         };
         let sql = format!("DELETE FROM {} WHERE `parent` = ?", table_of(target)?);
         stmt!(&sql, &[Bind::Text(name.to_string())])
-            .execute(conn)
+            .execute(&mut *conn)
             .await
             .map_err(db_err)?;
     }
@@ -668,7 +671,7 @@ pub async fn delete_all(
     schema_of(registry, schema_name)?;
     let st = query::build_delete(&table_of(schema_name)?, filters)?;
     Ok(stmt!(&st.sql, &st.params)
-        .execute(conn)
+        .execute(&mut *conn)
         .await
         .map_err(db_err)?
         .rows_affected())
@@ -681,7 +684,7 @@ pub async fn get_single(
 ) -> Result<Map<String, Value>, BackendError> {
     let sql = "SELECT `fieldname`, `value` FROM `singlevalue` WHERE `parent` = ?";
     let rows = stmt!(sql, &[Bind::Text(schema_name.into())])
-        .fetch_all(conn)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|e| BackendError::from(DbError::from(e)))?;
 
@@ -833,7 +836,7 @@ pub async fn get_single_values(
         "SELECT `fieldname`, `parent`, `value` FROM `singlevalue` WHERE {}",
         groups.join(" OR ")
     );
-    let rows = match stmt!(&sql, &params).fetch_all(conn).await {
+    let rows = match stmt!(&sql, &params).fetch_all(&mut *conn).await {
         Ok(rows) => rows,
         Err(e) => {
             let e = DbError::from(e);
@@ -877,12 +880,12 @@ pub async fn next_autoincrement_id(
     let table = table_of(schema_name)?;
     // Best-effort, like core.ts: a missing table surfaces from the MAX below.
     let probe = format!("SELECT 1 FROM {table} LIMIT 1 FOR UPDATE");
-    let _ = stmt!(&probe, &[] as &[Bind]).fetch_optional(conn).await;
+    let _ = stmt!(&probe, &[] as &[Bind]).fetch_optional(&mut *conn).await;
     // CAST to SIGNED, not UNSIGNED: MariaDB returns an unsigned aggregate as
     // BIGINT UNSIGNED, which sqlx will not decode into `i64`.
     let sql = format!("SELECT MAX(CAST(`name` AS SIGNED)) FROM {table} FOR UPDATE");
     let max: Option<i64> = stmt!(&sql, &[] as &[Bind])
-        .fetch_one(conn)
+        .fetch_one(&mut *conn)
         .await
         .map_err(db_err)?
         .try_get(0)
@@ -915,7 +918,7 @@ pub async fn next_series_value(
          WHERE `name` = ? FOR UPDATE",
     )
     .bind(prefix)
-    .fetch_optional(conn)
+        .fetch_optional(&mut *conn)
     .await
     .map_err(|e| BackendError::from(DbError::from(e)))?;
 
@@ -946,7 +949,7 @@ pub async fn next_series_value(
         let padded = format!("{prefix}{:0>width$}", candidate, width = pad_zeros);
         let exists = sqlx::query(&format!("SELECT 1 FROM {table} WHERE `name` = ? LIMIT 1"))
             .bind(&padded)
-            .fetch_optional(conn)
+            .fetch_optional(&mut *conn)
             .await
             .map_err(|e| BackendError::from(DbError::from(e)))?
             .is_some();
@@ -963,7 +966,7 @@ pub async fn next_series_value(
     sqlx::query("UPDATE `numberseries` SET `current` = ? WHERE `name` = ?")
         .bind(candidate)
         .bind(prefix)
-        .execute(conn)
+        .execute(&mut *conn)
         .await
         .map_err(db_err)?;
 
@@ -985,7 +988,7 @@ pub async fn existing_columns(
                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?";
     let rows = sqlx::query(sql)
         .bind(table_name(schema_name))
-        .fetch_all(conn)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|e| BackendError::from(DbError::from(e)))?;
 
@@ -1019,7 +1022,7 @@ pub async fn table_exists(
          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1",
     )
     .bind(table_name(schema_name))
-    .fetch_optional(conn)
+    .fetch_optional(&mut *conn)
     .await
     .map_err(|e| BackendError::from(DbError::from(e)))?;
     Ok(found.is_some())
@@ -1036,7 +1039,7 @@ pub async fn index_exists(
     )
     .bind(table_name(schema_name))
     .bind(index_name)
-    .fetch_optional(conn)
+    .fetch_optional(&mut *conn)
     .await
     .map_err(|e| BackendError::from(DbError::from(e)))?;
     Ok(found.is_some())
@@ -1052,7 +1055,7 @@ pub async fn foreign_key_columns(
                  AND REFERENCED_TABLE_NAME IS NOT NULL";
     let rows = sqlx::query(sql)
         .bind(table_name(schema_name))
-        .fetch_all(conn)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|e| BackendError::from(DbError::from(e)))?;
     Ok(rows.iter().filter_map(|r| r.try_get(0).ok()).collect())
