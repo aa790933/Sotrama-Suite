@@ -50,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-     - name: Copy icon to VitePress public folder
+      - name: Copy icon to VitePress public folder
         run: |
           mkdir -p docs/public
           cp build/icon.png docs/public/icon.png
