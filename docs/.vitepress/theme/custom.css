@@ -6,7 +6,7 @@
   --vp-c-brand-3: #443388;
   --vp-c-brand-soft: #22116633;
 
-  --vp-c-accent: #6366f1;
+  --vp-c-accent: #4338ca;
 
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: linear-gradient(135deg, #221166 0%, #6366f1 100%);
@@ -16,10 +16,10 @@
 }
 
 .dark {
-  --vp-c-brand-1: #6366f1;
-  --vp-c-brand-2: #7c7cff;
-  --vp-c-brand-3: #9999ff;
-  --vp-c-brand-soft: #6366f133;
+  --vp-c-brand-1: #a5b4fc;
+  --vp-c-brand-2: #c7d2fe;
+  --vp-c-brand-3: #e0e7ff;
+  --vp-c-brand-soft: #a5b4fc33;
 }
 
 /* Custom sidebar styling */

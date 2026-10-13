@@ -7,12 +7,16 @@ on:
       - 'docs/**'
       - 'package.json'
       - 'yarn.lock'
+      - 'scripts/check-doc-links.mjs'
+      - 'build/icon.png'
       - '.github/workflows/docs.yml'
   pull_request:
     paths:
       - 'docs/**'
       - 'package.json'
       - 'yarn.lock'
+      - 'scripts/check-doc-links.mjs'
+      - 'build/icon.png'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -44,8 +48,16 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Check documentation links and public assets
+        run: node scripts/check-doc-links.mjs
+
       - name: Build documentation
         run: yarn docs:build
+
+      - name: Verify generated public assets
+        shell: bash
+        run: |
+          test -s docs/.vitepress/dist/icon.png
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'

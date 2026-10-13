@@ -34,3 +34,4 @@ package-lock.json
 /rust-backend/target
 rust-backend/check_output*.txt
 RUST_BACKEND_PLAN.md
+anti-slop/audit-001-2026-10-13.md

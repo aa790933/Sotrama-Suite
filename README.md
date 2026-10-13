@@ -50,7 +50,7 @@ Sotrama Suite addresses a market gap where small businesses face expensive, comp
 
 - **Dashboard**: Provides an overview of key financial data and performance metrics.
 - **Point of Sale**: Simplifies retail transactions with an integrated POS system for easy sales processing.
-- **Works Offline**: Enables users to continue working without an internet connection and sync later.
+- **MariaDB storage**: Stores company records in a MariaDB database that can run locally or on a reachable LAN host. The application does not provide an offline synchronization engine.
 - **Double-entry accounting**: Ensures accurate financial tracking by recording each transaction in two accounts.
 - **Entries**
   - **Invoicing**: Allows businesses to create and manage professional invoices effortlessly.

@@ -49,17 +49,15 @@ export default defineConfig({
   base: '/Sotrama-Suite/',
 
   head: [
-    ['link', { rel: 'icon', href: '/Sotrama-Suite/favicon.ico' }],
     ['meta', { name: 'theme-color', content: '#221166' }],
     ['meta', { property: 'og:title', content: 'Sotrama Suite' }],
     ['meta', { property: 'og:description', content: 'Modern Accounting Made Simple' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://aa790933.github.io/Sotrama-Suite/' }],
-    ['meta', { property: 'og:image', content: 'https://aa790933.github.io/Sotrama-Suite/og-cover.png' }],
   ],
 
   themeConfig: {
-    logo: '/Sotrama-Suite/icon.png',
+    logo: '/icon.png',
     siteTitle: 'Sotrama Suite',
     nav: [
       { text: 'Docs', link: '/getting-started/installation', activeMatch: '/getting-started/' },

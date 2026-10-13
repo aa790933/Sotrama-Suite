@@ -10,6 +10,7 @@ on:
       - 'backend/database/core.ts'
       - 'backend/helpers.ts'
       - 'utils/version.ts'
+      - 'scripts/verify-rust-patch-parity.mjs'
       - '.github/workflows/rust-backend.yml'
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - 'backend/database/core.ts'
       - 'backend/helpers.ts'
       - 'utils/version.ts'
+      - 'scripts/verify-rust-patch-parity.mjs'
       - '.github/workflows/rust-backend.yml'
   workflow_dispatch:
 
@@ -53,6 +55,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust-backend
+
+      - name: Verify Rust patch registry matches legacy registry
+        run: node scripts/verify-rust-patch-parity.mjs
 
       - name: Format, lint, and unit test
         run: |
@@ -182,6 +187,34 @@ jobs:
           fi
           missing=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot -e "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='sotrama_must_not_be_created'")
           test "$missing" = "0"
+
+          # Force one legacy pre-migration patch to fail, then verify a later
+          # startup retries it after the database-side failure is removed.
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "
+            DROP TRIGGER IF EXISTS ci_fail_payment_reference_type;
+            INSERT INTO payment (name, paymentType, referenceType, createdBy, modifiedBy, created, modified)
+              VALUES ('ci-patch-retry-payment', 'Pay', NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))
+              ON DUPLICATE KEY UPDATE paymentType = VALUES(paymentType), referenceType = NULL;
+            UPDATE patchrun SET failed = 1 WHERE name = 'setPaymentReferenceType';
+            CREATE TRIGGER ci_fail_payment_reference_type BEFORE UPDATE ON payment
+              FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'intentional CI patch failure';"
+          if ./target/debug/sotrama-backend --migrate > patch-failure.json 2>&1; then
+            echo "migration unexpectedly succeeded while the patch trigger was active"
+            cat patch-failure.json
+            exit 1
+          fi
+          failed_patch=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT failed FROM patchrun WHERE name='setPaymentReferenceType'")
+          test "$failed_patch" = "1"
+          failed_payment=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COALESCE(referenceType, 'NULL') FROM payment WHERE name='ci-patch-retry-payment'")
+          test "$failed_payment" = "NULL"
+
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "DROP TRIGGER ci_fail_payment_reference_type"
+          ./target/debug/sotrama-backend --migrate > patch-retry.json
+          retried_patch=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT failed FROM patchrun WHERE name='setPaymentReferenceType'")
+          test "$retried_patch" = "0"
+          retried_payment=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT referenceType FROM payment WHERE name='ci-patch-retry-payment'")
+          test "$retried_payment" = "PurchaseInvoice"
+
           echo "first run:"
           cat first.json
 
@@ -212,11 +245,17 @@ jobs:
             '{"jsonrpc":"2.0","id":5,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
             '{"jsonrpc":"2.0","id":6,"method":"db.schema","params":[]}' \
             '{"jsonrpc":"2.0","id":9,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"HSN-LEGACY"}]}' \
+            '{"jsonrpc":"2.0","id":12,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","uomConversions":[{"name":"ci-uom-child","uom":"Unit","conversionFactor":2}]}]}' \
+            '{"jsonrpc":"2.0","id":13,"method":"db.call","params":["get","Item","legacy-item-fixture",["name","uomConversions"]]}' \
+            '{"jsonrpc":"2.0","id":14,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","uomConversions":[{"name":"ci-uom-child","uom":"Unit","conversionFactor":3}]}]}' \
+            '{"jsonrpc":"2.0","id":15,"method":"db.call","params":["get","Item","legacy-item-fixture",["name","uomConversions"]]}' \
+            '{"jsonrpc":"2.0","id":16,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","uomConversions":[]}]}' \
+            '{"jsonrpc":"2.0","id":17,"method":"db.call","params":["get","Item","legacy-item-fixture",["name","uomConversions"]]}' \
             '{"jsonrpc":"2.0","id":10,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"MUST-ROLLBACK","uomConversions":[null]}]}' \
             '{"jsonrpc":"2.0","id":11,"method":"db.call","params":["get","Item","legacy-item-fixture",["hsnCode"]]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 9 and
+            length == 15 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -232,11 +271,26 @@ jobs:
             .[5].jsonrpc == "2.0" and .[5].id == 6 and
             (.[5].result.data.Item.fields | any(.fieldname == "ciCustomField" and .isCustom == true)) and
             .[6].jsonrpc == "2.0" and .[6].id == 9 and .[6].result.data == null and
-            .[7].jsonrpc == "2.0" and .[7].id == 10 and
-            (.[7].result.error.message | contains("must be an object")) and
-            .[8].jsonrpc == "2.0" and .[8].id == 11 and
-            .[8].result.data.hsnCode == "HSN-LEGACY"
+            .[7].jsonrpc == "2.0" and .[7].id == 12 and .[7].result.data == null and
+            .[8].jsonrpc == "2.0" and .[8].id == 13 and
+            .[8].result.data.uomConversions[0].name == "ci-uom-child" and
+            .[8].result.data.uomConversions[0].conversionFactor == 2 and
+            .[9].jsonrpc == "2.0" and .[9].id == 14 and .[9].result.data == null and
+            .[10].jsonrpc == "2.0" and .[10].id == 15 and
+            .[10].result.data.uomConversions[0].conversionFactor == 3 and
+            .[11].jsonrpc == "2.0" and .[11].id == 16 and .[11].result.data == null and
+            .[12].jsonrpc == "2.0" and .[12].id == 17 and
+            (.[12].result.data.uomConversions | length) == 0 and
+            .[13].jsonrpc == "2.0" and .[13].id == 10 and
+            (.[13].result.error.message | contains("must be an object")) and
+            .[14].jsonrpc == "2.0" and .[14].id == 11 and
+            .[14].result.data.hsnCode == "HSN-LEGACY"
           ' protocol.jsonl
+
+          child_rows=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM uomconversionitem WHERE parent='legacy-item-fixture'")
+          test "$child_rows" = "0"
+          parent_hsn=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT hsnCode FROM item WHERE name='legacy-item-fixture'")
+          test "$parent_hsn" = "HSN-LEGACY"
 
           # Start two independent sidecars against a series that does not yet
           # exist. This exercises the first-row race as well as row locking.

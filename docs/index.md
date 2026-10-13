@@ -5,7 +5,7 @@ hero:
   text: Modern Accounting Made Simple
   tagline: Open-source desktop accounting software for small and medium businesses
   image:
-    src: /Sotrama-Suite/icon.png
+    src: /icon.png
     alt: Sotrama Suite Logo
   actions:
     - theme: brand
@@ -31,38 +31,19 @@ features:
   - title: Financial Reports
     details: Profit & Loss, Balance Sheet, General Ledger, Cash Flow, and custom report builder
     icon: 📈
-  - title: Offline-First
-    details: Stores company data in MariaDB, with local or LAN database options
+  - title: MariaDB storage
+    details: Stores company records in MariaDB, either on the same computer or on a reachable LAN host
     icon: 💾
   - title: Cross-Platform
     details: Native desktop apps for Windows, macOS (Intel & Apple Silicon), and Linux
     icon: 🖥️
-  - title: Regional Compliance
-    details: Built-in GST (India), VAT (EU), Sales Tax (US), TVA (Algeria), MWST (Switzerland)
+  - title: Country and tax settings
+    details: Choose a country and review the tax settings available in your installation before recording transactions
     icon: 🌍
   - title: Open Source
     details: AGPL-3.0 licensed, community-driven, fully auditable codebase
     icon: 🔓
 ---
-
-<script setup>
-import { VPTeamPage, VPTeamMembers } from 'vitepress/theme'
-
-const coreTeam = [
-  {
-    avatar: 'https://github.com/aa790933.png',
-    name: 'aa790933',
-    title: 'Creator & Maintainer',
-    links: [
-      { icon: 'github', link: 'https://github.com/aa790933' },
-    ]
-  }
-]
-
-const contributors = [
-  // Add contributors here
-]
-</script>
 
 ## Quick Links
 

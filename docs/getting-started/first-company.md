@@ -110,29 +110,18 @@ Sotrama Suite supports multiple companies in one installation:
 
 ## Backup & Restore
 
-### Automatic Backups
+### Backup before changes
 
-- Enabled by default (daily at 2 AM)
-- Stored in `~/SotramaSuite/backups/`
-- Retains last 30 days
-
-### Manual Backup
-
-```bash
-# CLI backup
-sotrama-suite backup --company "My Company" --output backup.zip
-```
+Do not assume automatic backups are enabled. Before an upgrade or schema migration, create a MariaDB backup using your approved database administration procedure and verify that it can be restored. See [Backup and restore](/guides/backup-restore).
 
 ### Restore
 
-1. File → Restore Company
-2. Select backup file
-3. Enter new company name (cannot overwrite existing)
+Restore is currently an operator workflow for the opt-in Rust backend, not an in-app button. Follow [Backup and restore](/guides/backup-restore) and verify representative records before using a restored database.
 
 ---
 
 ## Next Steps
 
-- [Record your first transaction](/guides/first-transaction)
-- [Set up Point of Sale](/guides/pos-setup)
-- [Generate financial reports](/guides/reports)
+- [Review database connection options](/guides/database-connections)
+- [Prepare a backup and test recovery](/guides/backup-restore)
+- [Read the architecture overview](/architecture/)
