@@ -282,10 +282,10 @@ jobs:
           # registry sees a field stored in the same MariaDB schema used by the
           # TypeScript backend, rather than silently dropping or ignoring it.
           docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "
-            INSERT INTO customfield
-              (name, parent, parentSchemaName, parentFieldname, idx, label, fieldname, fieldtype, isRequired, createdBy, modifiedBy, created, modified)
-            VALUES
-              ('ci-custom-field', 'Item', 'CustomField', 'customFields', 0, 'CI Custom Field', 'ciCustomField', 'Data', 0, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))
+           INSERT INTO customfield
+              (name, parent, parentSchemaName, parentFieldname, idx, label, fieldname, fieldtype, isRequired)
+           VALUES
+              ('ci-custom-field', 'Item', 'CustomField', 'customFields', 0, 'CI Custom Field', 'ciCustomField', 'Data', 0)
             ON DUPLICATE KEY UPDATE fieldname = VALUES(fieldname), fieldtype = VALUES(fieldtype);
             ALTER TABLE customfield DROP COLUMN \`references\`;"
           printf '%s\n' \
