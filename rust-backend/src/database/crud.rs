@@ -750,9 +750,9 @@ async fn set_single_values(
             .map_err(db_err)?;
         } else {
             let sql = "INSERT INTO `singlevalue` \
-                       (`name`, `parent`, `fieldname`, `value`, `creation`, `modified`, \
-                        `modifiedBy`, `createdBy`, `owner`) \
-                       VALUES (?, ?, ?, ?, NOW(6), NOW(6), '__SYSTEM__', '__SYSTEM__', '__SYSTEM__')";
+                       (`name`, `parent`, `fieldname`, `value`, `created`, `modified`, \
+                        `modifiedBy`, `createdBy`) \
+                       VALUES (?, ?, ?, ?, NOW(6), NOW(6), '__SYSTEM__', '__SYSTEM__')";
             stmt!(
                 &sql,
                 &[
