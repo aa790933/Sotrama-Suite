@@ -2,7 +2,7 @@ name: Documentation
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main]
     paths:
       - 'docs/**'
       - 'package.json'
