@@ -110,6 +110,7 @@ pub enum BackendError {
     UnknownSchema(String),
 
     #[error("schema {schema} is not configured for this connection")]
+    #[allow(dead_code)]
     NotConfigured { schema: String },
 
     #[error("{0}")]

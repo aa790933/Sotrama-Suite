@@ -40,17 +40,17 @@ pub async fn run(db: &Db) -> Result<MigrationReport, BackendError> {
         (Err(error), _) => {
             // A failed DDL/FK restore makes this session unsafe to reuse. Closing
             // the physical connection also guarantees MariaDB drops its lock.
-            conn.close().await;
+            let _ = conn.close().await;
             Err(error)
         }
         (Ok(_), Err(error)) => {
             // Do not return a possibly lock-owning connection to the pool.
-            conn.close().await;
-            Err(BackendError::from(crud::db_err(error)))
+            let _ = conn.close().await;
+            Err(crud::db_err(error))
         }
         (Ok(report), Ok(Some(1))) => Ok(report),
         (Ok(_), Ok(_)) => {
-            conn.close().await;
+            let _ = conn.close().await;
             Err(BackendError::Db(DbError::new(
                 "MariaDB schema migration lock was not released by this connection; the connection was discarded",
             )))

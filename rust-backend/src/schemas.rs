@@ -544,7 +544,7 @@ mod tests {
         assert_eq!(bin.options.as_ref().map(|o| o.len()), Some(2));
         assert_eq!(bin.is_custom, Some(true));
         // Required with no default is downgraded, so inserts do not fail 1364.
-        assert_eq!(bin.is_required(), false);
+        assert!(!bin.is_required());
     }
 
     #[test]

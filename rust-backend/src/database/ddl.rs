@@ -200,11 +200,17 @@ pub fn diff_columns(schema: &Schema, existing: &[ExistingColumn]) -> ColumnDiff 
 
     let mut diff = ColumnDiff::default();
 
-    for (key, (sql_type, _)) in &declared {
+    for (key, (sql_type, is_name)) in &declared {
         let Some(found) = existing_by_name.get(key) else {
             diff.added.push((*key).clone());
             continue;
         };
+        // The `name` field is forced to VARCHAR(255) PRIMARY KEY by create_table_sql.
+        // An existing numeric primary key must not be retyped; the table was created
+        // by the legacy backend and works as-is.
+        if *is_name {
+            continue;
+        }
         let want = canonical_type(sql_type);
         let have = canonical_type(&found.column_type);
         // A NOT NULL column that MariaDB reports as nullable needs the same
@@ -324,7 +330,9 @@ mod tests {
         let mut f = field("kind", "Data");
         f.default = Some(serde_json::Value::Null);
         let schema = schema_with(vec![field("name", "Data"), f]);
-        assert!(!create_table_sql(&schema).unwrap().contains("DEFAULT"));
+        let sql = create_table_sql(&schema).unwrap();
+        // Column-level DEFAULT should not appear; table-level DEFAULT CHARSET is fine.
+        assert!(!sql.split("ENGINE=").next().unwrap().contains(" DEFAULT "));
     }
 
     #[test]

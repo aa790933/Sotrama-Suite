@@ -143,7 +143,7 @@ pub async fn run_phase(
         })
         .collect();
     // Stable sort preserves patches/index.ts order when priorities are equal.
-    due.sort_by(|a, b| b.priority.cmp(&a.priority));
+    due.sort_by_key(|a| std::cmp::Reverse(a.priority));
 
     for patch in due {
         let result = execute(patch.name, conn).await;
@@ -483,7 +483,7 @@ mod tests {
     fn legacy_patch_registry_has_nine_entries_and_expected_order() {
         assert_eq!(PATCHES.len(), 9);
         let mut ordered = PATCHES.to_vec();
-        ordered.sort_by(|a, b| b.priority.cmp(&a.priority));
+        ordered.sort_by_key(|a| std::cmp::Reverse(a.priority));
         assert_eq!(ordered[0].name, "updateSchemas");
         assert_eq!(PATCHES.iter().filter(|p| p.before_migrate).count(), 7);
     }

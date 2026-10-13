@@ -49,11 +49,12 @@ impl From<&str> for Bind {
 /// Same list as `ALLOWED_OPERATORS` in `core.ts:57`, plus the `includes`
 /// convenience alias that `#getFiltersArray` rewrites to `like`.
 const ALLOWED_OPERATORS: &[&str] = &[
-    "=", "!=", "<>", "<", "<=", ">", ">=", "like", "not like", "in", "not in", "is", "is not",
+    "=", "!=", "<>", "<", "<=", ">", ">=", "LIKE", "NOT LIKE", "IN", "NOT IN", "IS", "IS NOT",
 ];
 
 fn is_allowed_operator(op: &str) -> bool {
-    ALLOWED_OPERATORS.contains(&op)
+    let upper = op.to_uppercase();
+    ALLOWED_OPERATORS.contains(&upper.as_str())
 }
 
 /// Rejects non-plain identifiers; schema and field names here are ASCII, so nothing legitimate is lost.
@@ -123,11 +124,12 @@ impl Condition {
     fn push(&self, sql: &mut String, params: &mut Vec<Bind>) -> Result<(), BackendError> {
         let column = ident(&self.field)?;
 
-        let is_list_operator = self.operator == "in" || self.operator == "not in";
+        let op_upper = self.operator.to_uppercase();
+        let is_list_operator = op_upper == "IN" || op_upper == "NOT IN";
         if is_list_operator {
             match &self.value {
                 Value::Array(items) if items.is_empty() => {
-                    sql.push_str(if self.operator == "in" {
+                    sql.push_str(if op_upper == "IN" {
                         "1 = 0"
                     } else {
                         "1 = 1"
@@ -136,7 +138,7 @@ impl Condition {
                 }
                 Value::Array(items) => {
                     let holes = vec!["?"; items.len()].join(", ");
-                    sql.push_str(&format!("{column} {} ({holes})", self.operator));
+                    sql.push_str(&format!("{column} {op_upper} ({holes})"));
                     params.extend(items.iter().map(Bind::from));
                     return Ok(());
                 }
@@ -144,7 +146,7 @@ impl Condition {
             }
         }
 
-        sql.push_str(&format!("{column} {} ?", self.operator));
+        sql.push_str(&format!("{column} {op_upper} ?"));
         params.push(Bind::from(&self.value));
         Ok(())
     }
@@ -185,10 +187,13 @@ fn conditions(filters: &serde_json::Map<String, Value>) -> Result<Vec<Condition>
         }
 
         for (op_value, mut operand) in pairs {
-            let mut operator = op_value.trim().to_lowercase();
-            if operator == "includes" {
-                operator = "like".to_string();
-            }
+            let operator = op_value.trim();
+            let op_lower = operator.to_lowercase();
+            let operator = if op_lower == "includes" {
+                "LIKE".to_string()
+            } else {
+                operator.to_string()
+            };
 
             if !is_allowed_operator(&operator) {
                 return Err(BackendError::InvalidArgument(format!(
@@ -196,7 +201,8 @@ fn conditions(filters: &serde_json::Map<String, Value>) -> Result<Vec<Condition>
                 )));
             }
 
-            if operator == "like" && !matches!(operand, Value::Array(_)) {
+            let op_upper = operator.to_uppercase();
+            if op_upper == "LIKE" && !matches!(operand, Value::Array(_)) {
                 if let Value::String(s) = &operand {
                     if !s.contains('%') {
                         operand = Value::String(format!("%{s}%"));
@@ -368,7 +374,7 @@ pub fn build_update_by_name(
     params.push(Bind::Text(name.to_string()));
     Ok(Statement::new(
         format!(
-            "UPDATE {} SET {set} WHERE {}",
+            "UPDATE {} SET {set} WHERE {} = ?",
             ident(table)?,
             ident("name")?
         ),
@@ -551,7 +557,7 @@ mod tests {
         for bad in [
             json!({ "name": ["Includes!", "x"] }),
             json!({ "name": ["union", "x"] }),
-            json!({ "name": ["is not ", "x"] }),
+            json!({ "name": ["between", "x"] }),
         ] {
             assert!(
                 where_clause(&filters(bad.clone()), &mut Vec::new()).is_err(),

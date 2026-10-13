@@ -111,6 +111,7 @@ impl std::fmt::Debug for Pool {
 impl Pool {
     /// Opens the pool and verifies one live connection.
     /// Fails here on a bad host instead of surfacing later as an unrelated error.
+    #[allow(dead_code)]
     pub async fn connect(config: &MariaDBConfig) -> Result<Self, BackendError> {
         Self::connect_with(config, PoolSettings::from_env(), false).await
     }
@@ -246,16 +247,25 @@ mod tests {
 
     #[test]
     fn rejects_invalid_pool_limits_and_timeouts() {
-        let mut settings = PoolSettings::default();
-        settings.max_connections = 0;
+        let settings = PoolSettings {
+            max_connections: 0,
+            ..Default::default()
+        };
         assert!(settings.validate().is_err());
 
-        settings.max_connections = 2;
-        settings.min_connections = 3;
+        let settings = PoolSettings {
+            max_connections: 2,
+            min_connections: 3,
+            ..Default::default()
+        };
         assert!(settings.validate().is_err());
 
-        settings.min_connections = 0;
-        settings.acquire_timeout = Duration::ZERO;
+        let settings = PoolSettings {
+            max_connections: 10,
+            min_connections: 0,
+            acquire_timeout: Duration::ZERO,
+            ..Default::default()
+        };
         assert!(settings.validate().is_err());
     }
 
