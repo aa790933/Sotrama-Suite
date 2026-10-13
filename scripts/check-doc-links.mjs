@@ -79,7 +79,9 @@ if (builtOutput) {
   if (!fs.existsSync(distRoot) || !base) {
     errors.push('built output check requires docs/.vitepress/dist and a configured VitePress base');
   } else {
-    const normalizedBase = `/${base.split('/').filter(Boolean).join('/')}/`;
+    const normalizedBase = base === '/'
+      ? '/'
+      : `/${base.split('/').filter(Boolean).join('/')}/`;
     const htmlFiles = [];
     const cssFiles = [];
     const walkBuilt = (directory) => {

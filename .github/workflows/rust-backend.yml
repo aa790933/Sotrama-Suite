@@ -1,5 +1,8 @@
 name: rust-backend
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, dev]
@@ -72,7 +75,7 @@ jobs:
           cd rust-backend
           cargo fetch --locked
           cargo fmt --all -- --check
-          cargo clippy --locked --all-targets
+          cargo clippy --locked --all-targets -- -D warnings
           cargo test --locked
 
   # The unit tests prove the SQL and DDL generators are correct. These prove the
@@ -117,7 +120,8 @@ jobs:
           docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot -e "
             CREATE DATABASE IF NOT EXISTS sotrama_test;
             CREATE USER IF NOT EXISTS 'sotrama'@'%' IDENTIFIED BY 'password';
-            GRANT ALL PRIVILEGES ON *.* TO 'sotrama'@'%' WITH GRANT OPTION;
+            GRANT ALL PRIVILEGES ON sotrama_test.* TO 'sotrama'@'%';
+            GRANT CREATE, DROP ON *.* TO 'sotrama'@'%';
             FLUSH PRIVILEGES;"
 
       - name: Migrate against a real MariaDB
@@ -181,6 +185,25 @@ jobs:
           restored=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_restore_test -e "SELECT CONCAT(hsnCode, ':', legacyMigrationFixture) FROM item WHERE name='legacy-item-fixture'")
           test "$restored" = "HSN-LEGACY:preserve-me"
           docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot -e "DROP DATABASE sotrama_restore_test"
+
+          # Preserve a valid manifest for a deliberately broken dump so the
+          # failure occurs during import and exercises staging-database cleanup.
+          backup_manifest="${backup%.sql}.json"
+          cp "$backup" restore-failure.sql
+          printf '\nTHIS IS NOT VALID SQL;\n' >> restore-failure.sql
+          broken_bytes=$(stat -c %s restore-failure.sql)
+          broken_sha=$(sha256sum restore-failure.sql | cut -d ' ' -f 1)
+          jq --arg filename "restore-failure.sql" --argjson bytes "$broken_bytes" --arg sha "$broken_sha" \
+            '.fileName = $filename | .fileBytes = $bytes | .sha256 = $sha' \
+            "$backup_manifest" > restore-failure.json
+          if ./target/debug/sotrama-backend --restore-backup restore-failure.sql --restore-to sotrama_restore_failed; then
+            echo "restore unexpectedly accepted a dump with invalid SQL"
+            exit 1
+          fi
+          failed_restore_db=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot -e "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='sotrama_restore_failed'")
+          test "$failed_restore_db" = "0"
+          rm -f restore-failure.sql restore-failure.json
+
           ./target/debug/sotrama-backend --migrate > concurrent-a.json &
           first_pid=$!
           ./target/debug/sotrama-backend --migrate > concurrent-b.json &

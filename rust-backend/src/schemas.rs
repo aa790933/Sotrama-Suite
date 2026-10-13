@@ -105,6 +105,16 @@ fn load_dir(prefix: &str) -> Result<BTreeMap<String, Schema>, BackendError> {
     let mut map = BTreeMap::new();
     for path in json_paths_under(prefix) {
         let schema: Schema = read_json(&path)?;
+        if let Some(field) = schema
+            .fields
+            .iter()
+            .find(|field| field.fieldtype.is_empty() && field.abstract_ != Some(true))
+        {
+            return Err(BackendError::InvalidArgument(format!(
+                "{path}: field `{}` is missing fieldtype and is not an abstract placeholder",
+                field.fieldname
+            )));
+        }
         map.insert(schema.name.clone(), schema);
     }
     Ok(map)
