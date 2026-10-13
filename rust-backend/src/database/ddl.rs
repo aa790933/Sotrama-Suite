@@ -295,7 +295,7 @@ mod tests {
         assert!(sql.contains("`name` VARCHAR(255) PRIMARY KEY"), "{sql}");
         assert!(sql.contains("`partyName` TEXT"), "{sql}");
         assert!(sql.contains("ENGINE=InnoDB"), "{sql}");
-       assert!(sql.contains(") ENGINE=InnoDB"), "{sql}");
+        assert!(sql.contains(") ENGINE=InnoDB"), "{sql}");
         assert!(sql.contains("COLLATE=utf8mb4_unicode_ci"), "{sql}");
     }
 
