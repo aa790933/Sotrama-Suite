@@ -495,5 +495,37 @@ mod tests {
         assert!(version_lte("0.5.0-beta.0", "0.5.0-beta.0"));
         assert!(!version_lte("0.5.0", "0.5.0-beta.0"));
         assert_eq!(compare_versions("0.20.1", "0.21.2"), Ordering::Less);
+        assert_eq!(
+            compare_versions("0.5.0-beta.2", "0.5.0-beta.10"),
+            Ordering::Less
+        );
+        assert_eq!(compare_versions("0.5.0-beta.10", "0.5.0"), Ordering::Less);
+    }
+
+    #[test]
+    fn patch_registry_keeps_legacy_phase_and_priority_contract() {
+        let before: Vec<_> = PATCHES
+            .iter()
+            .filter(|patch| patch.before_migrate)
+            .map(|patch| patch.name)
+            .collect();
+        let after: Vec<_> = PATCHES
+            .iter()
+            .filter(|patch| !patch.before_migrate)
+            .map(|patch| patch.name)
+            .collect();
+
+        assert_eq!(before.len(), 7);
+        assert_eq!(before[0], "testPatch");
+        assert_eq!(before[1], "updateSchemas");
+        assert_eq!(after, ["addUOMs", "createPaymentMethods"]);
+        assert_eq!(
+            PATCHES
+                .iter()
+                .find(|p| p.name == "updateSchemas")
+                .unwrap()
+                .priority,
+            100
+        );
     }
 }

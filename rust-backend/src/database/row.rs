@@ -121,8 +121,14 @@ mod tests {
             Value::Bool(false)
         );
         assert_eq!(decode_value(b"", Some(FieldType::Check)), Value::Null);
-        assert_eq!(decode_value(&[1], Some(FieldType::Check)), Value::Bool(true));
-        assert_eq!(decode_value(&[0], Some(FieldType::Check)), Value::Bool(false));
+        assert_eq!(
+            decode_value(&[1], Some(FieldType::Check)),
+            Value::Bool(true)
+        );
+        assert_eq!(
+            decode_value(&[0], Some(FieldType::Check)),
+            Value::Bool(false)
+        );
     }
 
     #[test]

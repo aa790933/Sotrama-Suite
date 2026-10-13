@@ -80,32 +80,37 @@ pub async fn load_custom_fields(pool: &sqlx::MySqlPool) -> Result<Vec<RawCustomF
         .await
         .map_err(DbError::from)?;
 
-    Ok(rows
-        .iter()
-        .filter_map(|r| {
-            Some(RawCustomField {
-                parent: r.try_get("parent").ok()?,
-                label: r
-                    .try_get::<Option<String>, _>("label")
-                    .ok()
-                    .flatten()
-                    .unwrap_or_default(),
-                fieldname: r.try_get("fieldname").ok()?,
-                fieldtype: r.try_get("fieldtype").ok()?,
-                is_required: r
-                    .try_get::<Option<i8>, _>("is_required")
-                    .ok()
-                    .flatten()
-                    .map(|v| v != 0),
-                section: r.try_get("section").ok().flatten(),
-                tab: r.try_get("tab").ok().flatten(),
-                options: r.try_get("options").ok().flatten(),
-                target: r.try_get("target").ok().flatten(),
-                references: r.try_get("references").ok().flatten(),
-                default: r.try_get("default").ok().flatten(),
-            })
-        })
-        .collect())
+    let mut fields = Vec::with_capacity(rows.len());
+    for row in &rows {
+        // A malformed custom-field row must fail connection setup. Silently
+        // dropping it creates a schema that differs between clients on the LAN.
+        let parent = row.try_get("parent").map_err(DbError::from)?;
+        let label = row
+            .try_get::<Option<String>, _>("label")
+            .map_err(DbError::from)?
+            .unwrap_or_default();
+        let fieldname = row.try_get("fieldname").map_err(DbError::from)?;
+        let fieldtype = row.try_get("fieldtype").map_err(DbError::from)?;
+        let is_required = row
+            .try_get::<Option<i8>, _>("is_required")
+            .map_err(DbError::from)?
+            .map(|value| value != 0);
+
+        fields.push(RawCustomField {
+            parent,
+            label,
+            fieldname,
+            fieldtype,
+            is_required,
+            section: row.try_get("section").map_err(DbError::from)?,
+            tab: row.try_get("tab").map_err(DbError::from)?,
+            options: row.try_get("options").map_err(DbError::from)?,
+            target: row.try_get("target").map_err(DbError::from)?,
+            references: row.try_get("references").map_err(DbError::from)?,
+            default: row.try_get("default").map_err(DbError::from)?,
+        });
+    }
+    Ok(fields)
 }
 
 /// `get(schema, name, fields)`: one row plus its child tables.

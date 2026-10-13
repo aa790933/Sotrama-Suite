@@ -186,15 +186,25 @@ jobs:
           SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
           SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
         run: |
+          # Custom-field definitions are loaded at sidecar startup. Verify the
+          # registry sees a field stored in the same MariaDB schema used by the
+          # TypeScript backend, rather than silently dropping or ignoring it.
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "
+            INSERT INTO customfield
+              (name, parent, parentSchemaName, parentFieldname, idx, label, fieldname, fieldtype, isRequired, createdBy, modifiedBy, created, modified)
+            VALUES
+              ('ci-custom-field', 'Item', 'CustomField', 'customFields', 0, 'CI Custom Field', 'ciCustomField', 'Data', 0, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))
+            ON DUPLICATE KEY UPDATE fieldname = VALUES(fieldname), fieldtype = VALUES(fieldtype);"
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"db.connect","params":[]}' \
             '{"jsonrpc":"2.0","id":2,"method":"db.call","params":["count","Item",{}]}' \
             '{"jsonrpc":"2.0","id":3,"method":"db.call","params":["getSingleValues",{"fieldname":"countryCode","parent":"SystemSettings"}]}' \
             '{"jsonrpc":"2.0","id":4,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
             '{"jsonrpc":"2.0","id":5,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+            '{"jsonrpc":"2.0","id":6,"method":"db.schema","params":[]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 5 and
+            length == 6 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -206,7 +216,9 @@ jobs:
             .[3].jsonrpc == "2.0" and .[3].id == 4 and
             .[3].result.data == 1 and
             .[4].jsonrpc == "2.0" and .[4].id == 5 and
-            .[4].result.data == 2
+            .[4].result.data == 2 and
+            .[5].jsonrpc == "2.0" and .[5].id == 6 and
+            (.[5].result.data.Item.fields | any(.fieldname == "ciCustomField" and .isCustom == true))
           ' protocol.jsonl
 
   build:
