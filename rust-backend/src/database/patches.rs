@@ -343,13 +343,13 @@ async fn fix_ledger_datetime(conn: &mut MySqlConnection) -> Result<(), BackendEr
         "payment",
         "stockmovement",
         "stocktransfer",
-   ] {
+    ] {
         // Older installations may have no table for a removed or abstract
         // schema. The legacy patch only needs to update sources that exist.
         if !crud::table_exists(conn, table).await? {
             continue;
         }
-       let sql = format!("UPDATE `accountingledgerentry` AS ledger JOIN `{table}` AS source ON source.`name` = ledger.`referenceName` SET ledger.`date` = source.`date`");
+        let sql = format!("UPDATE `accountingledgerentry` AS ledger JOIN `{table}` AS source ON source.`name` = ledger.`referenceName` SET ledger.`date` = source.`date`");
         sqlx::query(&sql)
             .execute(&mut *conn)
             .await
