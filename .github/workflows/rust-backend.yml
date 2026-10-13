@@ -120,8 +120,7 @@ jobs:
           docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot -e "
             CREATE DATABASE IF NOT EXISTS sotrama_test;
             CREATE USER IF NOT EXISTS 'sotrama'@'%' IDENTIFIED BY 'password';
-            GRANT ALL PRIVILEGES ON sotrama_test.* TO 'sotrama'@'%';
-            GRANT CREATE, DROP ON *.* TO 'sotrama'@'%';
+            GRANT ALL PRIVILEGES ON *.* TO 'sotrama'@'%';
             FLUSH PRIVILEGES;"
 
       - name: Verify MariaDB connectivity
