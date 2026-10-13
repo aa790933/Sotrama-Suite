@@ -489,7 +489,7 @@ export default class DatabaseCore extends DatabaseBase {
       const rows = (await conn.query(
         `SELECT GET_LOCK(${DatabaseCore.MIGRATE_LOCK_NAME}, ?) AS acquired`,
         [this.migrateLockTimeoutSeconds]
-      )) as { acquired: number | string | null }[];
+      )) as unknown as { acquired: number | string | null }[];
 
       if (Number(rows[0]?.acquired) !== 1) {
         throw new Error(
