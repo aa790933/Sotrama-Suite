@@ -504,7 +504,7 @@ async fn sync_children(
             );
 
             let exists =
-                crud_exists(conn, target, &row["name"].as_str().unwrap_or_default()).await?;
+                crud_exists(conn, target, row["name"].as_str().unwrap_or_default()).await?;
             if is_update && exists {
                 update_row(conn, child_schema, &row).await?;
             } else {

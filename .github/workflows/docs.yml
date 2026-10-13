@@ -38,10 +38,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24.x'
-          cache: yarn
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Enable Corepack and prepare Yarn 4.7.0
+        run: |
+          corepack enable
+          corepack prepare yarn@4.7.0 --activate
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

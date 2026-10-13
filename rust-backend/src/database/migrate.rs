@@ -170,7 +170,7 @@ async fn run_schema_pass(
         report
             .errors
             .push(format!("FOREIGN_KEY_CHECKS could not be restored: {error}"));
-        return Err(BackendError::from(crud::db_err(error)));
+        return Err(crud::db_err(error));
     }
 
     ddl_result?;
