@@ -1,0 +1,84 @@
+/* Custom theme overrides for Sotrama Suite docs */
+
+:root {
+  --vp-c-brand-1: #221166;
+  --vp-c-brand-2: #332277;
+  --vp-c-brand-3: #443388;
+  --vp-c-brand-soft: #22116633;
+
+  --vp-c-accent: #6366f1;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #221166 0%, #6366f1 100%);
+
+  --vp-home-hero-image-background-image: linear-gradient(135deg, #221166 0%, #6366f1 100%);
+  --vp-home-hero-image-filter: blur(80px);
+}
+
+.dark {
+  --vp-c-brand-1: #6366f1;
+  --vp-c-brand-2: #7c7cff;
+  --vp-c-brand-3: #9999ff;
+  --vp-c-brand-soft: #6366f133;
+}
+
+/* Custom sidebar styling */
+.VPSidebar {
+  --vp-sidebar-bg-color: var(--vp-c-bg-alt);
+}
+
+/* Better code block styling */
+.vp-doc pre {
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-alt);
+}
+
+.vp-doc code {
+  font-size: 0.875rem;
+}
+
+/* Custom hero section */
+.VPHero {
+  text-align: center;
+}
+
+.VPHero .main {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Feature cards */
+.VPFeatures {
+  padding: 2rem 0;
+}
+
+/* Table improvements */
+.vp-doc table {
+  font-size: 0.875rem;
+}
+
+.vp-doc th {
+  background: var(--vp-c-bg-alt);
+  font-weight: 600;
+}
+
+/* Admonition styling */
+.custom-block {
+  border-radius: 8px;
+}
+
+/* Navigation improvements */
+.VPNav {
+  backdrop-filter: blur(8px);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .VPHero h1 {
+    font-size: 2rem;
+  }
+
+  .VPFeatures .item {
+    max-width: 100%;
+  }
+}

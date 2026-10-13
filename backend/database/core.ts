@@ -54,6 +54,11 @@ if (process.env.TZ === undefined || process.env.TZ === '') {
 
 type QueryResult = RowsWithMeta<unknown> | UpsertResult;
 
+function isMissingTableError(error: unknown): boolean {
+  const dbError = error as { errno?: number; code?: string } | null;
+  return dbError?.errno === 1146 || dbError?.code === 'ER_NO_SUCH_TABLE';
+}
+
 const ALLOWED_OPERATORS = new Set([
   '=',
   '!=',
@@ -115,15 +120,20 @@ export default class DatabaseCore extends DatabaseBase {
         `SELECT value FROM \`singlevalue\` WHERE fieldname = ? AND parent = ?`,
         ['countryCode', 'SystemSettings']
       )) as { value: string }[];
-    } catch {
-      // Database not initialized or table not created yet
+    } catch (error) {
+      // A new database has no SingleValue table yet. Connection and permission
+      // errors must reach the caller so they are not misreported as a default.
+      if (!isMissingTableError(error)) {
+        throw error;
+      }
+    } finally {
+      await db.close();
     }
 
     if (query && query.length > 0) {
       countryCode = query[0].value;
     }
 
-    await db.close();
     return countryCode;
   }
 
@@ -180,7 +190,13 @@ export default class DatabaseCore extends DatabaseBase {
       this.rawCustomFields = (await this.query(
         'SELECT * FROM customfield'
       )) as RawCustomField[];
-    } catch {}
+    } catch (error) {
+      if (isMissingTableError(error)) {
+        this.rawCustomFields = [];
+        return;
+      }
+      throw error;
+    }
   }
 
   async #migrateLifecycle(): Promise<void> {
@@ -363,6 +379,8 @@ export default class DatabaseCore extends DatabaseBase {
       password: this.connectionParams.password,
       database: this.connectionParams.database,
       connectionLimit: 10,
+      connectTimeout: 8000,
+      acquireTimeout: 15000,
       timezone: 'Z',
       dateStrings: false,
       multipleStatements: true,

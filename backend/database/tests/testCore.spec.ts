@@ -45,7 +45,6 @@ test('db init, migrate, close', async (t) => {
   const schemaMap = getBuiltTestSchemaMap();
   db.setSchemaMap(schemaMap);
 
-  // Same Object
   t.equal(schemaMap, db.schemaMap);
 
   await assertDoesNotThrow(async () => await db.connect());
@@ -449,7 +448,6 @@ test('CRUD nondependent schema', async function (t) {
   const cOne = { name: 'John Whoe', ...getDefaultMetaFieldValueMap() };
   const cTwo = { name: 'Jane Whoe', ...getDefaultMetaFieldValueMap() };
 
-  // Insert
   await db.insert(schemaName, cOne);
   t.equal(
     (
@@ -493,14 +491,12 @@ test('CRUD nondependent schema', async function (t) {
     }
   }
 
-  // Update
   await db.update(schemaName, { name: cOne.name, email });
   const cOneEmail = await db.get(schemaName, cOne.name, 'email');
   t.equal(cOneEmail.email, email, `mi update check one ${cOneEmail}`);
   const cTwoEmail = await db.get(schemaName, cTwo.name, 'email');
   t.equal(cOneEmail.email, email, `mi update check two ${cTwoEmail}`);
 
-  // Rename
   const newName = 'Johnny Whoe';
   await db.rename(schemaName, cOne.name, newName);
 
@@ -514,7 +510,6 @@ test('CRUD nondependent schema', async function (t) {
   fvMap = await db.get(schemaName, newName);
   t.equal(fvMap.email, email, `mi rename check new ${JSON.stringify(fvMap)}`);
 
-  // Delete
   await db.delete(schemaName, newName);
   rows = (await db.query(
     `SELECT * FROM \`${schemaName.toLowerCase()}\``
@@ -716,10 +711,8 @@ test('db deleteAll', async (t) => {
     });
   }
 
-  // Get total count
   t.equal((await db.getAll('Customer')).length, customers.length);
 
-  // Single filter
   t.equal(
     await db.deleteAll('Customer', { email: emailOne }),
     customers.filter((c) => c.email === emailOne).length
@@ -729,7 +722,6 @@ test('db deleteAll', async (t) => {
     0
   );
 
-  // Multiple filters
   t.equal(
     await db.deleteAll('Customer', { email: emailTwo, phone: phoneTwo }),
     customers.filter(
@@ -741,7 +733,6 @@ test('db deleteAll', async (t) => {
     0
   );
 
-  // Includes filters
   t.equal(
     await db.deleteAll('Customer', { email: ['in', [emailTwo, emailThree]] }),
     customers.filter(

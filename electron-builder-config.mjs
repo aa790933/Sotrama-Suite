@@ -13,6 +13,12 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = dirname;
 const buildDirPath = path.join(root, 'dist_electron', 'build');
 const packageDirPath = path.join(root, 'dist_electron', 'bundled');
+const rustBackendName = process.platform === 'win32' ? 'sotrama-backend.exe' : 'sotrama-backend';
+const rustBackendPath = path.join(root, 'rust-backend', 'target', 'release', rustBackendName);
+
+if (process.env.SOTRAMA_REQUIRE_RUST_BACKEND === '1' && !fs.existsSync(rustBackendPath)) {
+  throw new Error(`Required Rust backend binary missing: ${rustBackendPath}`);
+}
 
 /**
  * Optional payloads must not abort packaging: CI builds without release
@@ -35,6 +41,7 @@ const sotramaSuiteConfig = {
   buildDependenciesFromSource: false,
   extraFiles: optionalCopy(path.join('build', 'mariadb'), 'mariadb', ['*.msi']),
   extraResources: [
+    ...(fs.existsSync(rustBackendPath) ? [{ from: rustBackendPath, to: rustBackendName }] : []),
     ...optionalCopy('log_creds.txt', '../creds/log_creds.txt'),
     { from: path.join(root, 'translations'), to: '../translations' },
     { from: path.join(root, 'templates'), to: '../templates' },

@@ -42,18 +42,15 @@ const batchMap = {
 };
 
 test('create dummy items, locations & batches', async (t) => {
-  // Create Items
   for (const { name, rate } of Object.values(itemMap)) {
     const item = getItem(name, rate, true);
     await fyo.doc.getNewDoc(ModelNameEnum.Item, item).sync();
   }
 
-  // Create Locations
   for (const name of Object.values(locationMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.Location, { name }).sync();
   }
 
-  // Create Batches
   for (const batch of Object.values(batchMap)) {
     const doc = fyo.doc.getNewDoc(ModelNameEnum.Batch, batch);
     await doc.sync();

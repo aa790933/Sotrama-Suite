@@ -10,7 +10,6 @@ import { SchemaMap } from 'schemas/types';
 
 type UnknownMap = Record<string, unknown>;
 export abstract class DatabaseBase {
-  // Create
   abstract insert(
     schemaName: string,
     fieldValueMap: UnknownMap
@@ -32,7 +31,6 @@ export abstract class DatabaseBase {
     ...fieldnames: ({ fieldname: string; parent?: string } | string)[]
   ): Promise<{ fieldname: string; parent: string; value: unknown }[]>;
 
-  // Update
   abstract rename(
     schemaName: string,
     oldName: string,
@@ -41,7 +39,6 @@ export abstract class DatabaseBase {
 
   abstract update(schemaName: string, fieldValueMap: UnknownMap): Promise<void>;
 
-  // Delete
   abstract delete(schemaName: string, name: string): Promise<void>;
   
   abstract deleteAll(schemaName:string, filters:QueryFilter): Promise<number>;

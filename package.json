@@ -17,6 +17,9 @@
     "script:translate": "scripts/runner.sh scripts/generateTranslations.ts",
     "script:profile": "scripts/profile.sh",
     "test": "bash scripts/test.sh",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "uitest": "node uitest/index.mjs | tap-spec",
     "lint": "eslint . --ext .ts,.vue --fix",
     "lint:check": "eslint . --ext .ts,.vue",
@@ -111,6 +114,7 @@
     "tslib": "^2.3.1",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
+    "vitepress": "^1.6.4",
     "vue-tsc": "^2.2.8",
     "yargs": "^17.7.2"
   },

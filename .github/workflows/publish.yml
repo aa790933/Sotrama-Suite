@@ -9,6 +9,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Build Rust backend
+        working-directory: rust-backend
+        run: cargo build --locked --release
+
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 
@@ -54,7 +66,11 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --mac --publish always
+
+      - name: Verify Rust backend is included in the packaged app
+        run: node scripts/verify-rust-backend-package.mjs
 
       - name: Tar files
         run: tar -cvf dist-macOS.tar dist_electron
@@ -70,6 +86,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Build Rust backend
+        working-directory: rust-backend
+        run: cargo build --locked --release
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
@@ -116,7 +144,11 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --mac --publish always
+
+      - name: Verify Rust backend is included in the packaged app
+        run: node scripts/verify-rust-backend-package.mjs
 
       - name: Tar files
         run: tar -cvf dist-macOS-arm.tar dist_electron
@@ -132,6 +164,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Install Rust build dependencies
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y pkg-config libssl-dev
+
+      - name: Build Rust backend
+        working-directory: rust-backend
+        run: cargo build --locked --release
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
@@ -163,7 +210,11 @@ jobs:
       - name: Run build
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --linux --publish always
+
+      - name: Verify Rust backend is included in the packaged app
+        run: node scripts/verify-rust-backend-package.mjs
 
       - name: Tar files
         run: tar -cvf dist-linux.tar dist_electron
@@ -182,6 +233,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Build Rust backend
+        working-directory: rust-backend
+        run: cargo build --locked --release
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
@@ -228,6 +291,7 @@ jobs:
         uses: nick-fields/retry@v4
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         with:
           max_attempts: 3
           retry_wait_seconds: 60
@@ -236,6 +300,9 @@ jobs:
           shell: bash
           command: |
             yarn build --win --publish never
+
+      - name: Verify Rust backend is included in the packaged app
+        run: node scripts/verify-rust-backend-package.mjs
 
       - name: Upload installers to GitHub release
         env:

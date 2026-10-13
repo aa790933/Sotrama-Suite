@@ -35,14 +35,12 @@ const locationMap = {
  */
 
 test('create dummy items & locations', async (t) => {
-  // Create Items
   for (const { name, rate } of Object.values(itemMap)) {
     const item = getItem(name, rate);
     await fyo.doc.getNewDoc(ModelNameEnum.Item, item).sync();
     t.ok(await fyo.db.exists(ModelNameEnum.Item, name), `${name} exists`);
   }
 
-  // Create Locations
   for (const name of Object.values(locationMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.Location, { name }).sync();
     t.ok(await fyo.db.exists(ModelNameEnum.Location, name), `${name} exists`);

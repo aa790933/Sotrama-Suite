@@ -96,7 +96,6 @@ test('migrate restores FOREIGN_KEY_CHECKS=1 even when CREATE fails', async (t) =
   t.ok(hadSet1, 'SET FOREIGN_KEY_CHECKS=1 was restored even after failure (finally path)');
 
   // Next migrate should still be able to run (pool not leaked, #txConn cleared)
-  // Make create succeed this time
   createShouldFail = false;
   calls.length = 0;
   try {

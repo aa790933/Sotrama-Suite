@@ -359,7 +359,6 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
         const pattern = value.replace(/%/g, '');
         if (!actual.includes(pattern)) return false;
       }
-      // other ops not needed for minimal slice
     }
     return true;
   }

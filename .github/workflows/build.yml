@@ -10,12 +10,33 @@ on:
       - '**.md'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Install Rust build dependencies
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y pkg-config libssl-dev
+
+      - name: Test and build Rust backend
+        working-directory: rust-backend
+        run: |
+          cargo fmt --all -- --check
+          cargo test --locked
+          cargo build --locked --release
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
@@ -29,19 +50,26 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Lint
-        run: yarn lint
+        run: yarn lint:check
 
       - name: Typecheck
         run: yarn typecheck
+
+      - name: Run TypeScript test suite
+        run: yarn test
 
       - name: Build (electron-builder --publish never)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --publish never
+
+      - name: Verify Rust backend is included in the packaged app
+        run: node scripts/verify-rust-backend-package.mjs
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
@@ -51,4 +79,65 @@ jobs:
             dist_electron/bundled
             dist_electron/build
           if-no-files-found: warn
+          retention-days: 7
+
+  windows-build:
+    name: Windows backend and Electron package
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Test and build Rust backend
+        working-directory: rust-backend
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --locked --all-targets
+          cargo test --locked
+          cargo build --locked --release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Test Electron IPC and Rust sidecar integration
+        run: yarn test main/ipc/router.spec.ts main/ipc/rustBackendClient.spec.ts
+
+      - name: Package Windows application
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
+        run: yarn build --win --publish never
+
+      - name: Verify Rust backend is included in the packaged app
+        run: node scripts/verify-rust-backend-package.mjs
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v6
+        with:
+          name: dist-electron-windows-${{ github.sha }}
+          path: |
+            dist_electron/bundled
+            dist_electron/build
+          if-no-files-found: error
           retention-days: 7

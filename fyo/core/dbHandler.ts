@@ -377,7 +377,6 @@ export class DatabaseHandler extends DatabaseBase {
     return count;
   }
 
-  // Update
   async rename(
     schemaName: string,
     oldName: string,
@@ -392,7 +391,6 @@ export class DatabaseHandler extends DatabaseBase {
     this.observer.trigger(`update:${schemaName}`, docValueMap);
   }
 
-  // Delete
   async delete(schemaName: string, name: string): Promise<void> {
     await this.backend.delete(schemaName, name);
     this.observer.trigger(`delete:${schemaName}`, name);

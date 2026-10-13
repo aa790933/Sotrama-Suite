@@ -1,0 +1,253 @@
+name: rust-backend
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'rust-backend/**'
+      - 'schemas/**'
+      - '.github/workflows/rust-backend.yml'
+  pull_request:
+    paths:
+      - 'rust-backend/**'
+      - 'schemas/**'
+      - '.github/workflows/rust-backend.yml'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: '0'
+  # Debug builds of dependencies are several times larger and slower to link.
+  CARGO_PROFILE_DEV_DEBUG: '0'
+
+jobs:
+  # Fast feedback: formatting, lints and the unit tests, which need no database.
+  check:
+    name: check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y pkg-config libssl-dev mariadb-client
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Format, lint, and unit test
+        run: |
+          cd rust-backend
+          cargo fetch --locked
+          cargo fmt --all -- --check
+          cargo clippy --locked --all-targets
+          cargo test --locked
+
+  # The unit tests prove the SQL and DDL generators are correct. These prove the
+  # generated SQL actually runs, which is the part a pure test cannot cover.
+  integration:
+    name: integration (mariadb)
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -uroot -proot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: '3307'
+      TEST_DB_USER: sotrama
+      TEST_DB_PASSWORD: password
+      TEST_DB_NAME: sotrama_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y pkg-config libssl-dev mariadb-client
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Create the test database and user
+        run: |
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot -e "
+            CREATE DATABASE IF NOT EXISTS sotrama_test;
+            CREATE USER IF NOT EXISTS 'sotrama'@'%' IDENTIFIED BY 'password';
+            GRANT ALL PRIVILEGES ON *.* TO 'sotrama'@'%' WITH GRANT OPTION;
+            FLUSH PRIVILEGES;"
+
+      - name: Migrate against a real MariaDB
+        working-directory: rust-backend
+        env:
+          SOTRAMA_DB_HOST: ${{ env.TEST_DB_HOST }}
+          SOTRAMA_DB_PORT: ${{ env.TEST_DB_PORT }}
+          SOTRAMA_DB_USER: ${{ env.TEST_DB_USER }}
+          SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
+        run: cargo run --locked -- --migrate
+
+      - name: Migration is idempotent
+        working-directory: rust-backend
+        env:
+          SOTRAMA_DB_HOST: ${{ env.TEST_DB_HOST }}
+          SOTRAMA_DB_PORT: ${{ env.TEST_DB_PORT }}
+          SOTRAMA_DB_USER: ${{ env.TEST_DB_USER }}
+          SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
+          SOTRAMA_BACKUP_DIR: ${{ runner.temp }}/sotrama-backups
+        run: |
+          cargo run --locked -- --migrate > first.json
+          # A successful exit alone is insufficient: an empty report on a new
+          # database could mean the migration skipped creating the schema.
+          jq -e '
+            (.tables_created | length) > 0 and
+            (.indexes_created | length) > 0 and
+            (.foreign_keys_created | length) > 0
+          ' first.json || {
+            echo "fresh migration did not create tables, indexes, and foreign keys"
+            cat first.json
+            exit 1
+          }
+          # Exercise an existing populated schema instead of testing only an empty database.
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "UPDATE singlevalue SET value='0.0.0' WHERE parent='SystemSettings' AND fieldname='version'; DELETE FROM patchrun WHERE name='fixItemHSNField'; INSERT INTO patchrun (name, failed, version) VALUES ('migration-fixture', 0, '0.5.0-beta.0'); ALTER TABLE patchrun ADD COLUMN legacyMigrationFixture VARCHAR(32) NULL; UPDATE patchrun SET legacyMigrationFixture = 'preserve-me' WHERE name = 'migration-fixture'; ALTER TABLE item MODIFY COLUMN hsnCode VARCHAR(255) NULL; ALTER TABLE item ADD COLUMN legacyMigrationFixture VARCHAR(32) NULL; INSERT INTO item (name, hsnCode, legacyMigrationFixture, createdBy, modifiedBy, created, modified) VALUES ('legacy-item-fixture', 'HSN-LEGACY', 'preserve-me', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));"
+          cargo run --locked -- --migrate > second.json
+          # A second run against the same schema must have no DDL left to apply.
+          jq -e '
+            (.tables_created   | length) == 0 and
+            (.columns_added    | length) == 0 and
+            (.columns_removed  | length) == 0 and
+            (.columns_retyped  | length) == 0 and
+            (.indexes_created  | length) == 0 and
+            (.foreign_keys_created | length) == 0
+          ' second.json || {
+            echo "migration is not idempotent"
+            cat first.json second.json
+            exit 1
+          }
+          preserved=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT legacyMigrationFixture FROM patchrun WHERE name='migration-fixture'")
+          test "$preserved" = "preserve-me"
+          legacy_row=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(hsnCode, ':', legacyMigrationFixture) FROM item WHERE name='legacy-item-fixture'")
+          test "$legacy_row" = "HSN-LEGACY:preserve-me"
+          hsn_type=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT DATA_TYPE FROM information_schema.columns WHERE table_schema='sotrama_test' AND table_name='item' AND column_name='hsnCode'")
+          test "$hsn_type" = "text"
+          backup=$(find "${{ runner.temp }}/sotrama-backups" -maxdepth 1 -type f -name '*.sql' | head -n 1)
+          test -n "$backup"
+          test -s "$backup"
+          cargo run --locked -- --restore-backup "$backup" --restore-to sotrama_restore_test
+          restored=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_restore_test -e "SELECT CONCAT(hsnCode, ':', legacyMigrationFixture) FROM item WHERE name='legacy-item-fixture'")
+          test "$restored" = "HSN-LEGACY:preserve-me"
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot -e "DROP DATABASE sotrama_restore_test"
+          ./target/debug/sotrama-backend --migrate > concurrent-a.json &
+          first_pid=$!
+          ./target/debug/sotrama-backend --migrate > concurrent-b.json &
+          second_pid=$!
+          wait "$first_pid"
+          wait "$second_pid"
+          jq -s -e 'length == 2 and all(.[]; .errors == [])' concurrent-a.json concurrent-b.json
+          # A failed connection to a named database must not create an empty database.
+          if SOTRAMA_DB_NAME=sotrama_must_not_be_created ./target/debug/sotrama-backend --serve --no-migrate </dev/null; then
+            echo "connection to a missing database unexpectedly succeeded"
+            exit 1
+          fi
+          missing=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot -e "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='sotrama_must_not_be_created'")
+          test "$missing" = "0"
+          echo "first run:"
+          cat first.json
+
+      - name: Exercise the JSON-RPC contract against MariaDB
+        working-directory: rust-backend
+        env:
+          SOTRAMA_DB_HOST: ${{ env.TEST_DB_HOST }}
+          SOTRAMA_DB_PORT: ${{ env.TEST_DB_PORT }}
+          SOTRAMA_DB_USER: ${{ env.TEST_DB_USER }}
+          SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"db.connect","params":[]}' \
+            '{"jsonrpc":"2.0","id":2,"method":"db.call","params":["count","Item",{}]}' \
+            '{"jsonrpc":"2.0","id":3,"method":"db.call","params":["getSingleValues",{"fieldname":"countryCode","parent":"SystemSettings"}]}' \
+            '{"jsonrpc":"2.0","id":4,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+            '{"jsonrpc":"2.0","id":5,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+            | cargo run --locked -- --serve --no-migrate > protocol.jsonl
+          jq -s -e '
+            length == 5 and
+            .[0].jsonrpc == "2.0" and .[0].id == 1 and
+            .[0].result.data.countryCode == "in" and
+            .[1].jsonrpc == "2.0" and .[1].id == 2 and
+            (.[1].result.data | type == "number") and
+            .[2].jsonrpc == "2.0" and .[2].id == 3 and
+            (.[2].result.data | length) == 1 and
+            .[2].result.data[0].fieldname == "countryCode" and
+            .[2].result.data[0].value == "in" and
+            .[3].jsonrpc == "2.0" and .[3].id == 4 and
+            .[3].result.data == 1 and
+            .[4].jsonrpc == "2.0" and .[4].id == 5 and
+            .[4].result.data == 2
+          ' protocol.jsonl
+
+  build:
+    name: build (${{ matrix.os }})
+    needs: [check]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: sotrama-backend-linux-x64
+            binary: sotrama-backend
+          - os: windows-latest
+            artifact: sotrama-backend-windows-x64
+            binary: sotrama-backend.exe
+          - os: macos-latest
+            artifact: sotrama-backend-macos-arm64
+            binary: sotrama-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y pkg-config libssl-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-backend
+
+      - name: Build release binary
+        working-directory: rust-backend
+        run: cargo build --locked --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: rust-backend/target/release/${{ matrix.binary }}
+          if-no-files-found: error
+          retention-days: 14

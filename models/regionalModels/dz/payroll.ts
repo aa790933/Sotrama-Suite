@@ -17,7 +17,6 @@
 // A gross salary below this floor must produce a non-blocking warning.
 export const SNMG_2026 = 24_000;
 
-// ---------------------------------------------------------------------------
 // CNAS — general social security contributions, expressed as % of gross salary.
 // Employer side — declared total 26%.
 // SUB-RATE DISCREPANCY: the individual components (12.5 + 10.5 + 1.25 + 1.5)
@@ -38,7 +37,6 @@ export const CNAS_EMPLOYEE_SICKNESS_MATERNITY = 5.5;
 export const CNAS_EMPLOYEE_RETIREMENT = 3.5;
 export const CNAS_EMPLOYEE_TOTAL = 9;
 
-// ---------------------------------------------------------------------------
 // Professional-expense abatement, applied to "net social" (gross minus employee
 // CNAS) before computing IRG. Declared as 40% of net social, with a legal
 // floor of 1,000 DZD and a ceiling of 1,500 DZD.
@@ -51,7 +49,6 @@ export const PROFESSIONAL_EXPENSE_RATE = 40; // % of net social
 export const PROFESSIONAL_EXPENSE_MIN = 1_000; // DZD / month
 export const PROFESSIONAL_EXPENSE_MAX = 1_500; // DZD / month
 
-// ---------------------------------------------------------------------------
 // IRG — income tax, progressive / marginal brackets applied to the taxable
 // base. Each portion of income is taxed at its own bracket rate.
 export const IRG_BRACKET_1_LIMIT = 30_000; // 0% band upper bound

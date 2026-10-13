@@ -103,7 +103,6 @@ const locationMap = {
 };
 
 test(' Coupon Codes: create dummy item, party, pricing rules, coupon codes', async (t) => {
-  // Create Items
   for (const { name, rate } of Object.values(itemMap)) {
     const item = getItem(name, rate, false);
 
@@ -112,7 +111,6 @@ test(' Coupon Codes: create dummy item, party, pricing rules, coupon codes', asy
     t.ok(await fyo.db.exists(ModelNameEnum.Item, name), `Item: ${name} exists`);
   }
 
-  // Create Party
   await fyo.doc.getNewDoc(ModelNameEnum.Party, partyMap.partyOne).sync();
 
   t.ok(
@@ -120,7 +118,6 @@ test(' Coupon Codes: create dummy item, party, pricing rules, coupon codes', asy
     `Party: ${partyMap.partyOne.name} exists`
   );
 
-  // Create Pricing Rules
   for (const pricingRule of Object.values(pricingRuleMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.PricingRule, pricingRule).sync();
 
@@ -134,13 +131,11 @@ test(' Coupon Codes: create dummy item, party, pricing rules, coupon codes', asy
 
   t.ok(fyo.singles.AccountingSettings?.enablePricingRule);
 
-  // Create Locations
   for (const name of Object.values(locationMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.Location, { name }).sync();
     t.ok(await fyo.db.exists(ModelNameEnum.Location, name), `${name} exists`);
   }
 
-  // create MaterialReceipt
   const stockMovement = await getStockMovement(
     MovementTypeEnum.MaterialReceipt,
     new Date('2022-11-03T09:57:04.528'),
@@ -161,7 +156,6 @@ test(' Coupon Codes: create dummy item, party, pricing rules, coupon codes', asy
     'Pen has quantity twenty five'
   );
 
-  // Create Coupon Codes
   for (const couponCodes of Object.values(couponCodesMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.CouponCode, couponCodes).sync();
 

@@ -67,7 +67,7 @@ function evaluateFieldMeta(
 export async function getLinkedEntries(
   doc: Doc
 ): Promise<Record<string, string[]>> {
-  // TODO: Normalize this function.
+  // Full schemaMap walk, then one query per incoming Link/DynamicLink field.
   const fyo = doc.fyo;
   const target = doc.schemaName;
 

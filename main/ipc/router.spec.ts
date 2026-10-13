@@ -34,8 +34,6 @@ function makeFakeDatabase(): DatabaseCore {
   } as unknown as DatabaseCore;
 }
 
-// ——— sanitizeDatabaseName ———
-
 test('sanitizeDatabaseName: allows alphanum, dash, underscore', (t) => {
   t.equal(sanitizeDatabaseName('sotrama'), 'sotrama');
   t.equal(sanitizeDatabaseName('my-db_123'), 'my-db_123');
@@ -63,8 +61,6 @@ test('sanitizeDatabaseName: rejects empty after sanitization', (t) => {
   t.throws(() => sanitizeDatabaseName('`'), /Invalid database name/);
   t.end();
 });
-
-// ——— PathPolicy ———
 
 function makePolicy(tmpRoot: string) {
   return new PathPolicy({
@@ -99,8 +95,6 @@ test('PathPolicy.assertAllowed throws with Path not allowed', (t) => {
   t.end();
 });
 
-// ——— assertAllowedApiEndpoint ———
-
 test('assertAllowedApiEndpoint: allows https + books_integration prefix', (t) => {
   t.doesNotThrow(() =>
     assertAllowedApiEndpoint(
@@ -128,8 +122,6 @@ test('assertAllowedApiEndpoint: rejects http and wrong prefix', (t) => {
   );
   t.end();
 });
-
-// ——— SenderPolicy ———
 
 test('AllowAllSenderPolicy always returns true', (t) => {
   const p = new AllowAllSenderPolicy();

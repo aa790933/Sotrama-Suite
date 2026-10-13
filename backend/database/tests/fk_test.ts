@@ -142,7 +142,6 @@ const schemaMap = {
 } as unknown as SchemaMap;
 
 async function main() {
-  // Clean database
   const adminDb = new DatabaseCore(undefined, {
     ...testDbConfig,
     database: 'test',
@@ -159,10 +158,8 @@ async function main() {
   db.connect();
   db.setSchemaMap(schemaMap);
 
-  // Migrate
   await db.migrate();
 
-  // Check FK constraint exists
   const fks = await db.query(`
     SELECT CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
     FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE

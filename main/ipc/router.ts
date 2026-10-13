@@ -7,7 +7,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import type { SelectFileOptions, SelectFileReturn } from 'utils/types';
 import { emitMainProcessError } from '../../backend/helpers';
-import type DatabaseCore from '../../backend/database/core';
 import type { FieldValueMap } from '../../backend/database/types';
 import type {
   DatabaseMethod,
@@ -44,8 +43,10 @@ import {
 } from './policies';
 import type { ConnectionStore } from './connectionStore';
 import { ElectronStoreConnectionStore } from './connectionStore';
+import { RustDatabaseAdapter, type RouterDatabase } from './rustDatabaseAdapter';
+import { RustBackendClient } from './rustBackendClient';
 
-// ---- Dependency contracts ----
+// Injected collaborators, so the router can be built without electron.
 
 export interface WindowProvider {
   getWindow(): Electron.BrowserWindow | null;
@@ -56,7 +57,7 @@ export interface WindowProvider {
 }
 
 export interface IpcRouterDeps {
-  database: DatabaseCore;
+  database: RouterDatabase;
   windowProvider: WindowProvider;
   app: Electron.App;
   dialog: Electron.Dialog;
@@ -67,7 +68,7 @@ export interface IpcRouterDeps {
   connectionStore?: ConnectionStore;
 }
 
-// ---- Typed sub-interfaces (the seam) ----
+// The capability groups the renderer is allowed to reach.
 
 export interface DbOps {
   checkDbAccess(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }>;
@@ -172,8 +173,6 @@ export interface AppOps {
   ): Promise<unknown>;
   showError(title: string, content: string): Promise<void>;
 }
-
-// ---- Implementation ----
 
 async function getErrorHandledResponse<T>(
   fn: () => Promise<T> | T
@@ -1010,15 +1009,33 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
   };
   const { app: electronApp, dialog: electronDialog } =
     require('electron') as typeof import('electron');
-  // Lazy to avoid pulling the mariadb driver into unit tests at module load
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { default: MainDatabase } =
-    require('../../backend/database/core') as typeof import('../../backend/database/core');
+  let database: RouterDatabase;
+  if (process.env.SOTRAMA_BACKEND === 'rust') {
+    // Explicit selection: startup fails clearly if the sidecar is missing or
+    // cannot start; it never silently switches to the legacy implementation.
+    database = new RustDatabaseAdapter(
+      new RustBackendClient({
+        backupDir: path.join(electronApp.getPath('userData'), 'backups'),
+      })
+    );
+  } else {
+    // Keep the existing backend as the default until Rust's patch and backup
+    // lifecycle has parity-tested against existing company databases.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { default: MainDatabase } =
+      require('../../backend/database/core') as typeof import('../../backend/database/core');
+    database = new MainDatabase();
+  }
+  electronApp.once('before-quit', () => {
+    void database.close().catch((error) => {
+      console.error('[main] failed to close database backend:', error);
+    });
+  });
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ElectronStoreConnectionStore } =
     require('./connectionStore') as typeof import('./connectionStore');
   return new IpcRouter({
-    database: new MainDatabase(),
+    database,
     windowProvider: winProvider,
     app: electronApp,
     dialog: electronDialog,

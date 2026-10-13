@@ -36,14 +36,12 @@ const priceListMap = {
 };
 
 test('Price List: create dummy item, party, price lists', async (t) => {
-  // Create Items
   for (const { name, rate } of Object.values(itemMap)) {
     const item = getItem(name, rate, false);
     await fyo.doc.getNewDoc(ModelNameEnum.Item, item).sync();
     t.ok(await fyo.db.exists(ModelNameEnum.Item, name), `Item: ${name} exists`);
   }
 
-  // Create Parties
   for (const { name, email } of Object.values(partyMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.Party, { name, email }).sync();
     t.ok(
