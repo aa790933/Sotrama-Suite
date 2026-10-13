@@ -88,6 +88,9 @@ export default class DatabaseCore extends DatabaseBase {
   connectionParams: MariaDBConfig;
   rawCustomFields: RawCustomField[] = [];
   #txConn: PoolConnection | null = null;
+  #migrationQueue: Promise<void> = Promise.resolve();
+  // Public so tests can wait a second instead of the production 30s.
+  migrateLockTimeoutSeconds = 30;
 
   constructor(dbPath?: string, connectionParams?: MariaDBConfig) {
     super();
@@ -204,15 +207,19 @@ export default class DatabaseCore extends DatabaseBase {
       return;
     }
 
-    const isFirstRun = await this.#getIsFirstRun();
-    if (isFirstRun) {
-      await this.migrate();
-    }
+    // Lock spans the whole lifecycle, not just migrate(): patches and the
+    // pre-migration backup must not interleave with another desktop's DDL.
+    await this.#withMigrateLock(async () => {
+      const isFirstRun = await this.#getIsFirstRun();
+      if (isFirstRun) {
+        await this.#migrateLocked();
+      }
 
-    await this.#executeMigration();
+      await this.#executeMigration(true);
+    });
   }
 
-  async #executeMigration() {
+  async #executeMigration(lockHeld = false) {
     const version = await this.#getAppVersion();
     const pending = await this.#getPatchesToExecute(version);
 
@@ -222,7 +229,7 @@ export default class DatabaseCore extends DatabaseBase {
     }
 
     await runPatches(pending.pre, this, version);
-    await this.migrate({
+    const migrationConfig: MigrationConfig = {
       pre: async () => {
         if (hasPatches) {
           return;
@@ -230,7 +237,12 @@ export default class DatabaseCore extends DatabaseBase {
 
         await this.#createBackup();
       },
-    });
+    };
+    if (lockHeld) {
+      await this.#migrateLocked(migrationConfig);
+    } else {
+      await this.migrate(migrationConfig);
+    }
     await runPatches(pending.post, this, version);
   }
 
@@ -443,6 +455,63 @@ export default class DatabaseCore extends DatabaseBase {
   }
 
   async migrate(config: MigrationConfig = {}) {
+    await this.#withMigrateLock(() => this.#migrateLocked(config));
+  }
+
+  /**
+   * MariaDB DDL is not transactional and every desktop holds its own
+   * connection, so two PCs starting together would otherwise both build the
+   * same schema. The lock name must stay byte-identical to
+   * `rust-backend/src/database/migrate.rs` so a TypeScript peer and a Rust
+   * peer serialize against each other instead of only against their own kind.
+   */
+  static readonly MIGRATE_LOCK_NAME =
+    "SHA2(CONCAT('sotrama:migrate:', DATABASE()), 256)";
+
+  async #withMigrateLock<T>(callback: () => Promise<T>): Promise<T> {
+    if (!this.pool) {
+      return await callback();
+    }
+
+    // Serialize calls made through the same pool before taking a database
+    // connection. Otherwise several waiters can consume every pool slot while
+    // the lock owner needs another connection to run its migration queries.
+    let releaseLocal!: () => void;
+    const previous = this.#migrationQueue;
+    this.#migrationQueue = new Promise<void>((resolve) => {
+      releaseLocal = resolve;
+    });
+    await previous;
+
+    let conn: PoolConnection | null = null;
+    try {
+      conn = await this.pool.getConnection();
+      const rows = (await conn.query(
+        `SELECT GET_LOCK(${DatabaseCore.MIGRATE_LOCK_NAME}, ?) AS acquired`,
+        [this.migrateLockTimeoutSeconds]
+      )) as { acquired: number | string | null }[];
+
+      if (Number(rows[0]?.acquired) !== 1) {
+        throw new Error(
+          `Timed out after ${this.migrateLockTimeoutSeconds}s waiting for the schema ` +
+            'migration lock: another desktop is migrating this database.'
+        );
+      }
+
+      return await callback();
+    } finally {
+      if (conn) {
+        // Dropping the session releases the lock even if RELEASE_LOCK cannot run.
+        await conn
+          .query(`SELECT RELEASE_LOCK(${DatabaseCore.MIGRATE_LOCK_NAME})`)
+          .catch(() => undefined);
+        void conn.release();
+      }
+      releaseLocal();
+    }
+  }
+
+  async #migrateLocked(config: MigrationConfig = {}) {
     const { create, alter } = await this.#getCreateAlterList();
     const hasSingleValueTable = !create.includes('SingleValue');
     let singlesConfig: UpdateSinglesConfig = {

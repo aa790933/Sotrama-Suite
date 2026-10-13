@@ -419,7 +419,10 @@ mod tests {
             "Item",
             "SalesInvoice",
             "SalesInvoiceItem",
-            "StockTransferItem",
+            // Abstract parents are folded into concrete extending schemas and
+            // must not appear as standalone tables in the registry.
+            "ShipmentItem",
+            "PurchaseReceiptItem",
             "POSSettings",
             "SingleValue",
             "SystemSettings",

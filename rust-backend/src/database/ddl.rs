@@ -118,7 +118,7 @@ pub fn create_table_sql(schema: &Schema) -> Result<String, BackendError> {
     }
 
     Ok(format!(
-        "CREATE TABLE IF NOT EXISTS {table} ({} \
+        "CREATE TABLE IF NOT EXISTS {table} ({}) \
          ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         columns.join(", ")
     ))
@@ -295,6 +295,7 @@ mod tests {
         assert!(sql.contains("`name` VARCHAR(255) PRIMARY KEY"), "{sql}");
         assert!(sql.contains("`partyName` TEXT"), "{sql}");
         assert!(sql.contains("ENGINE=InnoDB"), "{sql}");
+       assert!(sql.contains(") ENGINE=InnoDB"), "{sql}");
         assert!(sql.contains("COLLATE=utf8mb4_unicode_ci"), "{sql}");
     }
 
