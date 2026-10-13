@@ -124,15 +124,16 @@ jobs:
             GRANT CREATE, DROP ON *.* TO 'sotrama'@'%';
             FLUSH PRIVILEGES;"
 
-      - name: Migrate against a real MariaDB
-        working-directory: rust-backend
-        env:
-          SOTRAMA_DB_HOST: ${{ env.TEST_DB_HOST }}
-          SOTRAMA_DB_PORT: ${{ env.TEST_DB_PORT }}
-          SOTRAMA_DB_USER: ${{ env.TEST_DB_USER }}
-          SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
-          SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
-        run: cargo run --locked -- --migrate
+      - name: Verify MariaDB connectivity
+       working-directory: rust-backend
+       run: |
+          mariadb \
+            --host="$TEST_DB_HOST" \
+            --port="$TEST_DB_PORT" \
+            --user="$TEST_DB_USER" \
+            --password="$TEST_DB_PASSWORD" \
+            "$TEST_DB_NAME" \
+            -e "SELECT 1"
 
       - name: Migration idempotency, backup, and patch recovery
         working-directory: rust-backend
