@@ -167,9 +167,10 @@ jobs:
           UPDATE patchrun SET legacyMigrationFixture = 'preserve-me' WHERE name = 'migration-fixture';
           ALTER TABLE item MODIFY COLUMN hsnCode VARCHAR(255) NULL;
           ALTER TABLE item ADD COLUMN legacyMigrationFixture VARCHAR(32) NULL;
-          INSERT INTO account (name, rootType, createdBy, modifiedBy, created, modified)
-            VALUES ('CI Income', 'Income', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6)),
-                   ('CI Expense', 'Expense', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
+         INSERT INTO account (name, rootType, createdBy, modifiedBy, created, modified)
+          INSERT INTO account (name, rootType, lft, rgt, createdBy, modifiedBy, created, modified)
+            VALUES ('CI Income', 'Income', 1, 2, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6)),
+                   ('CI Expense', 'Expense', 3, 4, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
           INSERT INTO item (name, hsnCode, legacyMigrationFixture, incomeAccount, expenseAccount, unit, createdBy, modifiedBy, created, modified)
             VALUES ('legacy-item-fixture', 'HSN-LEGACY', 'preserve-me', 'CI Income', 'CI Expense', NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
           SQL
