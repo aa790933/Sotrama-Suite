@@ -187,6 +187,7 @@ pub async fn get(
                 load_children(conn, registry, target, name)
                     .await?
                     .into_iter()
+                    .map(Value::Object)
                     .collect(),
             ),
         );
@@ -382,7 +383,10 @@ async fn insert_row(
         vec!["?"; columns.len()].join(", ")
     );
 
-    stmt!(&sql, &params).execute(&mut *conn).await.map_err(db_err)?;
+    stmt!(&sql, &params)
+        .execute(&mut *conn)
+        .await
+        .map_err(db_err)?;
     Ok(())
 }
 
@@ -880,7 +884,9 @@ pub async fn next_autoincrement_id(
     let table = table_of(schema_name)?;
     // Best-effort, like core.ts: a missing table surfaces from the MAX below.
     let probe = format!("SELECT 1 FROM {table} LIMIT 1 FOR UPDATE");
-    let _ = stmt!(&probe, &[] as &[Bind]).fetch_optional(&mut *conn).await;
+    let _ = stmt!(&probe, &[] as &[Bind])
+        .fetch_optional(&mut *conn)
+        .await;
     // CAST to SIGNED, not UNSIGNED: MariaDB returns an unsigned aggregate as
     // BIGINT UNSIGNED, which sqlx will not decode into `i64`.
     let sql = format!("SELECT MAX(CAST(`name` AS SIGNED)) FROM {table} FOR UPDATE");
@@ -918,7 +924,7 @@ pub async fn next_series_value(
          WHERE `name` = ? FOR UPDATE",
     )
     .bind(prefix)
-        .fetch_optional(&mut *conn)
+    .fetch_optional(&mut *conn)
     .await
     .map_err(|e| BackendError::from(DbError::from(e)))?;
 

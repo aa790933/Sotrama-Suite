@@ -43,8 +43,13 @@ export function resolveAppFilePath(requestUrl: string): string {
     return path.join(baseDir, 'index.html');
   }
 
-  const cleanPath = decodedPath.replace(/^\/+/, '');
-  const relative = path.join(decodedHost, cleanPath);
+  // Treat both separator styles consistently on every host. URL parsers and
+  // path.normalize use platform-specific rules; on POSIX, a Windows-style
+  // `..\\..\\outside` path would otherwise remain a literal filename.
+  const portableHost = decodedHost.replace(/\\/g, '/');
+  const portablePath = decodedPath.replace(/\\/g, '/');
+  const cleanPath = portablePath.replace(/^\/+/, '');
+  const relative = path.join(portableHost, cleanPath);
   const filePath = path.join(baseDir, relative);
 
   const normalized = path.normalize(filePath);

@@ -9,7 +9,7 @@ use serde_json::Value;
 use crate::error::BackendError;
 use crate::types::{Field, RawCustomField, Schema, SchemaMap, SelectOption};
 
-static SCHEMA_DIR: &include_dir::Dir<'static> =
+static SCHEMA_DIR: include_dir::Dir<'static> =
     include_dir::include_dir!("$CARGO_MANIFEST_DIR/../schemas");
 
 /// An immutable, fully-built schema map plus the country it was built for.
@@ -79,7 +79,7 @@ fn read_json<T: serde::de::DeserializeOwned>(path: &str) -> Result<T, BackendErr
 /// guarantee ordering, and a stable map keeps generated DDL diffable.
 fn json_paths_under(prefix: &str) -> Vec<String> {
     let mut paths = Vec::new();
-    collect_json(SCHEMA_DIR, prefix, &mut paths);
+    collect_json(&SCHEMA_DIR, prefix, &mut paths);
     paths.sort();
     paths
 }

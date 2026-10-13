@@ -2,7 +2,7 @@
   "name": "sotrama-suite",
   "version": "0.37.0",
   "packageManager": "yarn@4.7.0",
-  "description": "Modern accounting made simple — Sotrama Suite",
+  "description": "Sotrama Suite desktop accounting software backed by MariaDB",
   "author": {
     "name": "Frappe Technologies Pvt. Ltd.",
     "email": "hello@frappe.io"

@@ -285,7 +285,10 @@ mod tests {
             fatal: Some(false),
             message: "duplicate".into(),
         });
-        assert_eq!(name_for(&duplicate, &duplicate_backend), "DuplicateEntryError");
+        assert_eq!(
+            name_for(&duplicate, &duplicate_backend),
+            "DuplicateEntryError"
+        );
 
         let missing = DbError {
             errno: Some(1146),
@@ -306,6 +309,8 @@ mod tests {
     fn pool_acquisition_timeout_is_classified_as_retriable() {
         let error = DbError::from(sqlx::Error::PoolTimedOut);
         assert_eq!(error.fatal, Some(false));
-        assert!(error.message.contains("timed out waiting for a free connection"));
+        assert!(error
+            .message
+            .contains("timed out waiting for a free connection"));
     }
 }

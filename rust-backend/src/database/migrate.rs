@@ -326,6 +326,9 @@ fn confirm_drop(column: &str) -> bool {
 }
 
 async fn exec(conn: &mut MySqlConnection, sql: &str) -> Result<(), BackendError> {
-    sqlx::query(sql).execute(&mut *conn).await.map_err(crud::db_err)?;
+    sqlx::query(sql)
+        .execute(&mut *conn)
+        .await
+        .map_err(crud::db_err)?;
     Ok(())
 }

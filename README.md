@@ -7,7 +7,7 @@
 
 <h1>Sotrama Suite</h1>
 
-**Modern Accounting Made Simple**
+**Desktop accounting backed by MariaDB**
 
 > Sotrama Suite is an open-source accounting software by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
@@ -22,7 +22,7 @@
 </div>
 <br />
 <div align="center">
-	<a href="https://github.com/aa790933/Sotrama-Suite">Website</a>
+	<a href="https://github.com/aa790933/Sotrama-Suite">Source code</a>
 	-
 	<a href="https://aa790933.github.io/Sotrama-Suite">Documentation</a>
 </div>
@@ -72,13 +72,15 @@ Each desktop installation connects to a MariaDB database. To share a company acr
 
 - **MariaDB**: Stores company data in a database on the same computer or on a reachable LAN host.
 
+- **Rust sidecar (opt-in)**: Provides an alternate MariaDB data layer while compatibility and recovery checks continue. The TypeScript database implementation remains the default.
+
 ## Production Setup
 
 ### Manual
 
-Download and install the latest release for your platform from the [releases page](https://github.com/aa790933/Sotrama-Suite/releases) .
+Download and install the latest release for your platform from the [releases page](https://github.com/aa790933/Sotrama-Suite/releases).
 
-### Using Homebrew (for MacOS and Linux)
+### Using Homebrew (macOS)
 
 ```zsh
 brew install --cask sotrama-suite
@@ -94,10 +96,7 @@ brew install --cask sotrama-suite
 
 ### Pre-requisites
 
-To get the dev environment up and running you need to first set up Node.js `v22.12.0` and npm. For this, we suggest using
-[nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-Next, you will need to install [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable).
+Use Node.js 24.x and Corepack. The package declares Yarn 4.7.0, so use the checked-in package manager version instead of installing Yarn Classic globally.
 
 ### Clone and Run
 
@@ -111,8 +110,11 @@ git clone https://github.com/aa790933/Sotrama-Suite.git
 # change directory
 cd Sotrama-Suite
 
-# install dependencies
-yarn
+# enable the package manager declared by package.json
+corepack enable
+
+# install dependencies from the checked-in lockfile
+yarn install
 ```
 
 To run Sotrama Suite in development mode (with hot reload, etc):
@@ -155,7 +157,7 @@ computer) check the _Building_ section at
 
 So to build for linux you could use the `--linux` flag like so: `yarn build --linux`.
 
-## Want to Just Try Out or Contribute?
+## Contribute to Sotrama Suite
 
 If you want to contribute to Sotrama Suite, please check our [Contribution Guidelines](.github/CONTRIBUTING.md). There are many ways you can contribute even if you don't code:
 

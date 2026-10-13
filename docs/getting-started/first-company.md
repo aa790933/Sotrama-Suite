@@ -1,127 +1,41 @@
 ---
-title: First Company Setup
-description: Set up your first company in Sotrama Suite
+title: First company setup
+description: Create a company and review its accounting defaults.
 ---
 
-# Creating Your First Company
+# First company setup
 
-## Company Setup Wizard
+From the company selector, choose **New Company**. Connect to the intended MariaDB host and database when prompted, then complete the setup wizard.
 
-After installation, the **Setup Wizard** guides you through creating your first company.
+## Setup wizard
 
-### Step 1: Basic Information
+The wizard asks for:
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| Company Name | ✅ | Legal business name |
-| Abbreviation | ✅ | Short code (e.g., `ABC` for ABC Corp) |
-| Country | ✅ | Determines tax rules & compliance |
-| Currency | ✅ | Base currency for accounting |
+- **Company name**
+- **Country**, which supplies regional settings
+- **Full name and email** for the company contact
+- **Bank name** for the initial bank account
+- **Currency**
+- **Fiscal-year start and end dates**
+- **Chart of accounts**
 
-### Step 2: Chart of Accounts
+Currency, fiscal-year dates, and the chart of accounts can be prefilled from the selected country. Review each value before submitting. Choose from the chart-of-accounts options shown in the wizard; the available country-specific charts vary by release.
 
-Choose a template:
+## Before recording transactions
 
-- **Standard**: generic chart for any business
-- **Service Business**: chart for consulting and agencies
-- **Retail/POS**: includes inventory and COGS accounts
-- **Manufacturing**: work-in-progress and raw materials
-- **Non-Profit**: fund accounting structure
-- **Custom**: start with minimal accounts
+1. Confirm the company name, country, currency, and fiscal year.
+2. Review the generated chart of accounts and the account defaults used by invoices and payments.
+3. Review the tax settings available for the selected country.
+4. Create a test transaction and check the resulting ledger and reports before entering real business records.
 
-> **Tip:** You can modify the chart of accounts later in Settings → Accounting.
+## Demo company
 
-### Step 3: Fiscal Year
+The company selector offers **Create Demo** for a separate demonstration company. Use it to inspect example transactions and workflows without mixing them with the company you intend to use for accounting.
 
-- **Start Date**: when your financial year begins
-- **End Date**: automatically calculated as 12 months
-- **Naming Series**: document numbering pattern (for example, `INV-.YYYY.-`)
+## More than one company
 
-### Step 4: Administrator Account
+Use the company selector to create a company or open one already configured. Each company uses its own database configuration. For shared use across PCs, configure every installation to connect to the same MariaDB host and company database. See [Database connections](/guides/database-connections).
 
-Create the first user (full access):
-- Email
-- Password
-- Full Name
+## Backup and recovery
 
----
-
-## Post-Setup Configuration
-
-### 1. Tax Setup (Country-Specific)
-
-| Country | Required Setup |
-|---------|----------------|
-| India | GST rates, HSN codes, GSTIN |
-| USA | Sales tax jurisdictions |
-| EU | VAT rates, VAT ID |
-| Algeria | TVA rates, NIF |
-| Switzerland | MWST/TVA rates |
-
-Go to **Settings → Accounting → Taxes** to configure.
-
-### 2. Numbering Series
-
-Configure document prefixes:
-- Sales Invoice: `SINV-.YYYY.-`
-- Purchase Invoice: `PINV-.YYYY.-`
-- Payment: `PAY-.YYYY.-`
-- Journal Entry: `JV-.YYYY.-`
-
-Settings → Accounting → Numbering Series
-
-### 3. Defaults
-
-Set default accounts for:
-- Default Receivable Account
-- Default Payable Account
-- Default Cash Account
-- Default Bank Account
-- Default Cost Center
-
-Settings → Accounting → Defaults
-
----
-
-## Sample Data (Optional)
-
-For exploration, load sample data:
-1. Settings → System → **Load Sample Data**
-2. Choose: Retail Demo / Service Demo / Manufacturing Demo
-3. Explore pre-built transactions, reports, and POS
-
-> **Warning:** Sample data cannot be removed. Create a new company if needed.
-
----
-
-## Multiple Companies
-
-Sotrama Suite supports multiple companies in one installation:
-
-1. **File → New Company**: creates a separate database
-2. **File → Switch Company**: switches between companies
-3. Each company has independent:
-   - Chart of accounts
-   - Transactions
-   - Users & permissions
-   - Settings
-
----
-
-## Backup & Restore
-
-### Backup before changes
-
-Do not assume automatic backups are enabled. Before an upgrade or schema migration, create a MariaDB backup using your approved database administration procedure and verify that it can be restored. See [Backup and restore](/guides/backup-restore).
-
-### Restore
-
-Restore is currently an operator workflow for the opt-in Rust backend, not an in-app button. Follow [Backup and restore](/guides/backup-restore) and verify representative records before using a restored database.
-
----
-
-## Next Steps
-
-- [Review database connection options](/guides/database-connections)
-- [Prepare a backup and test recovery](/guides/backup-restore)
-- [Read the architecture overview](/architecture/)
+Before upgrades or schema migrations, create a MariaDB backup and verify that it can be restored. Restore is an operator workflow for the opt-in Rust backend, not an in-app button. Follow [Backup and restore](/guides/backup-restore) and verify representative records before using a restored database.

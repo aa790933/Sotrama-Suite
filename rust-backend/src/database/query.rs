@@ -152,9 +152,7 @@ impl Condition {
 
 /// Turns a renderer filter map into conditions like core.ts #getFiltersArray.
 /// Unknown operators and third pairs are rejected instead of silently dropped.
-fn conditions(
-    filters: &serde_json::Map<String, Value>,
-) -> Result<Vec<Condition>, BackendError> {
+fn conditions(filters: &serde_json::Map<String, Value>) -> Result<Vec<Condition>, BackendError> {
     let mut out = Vec::new();
 
     for (field, value) in filters {
@@ -364,7 +362,7 @@ pub fn build_update_by_name(
     }
     let set = assignments
         .iter()
-        .map(|c| format!("{} = ?", ident(c)?))
+        .map(|c| Ok(format!("{} = ?", ident(c)?)))
         .collect::<Result<Vec<_>, BackendError>>()?
         .join(", ");
     params.push(Bind::Text(name.to_string()));
@@ -504,6 +502,19 @@ mod tests {
             stmt.sql,
             "UPDATE `item` SET `hsnCode` = ?, `trackItem` = ? WHERE `name` = ?"
         );
+    }
+
+    #[test]
+    fn update_rejects_an_invalid_assignment_identifier() {
+        let error = build_update_by_name(
+            "item",
+            &["trackItem` = 1; DROP TABLE item; --".to_string()],
+            vec![Bind::Int(1)],
+            "item-1",
+        )
+        .unwrap_err();
+
+        assert!(matches!(error, BackendError::InvalidIdentifier(_)));
     }
 
     #[test]

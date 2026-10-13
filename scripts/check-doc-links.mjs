@@ -37,7 +37,10 @@ function targetExists(target, sourceFile) {
   }
 
   const resolved = path.resolve(path.dirname(sourceFile), clean);
-  return resolved.startsWith(`${docsRoot}${path.sep}`) && fs.existsSync(resolved);
+  if (!resolved.startsWith(`${docsRoot}${path.sep}`)) return false;
+  return [resolved, `${resolved}.md`, path.join(resolved, 'index.md')].some((candidate) =>
+    candidate.startsWith(`${docsRoot}${path.sep}`) && fs.existsSync(candidate)
+  );
 }
 
 walk(docsRoot);

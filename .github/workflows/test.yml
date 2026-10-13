@@ -52,15 +52,18 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Provision MariaDB privileges and databases
         run: |
           docker exec ${{ job.services.mariadb.id }} mariadb -uroot -proot -e \
-            "GRANT ALL PRIVILEGES ON *.* TO 'sotra'@'%'; \
-             CREATE USER IF NOT EXISTS 'sotrama_app'@'%' IDENTIFIED BY 'password'; \
-             GRANT ALL PRIVILEGES ON *.* TO 'sotrama_app'@'%'; \
+          "CREATE DATABASE IF NOT EXISTS test; \
              CREATE DATABASE IF NOT EXISTS test_books_core; \
+             GRANT ALL PRIVILEGES ON test.* TO 'sotra'@'%'; \
+             GRANT ALL PRIVILEGES ON test_books_core.* TO 'sotra'@'%'; \
+             GRANT CREATE, DROP ON *.* TO 'sotra'@'%'; \
+             CREATE USER IF NOT EXISTS 'sotrama_app'@'%' IDENTIFIED BY 'password'; \
+             GRANT ALL PRIVILEGES ON test_books_core.* TO 'sotrama_app'@'%'; \
              FLUSH PRIVILEGES;"
 
       - name: Verify database connectivity

@@ -34,7 +34,7 @@ For Rust changes:
 ```sh
 cd rust-backend
 cargo fmt --all -- --check
-cargo clippy --locked --all-targets
+cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
 ```
 
