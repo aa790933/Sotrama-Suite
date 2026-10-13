@@ -261,6 +261,10 @@ impl Schema {
         self.is_submittable.unwrap_or(false)
     }
 
+    pub fn is_abstract(&self) -> bool {
+        self.is_abstract.unwrap_or(false)
+    }
+
     /// Column-owning fields in declaration order, so generated SQL stays stable.
     pub fn column_fields(&self) -> impl Iterator<Item = &Field> {
         self.fields.iter().filter(|f| f.is_column())

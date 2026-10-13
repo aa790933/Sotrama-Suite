@@ -129,11 +129,7 @@ impl Condition {
         if is_list_operator {
             match &self.value {
                 Value::Array(items) if items.is_empty() => {
-                    sql.push_str(if op_upper == "IN" {
-                        "1 = 0"
-                    } else {
-                        "1 = 1"
-                    });
+                    sql.push_str(if op_upper == "IN" { "1 = 0" } else { "1 = 1" });
                     return Ok(());
                 }
                 Value::Array(items) => {

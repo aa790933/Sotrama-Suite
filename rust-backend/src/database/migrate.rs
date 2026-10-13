@@ -103,7 +103,7 @@ async fn schema_needs_changes(db: &Db, conn: &mut MySqlConnection) -> Result<boo
         .registry()
         .schemas()
         .values()
-        .filter(|schema| !schema.is_single())
+        .filter(|schema| !schema.is_single() && !schema.is_abstract())
     {
         if !crud::table_exists(conn, &schema.name).await? {
             return Ok(true);
@@ -193,7 +193,7 @@ async fn apply_all(
     let names: Vec<String> = registry
         .schemas()
         .values()
-        .filter(|s| !s.is_single())
+        .filter(|s| !s.is_single() && !s.is_abstract())
         .map(|s| s.name.clone())
         .collect();
 

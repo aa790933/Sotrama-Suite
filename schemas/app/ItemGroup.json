@@ -2,6 +2,7 @@
   "name": "ItemGroup",
   "label": "item Group",
   "naming": "manual",
+  "isTree": true,
   "fields": [
     {
       "fieldname": "image",

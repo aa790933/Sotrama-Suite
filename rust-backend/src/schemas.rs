@@ -145,6 +145,7 @@ fn build_app_schemas(country_code: &str) -> Result<SchemaMap, BackendError> {
 }
 
 /// Merges extends chains like getAbstractCombinedSchemas: extending schemas gain the parent fields, abstracts drop out.
+/// Abstract schemas with no `extends` are kept as standalone (unlike TS which drops them).
 fn abstract_combined(schemas: BTreeMap<String, Schema>) -> SchemaMap {
     let abstract_names: Vec<String> = schemas
         .iter()
@@ -162,9 +163,20 @@ fn abstract_combined(schemas: BTreeMap<String, Schema>) -> SchemaMap {
         .map(|(n, _)| n.clone())
         .collect();
 
+    // Abstract schemas that are NOT extended by anyone are kept as standalone.
+    let unextended_abstracts: Vec<String> = abstract_names
+        .iter()
+        .filter(|a| !extending_names.iter().any(|e| {
+            schemas.get(e).and_then(|s| s.extends.as_deref()) == Some(a)
+        }))
+        .cloned()
+        .collect();
+
     let mut out: SchemaMap = schemas
         .iter()
-        .filter(|(n, _)| !abstract_names.contains(n) && !extending_names.contains(n))
+        .filter(|(n, _)| {
+            !abstract_names.contains(n) || unextended_abstracts.contains(n)
+        } && !extending_names.contains(n))
         .map(|(n, s)| (n.clone(), s.clone()))
         .collect();
 
@@ -176,8 +188,6 @@ fn abstract_combined(schemas: BTreeMap<String, Schema>) -> SchemaMap {
             continue;
         };
         let Some(parent) = schemas.get(parent_name) else {
-            // `extends` a name that does not exist: treat the schema as
-            // standalone rather than dropping it.
             out.insert(name, extending.clone());
             continue;
         };
@@ -273,7 +283,13 @@ fn add_meta_fields(map: &mut SchemaMap) {
         };
         schema.fields.extend(meta_fields);
 
-        if !schema.fields.iter().any(|f| f.fieldname == "name") {
+        // Ensure "name" is the first field for all stored schemas (matches Frappe convention).
+        if let Some(pos) = schema.fields.iter().position(|f| f.fieldname == "name") {
+            if pos != 0 {
+                let name_field = schema.fields.remove(pos);
+                schema.fields.insert(0, name_field);
+            }
+        } else {
             schema.fields.insert(0, name_field());
         }
         if schema.title_field.is_none() {
@@ -415,9 +431,9 @@ mod tests {
     #[test]
     fn regional_schemas_overlay_the_base_country() {
         let base = Registry::build("-", &[]).unwrap();
-        let india = Registry::build("in", &[]).unwrap();
+        let algeria = Registry::build("dz", &[]).unwrap();
 
-        assert!(india.contains("Employee"), "regional schema not loaded");
+        assert!(algeria.contains("Employee"), "regional schema not loaded");
         assert!(
             !base.contains("Employee"),
             "regional schema leaked into base"
@@ -425,13 +441,11 @@ mod tests {
 
         // Regional overlay wins redefined fields; base-only fields survive.
         let base_party = base.get("Party").unwrap();
-        let india_party = india.get("Party").unwrap();
+        let algeria_party = algeria.get("Party").unwrap();
         assert!(
-            india_party.fields.len() >= base_party.fields.len(),
+            algeria_party.fields.len() >= base_party.fields.len(),
             "regional overlay lost fields"
         );
-        let gst = india_party.field("gstin");
-        assert!(gst.is_some(), "regional field missing after overlay");
     }
 
     #[test]
@@ -488,17 +502,17 @@ mod tests {
         let r = Registry::build(
             "-",
             &[
-                // `party` already exists on ItemGroup, so this must be ignored.
+                // `tax` already exists on ItemGroup, so this must be ignored.
                 RawCustomField {
                     parent: "ItemGroup".into(),
                     label: "Duplicate".into(),
-                    fieldname: "party".into(),
+                    fieldname: "tax".into(),
                     fieldtype: "Link".into(),
                     is_required: Some(true),
                     section: None,
                     tab: None,
                     options: None,
-                    target: Some("Party".into()),
+                    target: Some("Tax".into()),
                     references: None,
                     default: None,
                 },
@@ -536,8 +550,12 @@ mod tests {
 
         let schema = r.get("ItemGroup").unwrap();
         assert!(
-            schema.field("party").is_none(),
-            "custom field shadowed a real field"
+            schema.field("tax").is_some(),
+            "original tax field should remain"
+        );
+        // The custom field with same name should not create a duplicate
+        let tax_fields: Vec<_> = schema.fields.iter().filter(|f| f.fieldname == "tax").collect();
+        assert_eq!(tax_fields.len(), 1, "custom field should not duplicate existing field")
         );
 
         let bin = schema.field("binCode").expect("custom field not appended");

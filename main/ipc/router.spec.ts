@@ -241,8 +241,8 @@ test('IpcRouter seam is real — depends on DatabaseCore directly, no string dis
     'DbOps uses typed MariaDBConfig'
   );
   t.ok(
-    src.includes('database: DatabaseCore'),
-    'injects MainDatabase directly, not a shallow wrapper'
+    src.includes('database: RouterDatabase'),
+    'injects RouterDatabase directly, not a shallow wrapper'
   );
   t.notOk(src.includes('asDatabase('), 'asDatabase literal deleted');
   t.notOk(src.includes('callBespoke'), 'bespoke string dispatch deleted');
