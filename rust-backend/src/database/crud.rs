@@ -423,7 +423,10 @@ pub async fn update(
             .execute(conn)
             .await
             .map_err(db_err)?;
-        if result.rows_affected() == 0 {
+        // MariaDB reports zero affected rows when the supplied values are
+        // identical to the stored values. Distinguish that no-op from a
+        // missing document before returning NotFound.
+        if result.rows_affected() == 0 && !crud_exists(conn, schema_name, name).await? {
             return Err(DbError::new(format!("{schema_name} `{name}` does not exist")).into());
         }
     }
@@ -455,15 +458,16 @@ async fn sync_children(
         let Some(Value::Array(children)) = values.get(&field.fieldname) else {
             continue;
         };
-        let Some(child_schema) = registry.get(target).ok() else {
-            continue;
-        };
+        let child_schema = registry.get(target)?;
 
         let mut kept = Vec::with_capacity(children.len());
         for (index, child) in children.iter().enumerate() {
-            let Some(child_map) = child.as_object() else {
-                continue;
-            };
+            let child_map = child.as_object().ok_or_else(|| {
+                BackendError::InvalidArgument(format!(
+                    "child row {} in {}.{} must be an object",
+                    index, schema.name, field.fieldname
+                ))
+            })?;
             let mut row = child_map.clone();
             if row
                 .get("name")
@@ -930,7 +934,9 @@ pub async fn next_series_value(
     let start = start.max(0);
     let mut candidate = match current {
         Some(c) if c != 0 => c.checked_add(1).ok_or_else(|| {
-            BackendError::InvalidArgument(format!("number series `{prefix}` exhausted its integer range"))
+            BackendError::InvalidArgument(format!(
+                "number series `{prefix}` exhausted its integer range"
+            ))
         })?,
         _ => start,
     };
@@ -948,7 +954,9 @@ pub async fn next_series_value(
             break;
         }
         candidate = candidate.checked_add(1).ok_or_else(|| {
-            BackendError::InvalidArgument(format!("number series `{prefix}` exhausted its integer range"))
+            BackendError::InvalidArgument(format!(
+                "number series `{prefix}` exhausted its integer range"
+            ))
         })?;
     }
 

@@ -211,9 +211,12 @@ jobs:
             '{"jsonrpc":"2.0","id":4,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
             '{"jsonrpc":"2.0","id":5,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
             '{"jsonrpc":"2.0","id":6,"method":"db.schema","params":[]}' \
+            '{"jsonrpc":"2.0","id":9,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"HSN-LEGACY"}]}' \
+            '{"jsonrpc":"2.0","id":10,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"MUST-ROLLBACK","uomConversions":[null]}]}' \
+            '{"jsonrpc":"2.0","id":11,"method":"db.call","params":["get","Item","legacy-item-fixture",["hsnCode"]]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 6 and
+            length == 9 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -227,15 +230,20 @@ jobs:
             .[4].jsonrpc == "2.0" and .[4].id == 5 and
             .[4].result.data == 2 and
             .[5].jsonrpc == "2.0" and .[5].id == 6 and
-            (.[5].result.data.Item.fields | any(.fieldname == "ciCustomField" and .isCustom == true))
+            (.[5].result.data.Item.fields | any(.fieldname == "ciCustomField" and .isCustom == true)) and
+            .[6].jsonrpc == "2.0" and .[6].id == 9 and .[6].result.data == null and
+            .[7].jsonrpc == "2.0" and .[7].id == 10 and
+            (.[7].result.error.message | contains("must be an object")) and
+            .[8].jsonrpc == "2.0" and .[8].id == 11 and
+            .[8].result.data.hsnCode == "HSN-LEGACY"
           ' protocol.jsonl
 
-          # Separate sidecar processes model two PCs requesting the same
-          # series concurrently; row locking must allocate distinct values.
-          printf '%s\n' '{"jsonrpc":"2.0","id":7,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+          # Start two independent sidecars against a series that does not yet
+          # exist. This exercises the first-row race as well as row locking.
+          printf '%s\n' '{"jsonrpc":"2.0","id":7,"method":"db.call","params":["getNextSeriesValue","CI-RACE-","Item"]}' \
             | ./target/debug/sotrama-backend --serve --no-migrate > series-a.jsonl &
           first_pid=$!
-          printf '%s\n' '{"jsonrpc":"2.0","id":8,"method":"db.call","params":["getNextSeriesValue","CI-SERIES-","Item"]}' \
+          printf '%s\n' '{"jsonrpc":"2.0","id":8,"method":"db.call","params":["getNextSeriesValue","CI-RACE-","Item"]}' \
             | ./target/debug/sotrama-backend --serve --no-migrate > series-b.jsonl &
           second_pid=$!
           wait "$first_pid"
@@ -243,7 +251,7 @@ jobs:
           jq -s -e '
             length == 2 and
             .[0].result.data != .[1].result.data and
-            ([.[].result.data] | sort) == [3, 4]
+            ([.[].result.data] | sort) == [1, 2]
           ' series-a.jsonl series-b.jsonl
 
   build:
