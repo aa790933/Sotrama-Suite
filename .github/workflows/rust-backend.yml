@@ -237,8 +237,14 @@ jobs:
           # startup retries it after the database-side failure is removed.
           docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "
             DROP TRIGGER IF EXISTS ci_fail_payment_reference_type;
-            INSERT INTO payment (name, paymentType, referenceType, createdBy, modifiedBy, created, modified)
-              VALUES ('ci-patch-retry-payment', 'Pay', NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))
+            INSERT INTO party (name, role, createdBy, modifiedBy, created, modified)
+              VALUES ('CI Party', 'Both', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
+            INSERT INTO numberseries (name, referenceType, current, createdBy, modifiedBy, created, modified)
+              VALUES ('CI-PAY-', 'Payment', 1001, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
+            INSERT INTO paymentmethod (name, type, createdBy, modifiedBy, created, modified)
+              VALUES ('CI Cash', 'Cash', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
+            INSERT INTO payment (name, numberSeries, party, date, paymentType, account, paymentAccount, paymentMethod, amount, referenceType, createdBy, modifiedBy, created, modified)
+              VALUES ('ci-patch-retry-payment', 'CI-PAY-', 'CI Party', NOW(6), 'Pay', 'CI Expense', 'CI Income', 'CI Cash', 0, NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6))
               ON DUPLICATE KEY UPDATE paymentType = VALUES(paymentType), referenceType = NULL;
             UPDATE patchrun SET failed = 1 WHERE name = 'setPaymentReferenceType';
             CREATE TRIGGER ci_fail_payment_reference_type BEFORE UPDATE ON payment
