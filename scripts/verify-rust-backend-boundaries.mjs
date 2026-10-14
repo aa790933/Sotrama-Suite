@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock, translationRuntime, translationHelpersEsm, translationHelpersCjs, rendererMisc, lifecycle] = await Promise.all([
+const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock, translationRuntime, translationHelpersEsm, translationHelpersCjs, rendererMisc, lifecycle, electronBuilderConfig] = await Promise.all([
   read('main/ipc/databaseContract.ts'),
   read('main/ipc/rustDatabaseAdapter.ts'),
   read('main/ipc/router.ts'),
@@ -34,14 +34,15 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('main/ipc/policies.ts'),
   read('scripts/verify-rust-backend-package.mjs'),
   read('docs/architecture/rust-backend.md'),
-  read('main/contactMothership.ts'),
+  read('main/contactMothership.js'),
   read('package.json'),
   read('yarn.lock'),
   read('fyo/utils/translation.ts'),
   read('utils/translationHelpers.mjs'),
   read('utils/translationHelpers.cjs'),
-  read('src/utils/misc.ts'),
-  read('main/registerAppLifecycleListeners.ts'),
+  read('src/utils/misc.js'),
+  read('main/registerAppLifecycleListeners.js'),
+  read('electron-builder-config.mjs'),
 ]);
 
 assert.match(contract, /export interface RouterDatabase/,
@@ -203,13 +204,25 @@ for (const behavior of ['correlates responses', 'before spawning', 'pending requ
 }
 assert.match(testRunner, /verify-rust-api-client\.mjs/,
   'the default test command must execute Rust API client regressions');
+assert.match(testRunner, /verify-preload-bridge\.mjs/,
+  'the default test command must verify the JavaScript preload bridge and declaration contract');
 assert.match(workflow, /Verify Rust ERPNext API client contract/,
   'Rust CI must execute the ERPNext API client contract tests');
 assert.match(packageVerifier, /output\.includes\('--serve-api'\)/,
   'packaged executable smoke checks must verify the API server mode is present');
+assert.match(buildScript, /!argv\.nopackage && !fs\.existsSync\(rustBackendPath\)/,
+  'the real application packaging path must refuse to package without the native backend binary');
+assert.match(electronBuilderConfig, /fs\.existsSync\(rustBackendPath\)[\s\S]*?from: rustBackendPath, to: rustBackendName/,
+  'electron-builder copies the built native executable into the package Resources payload');
+assert.match(electronBuilderConfig, /output: packageDirPath/,
+  'the configured package output matches the native artifact verifier root');
+assert.match(packageVerifier, /path\.resolve\('dist_electron', 'bundled'\)/,
+  'the artifact verifier inspects the configured package output directory');
+assert.match(workflow, /name: Build release binary[\s\S]*?name: Package Electron app directory with the Rust backend[\s\S]*?name: Verify packaged Rust backend resource and startup[\s\S]*?node scripts\/verify-rust-backend-package\.mjs/,
+  'Rust CI builds the native executable, packages an Electron directory, and executes the packaged-resource smoke test in that order');
 assert.match(architectureDocs, /long-lived HTTPS request service/,
   'the Rust backend architecture documentation must describe the database-independent API service');
-for (const file of ['scripts/verify-rust-utility-bridge.mjs', 'scripts/verify-rust-api-client.mjs', 'build/scripts/build.mjs']) {
+for (const file of ['scripts/verify-rust-utility-bridge.mjs', 'scripts/verify-rust-api-client.mjs', 'scripts/verify-renderer-js-migration.mjs', 'build/scripts/build.mjs', 'electron-builder-config.mjs', 'scripts/verify-rust-backend-package.mjs']) {
   assert.ok(workflow.includes(`- '${file}'`), `Rust workflow path filters must include ${file}`);
 }
 

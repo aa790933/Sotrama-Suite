@@ -19,6 +19,17 @@ on:
       - 'scripts/verify-rust-api-client.mjs'
       - 'scripts/verify-main-external-url.mjs'
       - 'scripts/verify-print-document-policy.mjs'
+      - 'scripts/verify-preload-bridge.mjs'
+      - 'scripts/verify-renderer-js-migration.mjs'
+      - 'tests/hostClient.flow.spec.ts'
+      - 'build/scripts/helpers.mjs'
+      - 'electron-builder-config.mjs'
+      - 'src/renderer.js'
+      - 'src/index.html'
+      - 'src/renderer/**'
+      - 'src/errorHandling.js'
+      - 'utils/misc.js'
+      - 'src/utils/**'
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
@@ -30,7 +41,6 @@ on:
       - 'fyo/database/Database.ts'
       - 'fyo/core/dbHandler.ts'
       - 'fyo/utils/translation.ts'
-      - 'src/utils/misc.ts'
       - 'utils/translationHelpers.mjs'
       - 'utils/translationHelpers.cjs'
       - 'utils/index.ts'
@@ -58,6 +68,17 @@ on:
       - 'scripts/verify-rust-api-client.mjs'
       - 'scripts/verify-main-external-url.mjs'
       - 'scripts/verify-print-document-policy.mjs'
+      - 'scripts/verify-preload-bridge.mjs'
+      - 'scripts/verify-renderer-js-migration.mjs'
+      - 'tests/hostClient.flow.spec.ts'
+      - 'build/scripts/helpers.mjs'
+      - 'electron-builder-config.mjs'
+      - 'src/renderer.js'
+      - 'src/index.html'
+      - 'src/renderer/**'
+      - 'src/errorHandling.js'
+      - 'utils/misc.js'
+      - 'src/utils/**'
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
@@ -69,7 +90,6 @@ on:
       - 'fyo/database/Database.ts'
       - 'fyo/core/dbHandler.ts'
       - 'fyo/utils/translation.ts'
-      - 'src/utils/misc.ts'
       - 'utils/translationHelpers.mjs'
       - 'utils/translationHelpers.cjs'
       - 'utils/index.ts'
@@ -110,6 +130,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24.x'
+          cache: yarn
+
+      - name: Install locked JavaScript dependencies
+        run: corepack yarn install --immutable
 
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
@@ -136,6 +160,27 @@ jobs:
 
       - name: Verify Rust ERPNext API client contract
         run: node scripts/verify-rust-api-client.mjs
+
+      - name: Verify Electron URL, print and preload boundaries
+        run: |
+          node scripts/verify-main-external-url.mjs
+          node scripts/verify-print-document-policy.mjs
+          node scripts/verify-preload-bridge.mjs
+          node scripts/verify-renderer-js-migration.mjs
+
+      - name: Verify translation and CSV regressions
+        run: |
+          node scripts/verify-csv-parser.mjs
+          node scripts/verify-translation-generator.mjs
+
+      - name: Run focused Electron IPC and host regressions
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/runner.sh ./node_modules/.bin/tape \
+            ./tests/hostClient.flow.spec.ts \
+            ./main/ipc/router.spec.ts \
+            ./tests/appProtocol.spec.ts | ./node_modules/.bin/tap-spec
 
       - name: Format, lint, and unit test
         run: |
@@ -620,6 +665,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24.x'
+          cache: yarn
+
+      - name: Install locked JavaScript dependencies
+        run: corepack yarn install --immutable
 
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
@@ -640,6 +689,12 @@ jobs:
       - name: Smoke test native binary startup
         working-directory: rust-backend
         run: cargo run --locked --release -- --help
+
+      - name: Package Electron app directory with the Rust backend
+        run: node build/scripts/build.mjs --nosign --dir
+
+      - name: Verify packaged Rust backend resource and startup
+        run: node scripts/verify-rust-backend-package.mjs
 
       - name: Verify application client propagates database startup failures
         env:

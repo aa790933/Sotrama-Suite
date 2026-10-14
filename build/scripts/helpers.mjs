@@ -12,7 +12,7 @@ export function getMainProcessCommonConfig(root) {
   return {
     entryPoints: [
       path.join(root, 'main.ts'),
-      path.join(root, 'main', 'preload.ts'),
+      path.join(root, 'main', 'preload.js'),
     ],
     bundle: true,
     sourcemap: true,
