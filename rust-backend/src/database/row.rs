@@ -94,7 +94,14 @@ pub fn encode_value(value: &Value, field_type: Option<FieldType>) -> crate::data
         (Some(FieldType::Check), v) => Bind::Int(match v {
             Value::Bool(b) => *b as i64,
             Value::Number(n) => n.as_i64().unwrap_or(0),
-            Value::String(s) => i64::from(!matches!(s.as_str(), "" | "0" | "false")),
+            Value::String(s) => {
+                let normalized = s.trim();
+                i64::from(
+                    !(normalized.is_empty()
+                        || normalized == "0"
+                        || normalized.eq_ignore_ascii_case("false")),
+                )
+            }
             _ => 0,
         }),
         (_, v) => Bind::from(v),
@@ -211,6 +218,34 @@ mod tests {
         assert_eq!(
             encode_value(&Value::from("42"), Some(FieldType::Data)),
             crate::database::query::Bind::Text("42".into())
+        );
+    }
+
+    #[test]
+    fn check_encoding_normalizes_false_strings() {
+        for value in ["", "0", "false", "FALSE", " False "] {
+            assert_eq!(
+                encode_value(&Value::from(value), Some(FieldType::Check)),
+                crate::database::query::Bind::Int(0),
+                "{value:?} should encode as false"
+            );
+        }
+
+        assert_eq!(
+            encode_value(&Value::from("true"), Some(FieldType::Check)),
+            crate::database::query::Bind::Int(1)
+        );
+    }
+
+    #[test]
+    fn date_and_time_columns_remain_strings_for_the_renderer_converter() {
+        assert_eq!(
+            decode_value(b"2026-10-11", Some(FieldType::Date)),
+            Value::String("2026-10-11".into())
+        );
+        assert_eq!(
+            decode_value(b"07:34:56", Some(FieldType::Time)),
+            Value::String("07:34:56".into())
         );
     }
 }

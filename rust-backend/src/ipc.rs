@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use serde_json::{json, Value};
 use sqlx::{Acquire, MySqlConnection};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, warn};
 
 use crate::database::crud;
@@ -20,6 +20,7 @@ const M_SCHEMA: &str = "db.schema";
 const M_PING: &str = "db.ping";
 const M_CLOSE: &str = "db.close";
 const M_CALL: &str = "db.call";
+const MAX_REQUEST_BYTES: usize = 8 * 1024 * 1024;
 
 pub struct IpcServer {
     db: Arc<Db>,
@@ -39,16 +40,35 @@ impl IpcServer {
 
     async fn serve_stdio(&self) -> std::io::Result<()> {
         let stdin = BufReader::new(tokio::io::stdin());
-        let mut lines = stdin.lines();
+        let mut line_reader = stdin;
+        let mut line = Vec::new();
         let mut stdout = tokio::io::stdout();
 
-        while let Some(line) = lines.next_line().await? {
-            let line = line.trim();
-            if line.is_empty() {
+        while let Some(oversized) = read_bounded_line(&mut line_reader, &mut line).await? {
+            if oversized {
+                warn!("rejecting JSON-RPC request larger than {MAX_REQUEST_BYTES} bytes");
+                let error = BackendError::InvalidArgument(format!(
+                    "request exceeds the {MAX_REQUEST_BYTES}-byte limit"
+                ));
+                let response = json!({
+                    "jsonrpc": "2.0",
+                    "id": null,
+                    "result": serde_json::to_value(WireResponse::err(&error))
+                        .unwrap_or(Value::Null),
+                });
+                stdout.write_all(format!("{response}\n").as_bytes()).await?;
+                stdout.flush().await?;
                 continue;
             }
 
-            let response = match serde_json::from_str::<Value>(line) {
+            let request_line = std::str::from_utf8(&line)
+                .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
+            let request_line = request_line.trim();
+            if request_line.is_empty() {
+                continue;
+            }
+
+            let response = match serde_json::from_str::<Value>(request_line) {
                 Ok(request) => self.handle(request).await,
                 Err(e) => {
                     // Without an id there is nobody to answer.
@@ -186,6 +206,46 @@ impl IpcServer {
     }
 }
 
+async fn read_bounded_line<R>(reader: &mut R, line: &mut Vec<u8>) -> std::io::Result<Option<bool>>
+where
+    R: AsyncBufRead + Unpin,
+{
+    line.clear();
+    let mut read_any = false;
+    let mut oversized = false;
+
+    loop {
+        let (consumed, ended) = {
+            let available = reader.fill_buf().await?;
+            if available.is_empty() {
+                return Ok(if read_any { Some(oversized) } else { None });
+            }
+
+            let newline = available.iter().position(|byte| *byte == b'\n');
+            let consumed = newline.map_or(available.len(), |index| index + 1);
+            let content_len = newline.unwrap_or(consumed);
+
+            if !oversized {
+                let remaining = MAX_REQUEST_BYTES.saturating_sub(line.len());
+                if content_len > remaining {
+                    line.clear();
+                    oversized = true;
+                } else {
+                    line.extend_from_slice(&available[..content_len]);
+                }
+            }
+
+            (consumed, newline.is_some())
+        };
+
+        reader.consume(consumed);
+        read_any = true;
+        if ended {
+            return Ok(Some(oversized));
+        }
+    }
+}
+
 async fn call_with(
     conn: &mut MySqlConnection,
     registry: &Registry,
@@ -312,4 +372,81 @@ fn schema_and_map(
         .cloned()
         .ok_or_else(|| BackendError::InvalidArgument("values must be an object".into()))?;
     Ok((name, values))
+}
+
+#[cfg(test)]
+mod request_line_tests {
+    use super::{read_bounded_line, MAX_REQUEST_BYTES};
+    use tokio::io::BufReader;
+
+    #[tokio::test]
+    async fn oversized_line_is_drained_without_buffering_the_next_request() {
+        let mut input = vec![b'x'; MAX_REQUEST_BYTES + 32];
+        input.extend_from_slice(b"\n{}\n");
+        let mut reader = BufReader::new(input.as_slice());
+        let mut line = Vec::new();
+
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            Some(true)
+        );
+        assert!(line.is_empty());
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            Some(false)
+        );
+        assert_eq!(line, b"{}");
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            None
+        );
+    }
+
+    #[tokio::test]
+    async fn final_request_without_newline_is_still_returned() {
+        let mut reader = BufReader::new(b"{\"id\":1}".as_slice());
+        let mut line = Vec::new();
+
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            Some(false)
+        );
+        assert_eq!(line, br#"{"id":1}"#);
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            None
+        );
+    }
+
+    #[tokio::test]
+    async fn request_at_the_byte_limit_is_accepted() {
+        let mut input = vec![b'x'; MAX_REQUEST_BYTES];
+        input.push(b'\n');
+        let mut reader = BufReader::new(input.as_slice());
+        let mut line = Vec::new();
+
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            Some(false)
+        );
+        assert_eq!(line.len(), MAX_REQUEST_BYTES);
+        assert!(line.iter().all(|byte| *byte == b'x'));
+    }
+
+    #[tokio::test]
+    async fn oversized_final_line_is_rejected_at_eof() {
+        let input = vec![b'x'; MAX_REQUEST_BYTES + 1];
+        let mut reader = BufReader::new(input.as_slice());
+        let mut line = Vec::new();
+
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            Some(true)
+        );
+        assert!(line.is_empty());
+        assert_eq!(
+            read_bounded_line(&mut reader, &mut line).await.unwrap(),
+            None
+        );
+    }
 }

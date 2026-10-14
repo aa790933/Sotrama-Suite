@@ -14,7 +14,7 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "rebuild": "electron-rebuild",
-    "script:translate": "scripts/runner.sh scripts/generateTranslations.ts",
+    "script:translate": "scripts/runner.sh scripts/generateTranslations.js",
     "script:profile": "scripts/profile.sh",
     "test": "bash scripts/test.sh",
     "docs:dev": "vitepress dev docs",

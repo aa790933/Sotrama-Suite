@@ -3,6 +3,10 @@ name: rust-backend
 permissions:
   contents: read
 
+concurrency:
+  group: rust-backend-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 on:
   push:
     branches: [main, dev]
@@ -15,6 +19,10 @@ on:
       - 'backend/database/runPatch.ts'
       - 'backend/database/types.ts'
       - 'backend/helpers.ts'
+      - 'fyo/core/converter.ts'
+      - 'fyo/database/Database.ts'
+      - 'fyo/core/dbHandler.ts'
+      - 'utils/index.ts'
       - 'utils/db/types.ts'
       - 'main/ipc/databaseContract.ts'
       - 'scripts/verify-rust-backend-boundaries.mjs'
@@ -22,6 +30,12 @@ on:
       - 'scripts/verify-rust-backend-package.mjs'
       - 'scripts/verify-rust-backend-client-runtime.mjs'
       - 'scripts/verify-rust-patch-parity.mjs'
+      - 'scripts/test.sh'
+      - 'scripts/verify-csv-parser.mjs'
+      - 'scripts/generateTranslations.js'
+      - 'scripts/verify-translation-generator.mjs'
+      - 'package.json'
+      - 'yarn.lock'
       - '.github/workflows/rust-backend.yml'
   pull_request:
     paths:
@@ -33,6 +47,10 @@ on:
       - 'backend/database/runPatch.ts'
       - 'backend/database/types.ts'
       - 'backend/helpers.ts'
+      - 'fyo/core/converter.ts'
+      - 'fyo/database/Database.ts'
+      - 'fyo/core/dbHandler.ts'
+      - 'utils/index.ts'
       - 'utils/db/types.ts'
       - 'main/ipc/databaseContract.ts'
       - 'scripts/verify-rust-backend-boundaries.mjs'
@@ -40,6 +58,12 @@ on:
       - 'scripts/verify-rust-backend-package.mjs'
       - 'scripts/verify-rust-backend-client-runtime.mjs'
       - 'scripts/verify-rust-patch-parity.mjs'
+      - 'scripts/test.sh'
+      - 'scripts/verify-csv-parser.mjs'
+      - 'scripts/generateTranslations.js'
+      - 'scripts/verify-translation-generator.mjs'
+      - 'package.json'
+      - 'yarn.lock'
       - '.github/workflows/rust-backend.yml'
   workflow_dispatch:
 
@@ -197,7 +221,23 @@ jobs:
                    ('CI Expense', 'Expense', 3, 4, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
           INSERT INTO item (name, hsnCode, legacyMigrationFixture, incomeAccount, expenseAccount, unit, createdBy, modifiedBy, created, modified)
             VALUES ('legacy-item-fixture', 'HSN-LEGACY', 'preserve-me', 'CI Income', 'CI Expense', NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));
+          UPDATE item SET trackItem = 0, barcode = '' WHERE name = 'legacy-item-fixture';
+          # Simulate an older deployed schema that predates this nullable Link.
+          # Removing its FK first keeps the fixture valid on every MariaDB line.
+          ALTER TABLE item DROP FOREIGN KEY fk_Item_itemGroup;
+          ALTER TABLE item DROP COLUMN itemGroup;
           SQL
+          cargo run --locked -- --migrate > upgrade.json
+          jq -e '
+            (.errors | length) == 0 and
+            any(.columns_added[]; ascii_downcase == "item.itemgroup") and
+            any(.foreign_keys_created[]; ascii_downcase == "item.itemgroup")
+          ' upgrade.json || {
+            echo "historical schema upgrade did not restore the missing Link column and foreign key"
+            cat upgrade.json
+            exit 1
+          }
+          # The repaired historical schema must converge on the next run.
           cargo run --locked -- --migrate > second.json
           # A second run against the same schema must have no DDL left to apply.
           jq -e '
@@ -216,6 +256,12 @@ jobs:
           test "$preserved" = "preserve-me"
           legacy_row=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(hsnCode, ':', legacyMigrationFixture) FROM item WHERE name='legacy-item-fixture'")
           test "$legacy_row" = "HSN-LEGACY:preserve-me"
+          legacy_nullable_values=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(trackItem, ':', HEX(barcode), ':', IF(itemGroup IS NULL, 'NULL', itemGroup)) FROM item WHERE name='legacy-item-fixture'")
+          test "$legacy_nullable_values" = "0::NULL"
+          item_group_column=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='sotrama_test' AND table_name='item' AND column_name='itemGroup'")
+          test "$item_group_column" = "1"
+          item_group_fk=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM information_schema.key_column_usage WHERE constraint_schema='sotrama_test' AND table_name='item' AND column_name='itemGroup' AND referenced_table_name='itemgroup'")
+          test "$item_group_fk" = "1"
           hsn_type=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT DATA_TYPE FROM information_schema.columns WHERE table_schema='sotrama_test' AND table_name='item' AND column_name='hsnCode'")
           test "$hsn_type" = "text"
           backup=$(find "${{ runner.temp }}/sotrama-backups" -maxdepth 1 -type f -name '*.sql' | head -n 1)
@@ -314,6 +360,11 @@ jobs:
               ('ci-custom-field', 'Item', 'CustomField', 'customFields', 0, 'CI Custom Field', 'ciCustomField', 'Data', 0)
             ON DUPLICATE KEY UPDATE fieldname = VALUES(fieldname), fieldtype = VALUES(fieldtype);
             ALTER TABLE customfield DROP COLUMN \`references\`;"
+          docker exec "${{ job.services.mariadb.id }}" mariadb -uroot -proot sotrama_test -e "
+            DELETE FROM singlevalue WHERE parent='SystemSettings' AND fieldname IN ('ci-null-single-value', 'ci-empty-single-value');
+            INSERT INTO singlevalue (name, parent, fieldname, value, createdBy, modifiedBy, created, modified)
+              VALUES ('ci-null-single-value-key', 'SystemSettings', 'ci-null-single-value', NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6)),
+                     ('ci-empty-single-value-key', 'SystemSettings', 'ci-empty-single-value', '', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));"
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"db.connect","params":[]}' \
             '{"jsonrpc":"2.0","id":2,"method":"db.call","params":["count","Item",{}]}' \
@@ -342,9 +393,15 @@ jobs:
             '{"jsonrpc":"2.0","id":27,"method":"db.call","params":["get","Defaults"]}' \
             '{"jsonrpc":"2.0","id":28,"method":"db.call","params":["update","Defaults",{"saveButtonColour":"#MUST-ROLLBACK","posCashDenominations":[null]}]}' \
             '{"jsonrpc":"2.0","id":29,"method":"db.call","params":["get","Defaults"]}' \
+            '{"jsonrpc":"2.0","id":30,"method":"db.call","params":["update","Payment",{"name":"ci-patch-retry-payment","date":"2026-10-12 07:34:56.123","clearanceDate":null,"referenceId":"","amount":"12.50","writeoff":"0.00"}]}' \
+            '{"jsonrpc":"2.0","id":31,"method":"db.call","params":["get","Payment","ci-patch-retry-payment",["date","clearanceDate","referenceId","amount","writeoff"]]}' \
+            '{"jsonrpc":"2.0","id":32,"method":"db.call","params":["update","Payment",{"name":"ci-patch-retry-payment","amount":"13.00"}]}' \
+            '{"jsonrpc":"2.0","id":33,"method":"db.call","params":["get","Payment","ci-patch-retry-payment",["date","clearanceDate","referenceId","amount","writeoff"]]}' \
+            '{"jsonrpc":"2.0","id":36,"method":"db.call","params":["getSingleValues",{"fieldname":"ci-null-single-value","parent":"SystemSettings"},{"fieldname":"ci-empty-single-value","parent":"SystemSettings"}]}' \
+            '{"jsonrpc":"2.0","id":37,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","definitelyNotAColumn":"must-not-be-ignored"}]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 27 and
+            length == 33 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -397,8 +454,65 @@ jobs:
             (.[25].result.error.message | contains("must be an object")) and
             .[26].jsonrpc == "2.0" and .[26].id == 29 and
             .[26].result.data.saveButtonColour == "#654321" and
-            (.[26].result.data.posCashDenominations | length) == 0
+            (.[26].result.data.posCashDenominations | length) == 0 and
+            .[27].jsonrpc == "2.0" and .[27].id == 30 and .[27].result.data == null and
+            .[28].jsonrpc == "2.0" and .[28].id == 31 and
+            .[28].result.data.date == "2026-10-12 07:34:56.123" and
+            .[28].result.data.clearanceDate == null and
+            .[28].result.data.referenceId == "" and
+            .[28].result.data.amount == "12.50" and
+            .[28].result.data.writeoff == "0.00" and
+            .[29].jsonrpc == "2.0" and .[29].id == 32 and .[29].result.data == null and
+            .[30].jsonrpc == "2.0" and .[30].id == 33 and
+            .[30].result.data.date == "2026-10-12 07:34:56.123" and
+            .[30].result.data.clearanceDate == null and
+            .[30].result.data.referenceId == "" and
+            .[30].result.data.amount == "13.00" and
+            .[30].result.data.writeoff == "0.00" and
+            .[31].jsonrpc == "2.0" and .[31].id == 36 and
+            any(.[31].result.data[]; .fieldname == "ci-null-single-value" and .value == null) and
+            any(.[31].result.data[]; .fieldname == "ci-empty-single-value" and .value == "") and
+            .[32].jsonrpc == "2.0" and .[32].id == 37 and
+            .[32].result.error.name == "DatabaseError" and
+            .[32].result.error.errno == 1054 and
+            (.[32].result.error.message | ascii_downcase | contains("unknown column"))
           ' protocol.jsonl
+
+          single_value_state=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(SUM(fieldname='ci-null-single-value' AND value IS NULL), ':', SUM(fieldname='ci-empty-single-value' AND value='')) FROM singlevalue WHERE parent='SystemSettings' AND fieldname IN ('ci-null-single-value', 'ci-empty-single-value')")
+          test "$single_value_state" = "1:1"
+
+          # Distinguish SQL NULL, an empty string, and zero-valued currency text
+          # in storage; the subsequent partial update must preserve omitted fields.
+          payment_values=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s.%f'), ':', IF(clearanceDate IS NULL, 'NULL', DATE_FORMAT(clearanceDate, '%Y-%m-%d')), ':', IF(referenceId IS NULL, 'NULL', CONCAT('HEX=', HEX(referenceId))), ':', COALESCE(writeoff, 'SQLNULL'), ':', amount) FROM payment WHERE name='ci-patch-retry-payment'")
+          test "$payment_values" = "2026-10-12 07:34:56.123000:NULL:HEX=:0.00:13.00"
+
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":34,"method":"db.call","params":["delete","Payment","ci-patch-retry-payment"]}' \
+            '{"jsonrpc":"2.0","id":35,"method":"db.call","params":["exists","Payment","ci-patch-retry-payment"]}' \
+            | ./target/debug/sotrama-backend --serve --no-migrate > delete.jsonl
+          jq -s -e '
+            length == 2 and
+            .[0].jsonrpc == "2.0" and .[0].id == 34 and .[0].result.data == null and
+            .[1].jsonrpc == "2.0" and .[1].id == 35 and .[1].result.data == false
+          ' delete.jsonl
+
+          # Exercise the bounded reader through the real JSON-RPC process:
+          # reject an oversized line, drain it, and still serve the next request.
+          {
+            head -c 8388609 /dev/zero | tr '\000' 'x'
+            printf '\n%s\n' '{"jsonrpc":"2.0","id":38,"method":"db.connect","params":[]}'
+          } | ./target/debug/sotrama-backend --serve --no-migrate > oversized.jsonl
+          jq -s -e '
+            length == 2 and
+            .[0].jsonrpc == "2.0" and .[0].id == null and
+            .[0].result.error.name == "ValueError" and
+            (.[0].result.error.message | contains("8388608-byte limit")) and
+            .[1].jsonrpc == "2.0" and .[1].id == 38 and
+            .[1].result.data.countryCode == "in"
+          ' oversized.jsonl
+
+          deleted_payment_count=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM payment WHERE name='ci-patch-retry-payment'")
+          test "$deleted_payment_count" = "0"
 
           # Confirm the failed transaction left the original values in MariaDB,
           # independently of the sidecar's error envelope and subsequent read.

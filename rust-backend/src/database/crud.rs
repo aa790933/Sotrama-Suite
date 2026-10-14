@@ -391,7 +391,7 @@ async fn insert_row(
     Ok(())
 }
 
-/// Partial update with children reconciled; unknown keys are rejected before building (errno 1054).
+/// Partial update with children reconciled; MariaDB rejects unknown columns with errno 1054.
 pub async fn update(
     conn: &mut MySqlConnection,
     registry: &Registry,
@@ -412,10 +412,18 @@ pub async fn update(
             BackendError::InvalidArgument("update requires a non-empty `name`".into())
         })?;
 
-    let assignments: Vec<String> = schema
-        .column_fields()
-        .map(|f| f.fieldname.clone())
-        .filter(|c| c != "name" && values.contains_key(c))
+    // Match legacy #updateOne: strip the primary key, child tables, and
+    // computed fields, but do not silently discard unknown keys. Let MariaDB
+    // report an unknown column through the established DatabaseError contract.
+    let assignments: Vec<String> = values
+        .keys()
+        .filter(|fieldname| fieldname.as_str() != "name")
+        .filter(|fieldname| {
+            !schema
+                .field(fieldname.as_str())
+                .is_some_and(|field| field.fieldtype == "Table" || field.is_computed())
+        })
+        .cloned()
         .collect();
 
     if !assignments.is_empty() {
@@ -707,14 +715,7 @@ pub async fn get_single(
         let value: Option<Vec<u8>> = r
             .try_get("value")
             .map_err(|e| BackendError::from(DbError::from(e)))?;
-        out.insert(
-            fieldname,
-            Value::String(
-                value
-                    .map(|b| String::from_utf8_lossy(&b).into_owned())
-                    .unwrap_or_default(),
-            ),
-        );
+        out.insert(fieldname, decode_single_value(value));
     }
     let schema = schema_of(registry, schema_name)?;
     for field in schema.table_fields() {
@@ -733,6 +734,14 @@ pub async fn get_single(
         );
     }
     Ok(out)
+}
+
+/// Preserve SQL NULL in legacy singlevalue rows instead of conflating it with
+/// an explicitly stored empty string.
+fn decode_single_value(value: Option<Vec<u8>>) -> Value {
+    value
+        .map(|bytes| Value::String(String::from_utf8_lossy(&bytes).into_owned()))
+        .unwrap_or(Value::Null)
 }
 
 /// Upserts each provided field of a single-doc schema.
@@ -892,15 +901,7 @@ pub async fn get_single_values(
         let value: Option<Vec<u8>> = r
             .try_get("value")
             .map_err(|e| BackendError::from(DbError::from(e)))?;
-        out.push((
-            fieldname,
-            parent,
-            Value::String(
-                value
-                    .map(|b| String::from_utf8_lossy(&b).into_owned())
-                    .unwrap_or_default(),
-            ),
-        ));
+        out.push((fieldname, parent, decode_single_value(value)));
     }
     Ok(out)
 }
@@ -1098,4 +1099,23 @@ pub async fn foreign_key_columns(
 
 pub(crate) fn db_err(e: sqlx::Error) -> BackendError {
     DbError::from(e).into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::decode_single_value;
+    use serde_json::Value;
+
+    #[test]
+    fn single_value_decoding_distinguishes_null_empty_and_zero() {
+        assert_eq!(decode_single_value(None), Value::Null);
+        assert_eq!(
+            decode_single_value(Some(Vec::new())),
+            Value::String(String::new())
+        );
+        assert_eq!(
+            decode_single_value(Some(b"0".to_vec())),
+            Value::String("0".into())
+        );
+    }
 }
