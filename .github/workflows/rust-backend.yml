@@ -12,6 +12,11 @@ on:
     branches: [main, dev]
     paths:
       - 'rust-backend/**'
+      - 'build/scripts/build.mjs'
+      - 'main/getLanguageMap.mjs'
+      - 'main/getPrintTemplates.mjs'
+      - 'main/rustUtility.mjs'
+      - 'scripts/verify-rust-utility-bridge.mjs'
       - 'main/ipc/**'
       - 'schemas/**'
       - 'backend/patches/**'
@@ -45,6 +50,11 @@ on:
   pull_request:
     paths:
       - 'rust-backend/**'
+      - 'build/scripts/build.mjs'
+      - 'main/getLanguageMap.mjs'
+      - 'main/getPrintTemplates.mjs'
+      - 'main/rustUtility.mjs'
+      - 'scripts/verify-rust-utility-bridge.mjs'
       - 'main/ipc/**'
       - 'schemas/**'
       - 'backend/patches/**'
@@ -118,6 +128,9 @@ jobs:
 
       - name: Verify backend-independent database contract
         run: node scripts/verify-rust-backend-boundaries.mjs
+
+      - name: Verify Electron-to-Rust utility bridge
+        run: node scripts/verify-rust-utility-bridge.mjs
 
       - name: Format, lint, and unit test
         run: |

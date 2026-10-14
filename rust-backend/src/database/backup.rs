@@ -376,18 +376,20 @@ async fn import_dump(
 /// server-certificate verification switch (hostname verification is stricter
 /// than the SQLx `verify-ca` policy, never weaker).
 fn configure_client_ssl(command: &mut Command) -> Result<(), BackendError> {
-    match super::pool::ssl_mode_from_env()? {
-        MySqlSslMode::Disabled => {
-            command.arg("--skip-ssl");
-        }
-        MySqlSslMode::Preferred | MySqlSslMode::Required => {
-            command.arg("--ssl");
-        }
-        MySqlSslMode::VerifyCa | MySqlSslMode::VerifyIdentity => {
-            command.arg("--ssl").arg("--ssl-verify-server-cert");
-        }
+    for arg in client_ssl_args(super::pool::ssl_mode_from_env()?) {
+        command.arg(arg);
     }
     Ok(())
+}
+
+fn client_ssl_args(mode: MySqlSslMode) -> &'static [&'static str] {
+    match mode {
+        MySqlSslMode::Disabled => &["--skip-ssl"],
+        MySqlSslMode::Preferred | MySqlSslMode::Required => &["--ssl"],
+        MySqlSslMode::VerifyCa | MySqlSslMode::VerifyIdentity => {
+            &["--ssl", "--ssl-verify-server-cert"]
+        }
+    }
 }
 
 async fn find_dump_utility() -> Result<(String, PathBuf), BackendError> {
@@ -478,12 +480,23 @@ fn io_error(error: impl std::fmt::Display) -> BackendError {
 
 #[cfg(test)]
 mod tests {
-    use super::safe_component;
+    use super::{client_ssl_args, safe_component};
+    use sqlx::mysql::MySqlSslMode;
 
     #[test]
     fn backup_file_components_cannot_inject_paths() {
         assert_eq!(safe_component("sotrama_db"), "sotrama_db");
         assert_eq!(safe_component("../../prod db"), "______prod_db");
         assert_eq!(safe_component(""), "unknown");
+    }
+
+    #[test]
+    fn dump_and_restore_clients_follow_the_configured_tls_policy() {
+        assert_eq!(client_ssl_args(MySqlSslMode::Disabled), &["--skip-ssl"]);
+        assert_eq!(client_ssl_args(MySqlSslMode::Required), &["--ssl"]);
+        assert_eq!(
+            client_ssl_args(MySqlSslMode::VerifyIdentity),
+            &["--ssl", "--ssl-verify-server-cert"]
+        );
     }
 }

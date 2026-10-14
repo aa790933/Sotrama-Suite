@@ -8,13 +8,14 @@ import * as vite from 'vite';
 import { getMainProcessCommonConfig } from './helpers.mjs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import sotramaSuiteConfig from '../../electron-builder-config.mjs';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(dirname, '..', '..');
 const buildDirPath = path.join(root, 'dist_electron', 'build');
 const packageDirPath = path.join(root, 'dist_electron', 'bundled');
 const mainFileName = 'main.js';
+const rustBackendName = process.platform === 'win32' ? 'sotrama-backend.exe' : 'sotrama-backend';
+const rustBackendPath = path.join(root, 'rust-backend', 'target', 'release', rustBackendName);
 const commonConfig = getMainProcessCommonConfig(root);
 
 const rawArgs = yargs(hideBin(process.argv))
@@ -28,6 +29,9 @@ const rawArgs = yargs(hideBin(process.argv))
   });
 
 const argv = rawArgs.argv;
+if (!argv.nopackage && !fs.existsSync(rustBackendPath)) {
+  throw new Error(`Rust backend binary is required for packaging: ${rustBackendPath}. Build rust-backend with --release first.`);
+}
 if (argv.nosign) {
   process.env['CSC_IDENTITY_AUTO_DISCOVERY'] = false;
 }
@@ -168,6 +172,7 @@ function copyPackageJson() {
  * are passed on as builderArgs.
  */
 async function packageApp() {
+  const { default: sotramaSuiteConfig } = await import('../../electron-builder-config.mjs');
   const { configureBuildCommand } =
     await await import('electron-builder/out/builder.js');
 

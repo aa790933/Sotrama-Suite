@@ -28,8 +28,8 @@ import {
 import { parseMariaDBConfigString } from '../../utils/mariadb-types';
 // getUrlAndTokenString / sendError are lazy-imported inside getCreds/sendError to avoid pulling electron at module load
 import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
-import { getLanguageMap } from '../getLanguageMap';
-import { getTemplates } from '../getPrintTemplates';
+import { getLanguageMap } from '../getLanguageMap.mjs';
+import { getTemplates } from '../getPrintTemplates.mjs';
 // isExpectedUpdateError is lazy-imported inside checkForUpdates to avoid pulling electron-store at module load
 import { sendAPIRequest } from '../api';
 import type { BackendResponse } from '../../utils/ipc/types';

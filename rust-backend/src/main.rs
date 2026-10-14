@@ -13,6 +13,8 @@ mod database;
 mod error;
 mod ipc;
 mod schemas;
+mod templates;
+mod translations;
 mod types;
 
 use crate::database::Db;
@@ -42,6 +44,26 @@ struct Args {
     #[arg(long, value_name = "DATABASE")]
     restore_to: Option<String>,
 
+    /// Load a bundled language map as JSON without opening a database.
+    #[arg(long, value_name = "CODE")]
+    language_map: Option<String>,
+
+    /// Directory containing translation CSV files for --language-map.
+    #[arg(long, value_name = "DIR")]
+    translations_dir: Option<PathBuf>,
+
+    /// Load print templates as JSON without opening a database.
+    #[arg(long)]
+    print_templates: bool,
+
+    /// Directory containing print template files for --print-templates.
+    #[arg(long, value_name = "DIR")]
+    templates_dir: Option<PathBuf>,
+
+    /// POS template width in points for --print-templates.
+    #[arg(long, value_name = "WIDTH")]
+    pos_template_width: Option<f64>,
+
     #[arg(long, env = "SOTRAMA_DB_HOST", default_value = "localhost")]
     host: String,
 
@@ -52,7 +74,7 @@ struct Args {
     user: String,
 
     #[arg(long, env = "SOTRAMA_DB_PASSWORD", hide_env_values = true)]
-    password: String,
+    password: Option<String>,
 
     #[arg(long, env = "SOTRAMA_DB_NAME", default_value = "sotrama")]
     database: String,
@@ -83,11 +105,64 @@ async fn main() -> Result<()> {
         .with_writer(std::io::stderr)
         .init();
 
+    if let Some(code) = args.language_map.as_deref() {
+        if args.serve
+            || args.migrate
+            || args.restore_backup.is_some()
+            || args.restore_to.is_some()
+            || args.print_templates
+            || args.templates_dir.is_some()
+            || args.pos_template_width.is_some()
+        {
+            anyhow::bail!("--language-map cannot be combined with another operation");
+        }
+        let directory = args
+            .translations_dir
+            .as_deref()
+            .context("--translations-dir is required with --language-map")?;
+        let language_map = translations::load_language_map(directory, code)?;
+        println!("{}", serde_json::to_string(&language_map)?);
+        return Ok(());
+    }
+
+    if args.print_templates {
+        if args.serve
+            || args.migrate
+            || args.restore_backup.is_some()
+            || args.restore_to.is_some()
+            || args.translations_dir.is_some()
+        {
+            anyhow::bail!("--print-templates cannot be combined with another operation");
+        }
+        if args
+            .pos_template_width
+            .is_some_and(|width| !width.is_finite())
+        {
+            anyhow::bail!("--pos-template-width must be finite");
+        }
+        let directory = args
+            .templates_dir
+            .as_deref()
+            .context("--templates-dir is required with --print-templates")?;
+        let templates = templates::load_templates(directory, args.pos_template_width)?;
+        println!("{}", serde_json::to_string(&templates)?);
+        return Ok(());
+    }
+
+    if args.translations_dir.is_some()
+        || args.templates_dir.is_some()
+        || args.pos_template_width.is_some()
+    {
+        anyhow::bail!("resource options require --language-map or --print-templates");
+    }
+
     let config = MariaDBConfig {
         host: args.host,
         port: args.port,
         user: args.user,
-        password: args.password,
+        password: args
+            .password
+            .context("SOTRAMA_DB_PASSWORD is required for database operations")?,
         database: args.database,
     };
 
