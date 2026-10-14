@@ -2,10 +2,9 @@
   "name": "sotrama-suite",
   "version": "0.37.0",
   "packageManager": "yarn@4.7.0",
-  "description": "Modern accounting made simple — Sotrama Suite",
+  "description": "Open-source desktop business management for sales, billing, payments, and financial reporting — Sotrama Suite",
   "author": {
-    "name": "Frappe Technologies Pvt. Ltd.",
-    "email": "hello@frappe.io"
+    "name": "Sotrama Suite contributors"
   },
   "scripts": {
     "dev": "node build/scripts/dev.mjs",

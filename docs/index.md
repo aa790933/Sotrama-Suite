@@ -79,4 +79,4 @@ Sotrama Suite is licensed under **AGPL-3.0-only**. See [LICENSE](https://github.
 
 ---
 
-*Built by [aa790933](https://github.com/aa790933) · Forked from Frappe Books*
+© 2026 Sotrama Suite contributors

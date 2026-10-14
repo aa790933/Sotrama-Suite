@@ -46,7 +46,7 @@ export default defineConfig({
   title: 'Sotrama Suite',
   description: 'Open-source, ERP-oriented desktop tools for business operations, built with Vue, Electron, and MariaDB.',
   lang: 'en',
- base: '/Sotrama-Suite/',
+  base: '/Sotrama-Suite/',
 
   head: [
     ['meta', { name: 'theme-color', content: '#221166' }],
@@ -54,6 +54,8 @@ export default defineConfig({
     ['meta', { property: 'og:description', content: 'Connected business tools for sales, billing, payments, company data, and financial reporting.' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://aa790933.github.io/Sotrama-Suite/' }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['link', { rel: 'icon', type: 'image/png', href: '/Sotrama-Suite/icon.png' }],
   ],
 
   themeConfig: {
@@ -77,7 +79,7 @@ export default defineConfig({
     ],
     footer: {
       message: 'Licensed under AGPL-3.0-only.',
-      copyright: 'Built by aa790933 Â· Forked from Frappe Books',
+      copyright: '© 2026 Sotrama Suite contributors',
     },
     search: {
       provider: 'local',
