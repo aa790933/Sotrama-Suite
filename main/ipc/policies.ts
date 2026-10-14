@@ -65,10 +65,19 @@ export class AllowAllSenderPolicy implements SenderPolicy {
 
 // Api endpoint guard.
 export function assertAllowedApiEndpoint(endpoint: string): void {
-  if (typeof endpoint !== 'string' || !endpoint.startsWith('https://')) {
+  if (typeof endpoint !== 'string') {
     throw new Error('SEND_API_REQUEST: only https allowed');
   }
-  const allowed = endpoint.includes('/api/method/books_integration.api.');
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw new Error('SEND_API_REQUEST: only https allowed');
+  }
+  if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
+    throw new Error('SEND_API_REQUEST: only https allowed');
+  }
+  const allowed = url.pathname.startsWith('/api/method/books_integration.api.') && !url.hash;
   if (!allowed) {
     throw new Error('SEND_API_REQUEST: endpoint not allowed');
   }

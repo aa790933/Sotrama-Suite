@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests] = await Promise.all([
+const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs] = await Promise.all([
   read('main/ipc/databaseContract.ts'),
   read('main/ipc/rustDatabaseAdapter.ts'),
   read('main/ipc/router.ts'),
@@ -24,6 +24,16 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('main/rustUtility.mjs'),
   read('.github/workflows/rust-backend.yml'),
   read('scripts/verify-rust-utility-bridge.mjs'),
+  read('main/bootstrap.ts'),
+  read('main/resolveAppFilePath.js'),
+  read('tests/appProtocol.spec.ts'),
+  read('rust-backend/src/api.rs'),
+  read('main/rustApiClient.mjs'),
+  read('main/api.mjs'),
+  read('scripts/verify-rust-api-client.mjs'),
+  read('main/ipc/policies.ts'),
+  read('scripts/verify-rust-backend-package.mjs'),
+  read('docs/architecture/rust-backend.md'),
 ]);
 
 assert.match(contract, /export interface RouterDatabase/,
@@ -91,13 +101,66 @@ assert.match(templates, /MAX_TOTAL_TEMPLATE_BYTES/,
   'Rust template loading must bound aggregate resource size');
 assert.match(templateBridge, /--print-templates/,
   'Electron template requests must be delegated to the Rust utility');
-assert.match(router, /from '\.\.\/getLanguageMap\.mjs'/,
+assert.match(router, /from '\.\.\/getLanguageMap\.cjs'/,
   'language-map IPC must use the JavaScript bridge to Rust');
-assert.match(router, /from '\.\.\/getPrintTemplates\.mjs'/,
+assert.match(router, /from '\.\.\/getPrintTemplates\.cjs'/,
   'print-template IPC must use the JavaScript bridge to Rust');
 assert.match(buildScript, /Rust backend binary is required for packaging/,
   'packaged apps must contain the Rust translation utility instead of shipping a broken language-map path');
-for (const file of ['main/getLanguageMap.mjs', 'main/getPrintTemplates.mjs', 'main/rustUtility.mjs', 'scripts/verify-rust-utility-bridge.mjs', 'build/scripts/build.mjs']) {
+assert.match(bootstrap, /import \{ resolveAppFilePath \} from '\.\/resolveAppFilePath'/,
+  'both Electron protocol handlers must use the single tested path resolver');
+assert.equal((bootstrap.match(/function resolveAppFilePath\s*\(/g) ?? []).length, 0,
+  'the Electron bootstrap must not retain a divergent inline path resolver');
+assert.match(appPathResolver, /normalized\.startsWith\(baseDir \+ path\.sep\)/,
+  'app protocol resolution must enforce normalized path containment');
+assert.ok(appPathResolver.includes("replace(/\\\\/g, '/')"),
+  'app protocol resolution must normalize Windows separators on every host');
+assert.match(appProtocolTests, /encoded traversal/,
+  'the app protocol regression suite must cover encoded traversal attempts');
+assert.ok(workflow.includes("- 'main/**'") && workflow.includes("- 'tests/appProtocol.spec.ts'"),
+  'host path-resolver changes and regression coverage must trigger Rust-boundary CI');
+assert.match(rustMain, /if args\.serve_api[\s\S]*?return api::serve\(\)\.await/,
+  'the ERPNext API server must dispatch before database credential validation');
+assert.match(apiService, /MAX_REQUEST_BYTES/,
+  'the Rust API server must bound incoming protocol frames');
+assert.match(apiService, /MAX_BODY_BYTES/,
+  'the Rust API server must bound request bodies');
+assert.match(apiService, /MAX_RESPONSE_BYTES/,
+  'the Rust API server must bound response bodies');
+assert.match(apiService, /Policy::none\(\)/,
+  'ERPNext API requests must not follow redirects to unvalidated targets');
+assert.match(apiService, /MAX_CONCURRENT_REQUESTS/,
+  'the Rust API server must bound concurrent network work');
+assert.match(apiService, /books_integration\.api\./,
+  'the Rust API server must enforce the ERPNext integration path');
+assert.match(apiClient, /safeUtilityEnvironment\(baseEnv\)/,
+  'the persistent API process must not inherit database credentials or unrelated secrets');
+assert.match(apiClient, /maxPendingRequests/,
+  'the persistent API client must bound outstanding requests');
+assert.match(apiClient, /requestTimeoutMs/,
+  'the persistent API client must time out requests');
+assert.doesNotMatch(apiBridge, /node-fetch/,
+  'the API adapter must not retain the legacy Node HTTP implementation');
+assert.match(router, /from '\.\.\/api\.cjs'/,
+  'the IPC router must load the API bridge through the CommonJS-compatible adapter');
+assert.match(router, /from '\.\.\/getLanguageMap\.cjs'/,
+  'the IPC router must load Rust resource bridges compatibly with the CommonJS test runner');
+assert.match(router, /from '\.\.\/getPrintTemplates\.cjs'/,
+  'the IPC router must load the template bridge compatibly with the CommonJS test runner');
+assert.match(policies, /url\.pathname\.startsWith\('\/api\/method\/books_integration\.api\.'\)/,
+  'the Electron IPC endpoint policy must validate the exact URL path, not a substring');
+for (const behavior of ['correlates responses', 'before spawning', 'pending request cap', 'times out', 'malformed service frames']) {
+  assert.ok(apiClientTests.includes(behavior), `Rust API client regression coverage must include ${behavior}`);
+}
+assert.match(testRunner, /verify-rust-api-client\.mjs/,
+  'the default test command must execute Rust API client regressions');
+assert.match(workflow, /Verify Rust ERPNext API client contract/,
+  'Rust CI must execute the ERPNext API client contract tests');
+assert.match(packageVerifier, /output\.includes\('--serve-api'\)/,
+  'packaged executable smoke checks must verify the API server mode is present');
+assert.match(architectureDocs, /long-lived HTTPS request service/,
+  'the Rust backend architecture documentation must describe the database-independent API service');
+for (const file of ['scripts/verify-rust-utility-bridge.mjs', 'scripts/verify-rust-api-client.mjs', 'build/scripts/build.mjs']) {
   assert.ok(workflow.includes(`- '${file}'`), `Rust workflow path filters must include ${file}`);
 }
 

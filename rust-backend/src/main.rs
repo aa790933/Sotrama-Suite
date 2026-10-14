@@ -9,6 +9,7 @@ use clap::Parser;
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
+mod api;
 mod database;
 mod error;
 mod ipc;
@@ -31,6 +32,10 @@ struct Args {
     /// Serve the JSON-RPC protocol on stdin/stdout.
     #[arg(long)]
     serve: bool,
+
+    /// Serve bounded HTTPS integration requests over stdin/stdout without a database.
+    #[arg(long)]
+    serve_api: bool,
 
     /// Connect, migrate, print the report, exit. Safe to run repeatedly.
     #[arg(long)]
@@ -107,6 +112,7 @@ async fn main() -> Result<()> {
 
     if let Some(code) = args.language_map.as_deref() {
         if args.serve
+            || args.serve_api
             || args.migrate
             || args.restore_backup.is_some()
             || args.restore_to.is_some()
@@ -127,6 +133,7 @@ async fn main() -> Result<()> {
 
     if args.print_templates {
         if args.serve
+            || args.serve_api
             || args.migrate
             || args.restore_backup.is_some()
             || args.restore_to.is_some()
@@ -147,6 +154,22 @@ async fn main() -> Result<()> {
         let templates = templates::load_templates(directory, args.pos_template_width)?;
         println!("{}", serde_json::to_string(&templates)?);
         return Ok(());
+    }
+
+    if args.serve_api {
+        if args.serve
+            || args.migrate
+            || args.restore_backup.is_some()
+            || args.restore_to.is_some()
+            || args.language_map.is_some()
+            || args.print_templates
+            || args.translations_dir.is_some()
+            || args.templates_dir.is_some()
+            || args.pos_template_width.is_some()
+        {
+            anyhow::bail!("--serve-api cannot be combined with another operation");
+        }
+        return api::serve().await.map_err(Into::into);
     }
 
     if args.translations_dir.is_some()

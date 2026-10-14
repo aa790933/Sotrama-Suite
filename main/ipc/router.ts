@@ -27,11 +27,10 @@ import {
 } from '../provision/hostProvision';
 import { parseMariaDBConfigString } from '../../utils/mariadb-types';
 // getUrlAndTokenString / sendError are lazy-imported inside getCreds/sendError to avoid pulling electron at module load
-import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
-import { getLanguageMap } from '../getLanguageMap.mjs';
-import { getTemplates } from '../getPrintTemplates.mjs';
+import { getLanguageMap } from '../getLanguageMap.cjs';
+import { getTemplates } from '../getPrintTemplates.cjs';
 // isExpectedUpdateError is lazy-imported inside checkForUpdates to avoid pulling electron-store at module load
-import { sendAPIRequest } from '../api';
+import { sendAPIRequest } from '../api.cjs';
 import type { BackendResponse } from '../../utils/ipc/types';
 import {
   AppPaths,
@@ -46,6 +45,12 @@ import { ElectronStoreConnectionStore } from './connectionStore';
 import type { RouterDatabase } from './databaseContract';
 import { RustDatabaseAdapter } from './rustDatabaseAdapter';
 import { RustBackendClient } from './rustBackendClient';
+
+type ApiRequestOptions = {
+  method?: 'GET' | 'POST';
+  headers?: Record<string, string>;
+  body?: string;
+};
 
 // Injected collaborators, so the router can be built without electron.
 
@@ -169,7 +174,7 @@ export interface AppOps {
   sendError(bodyJson: string, main: unknown): Promise<void>;
   sendAPIRequest(
     endpoint: string,
-    options: NodeFetchRequestInit | undefined,
+    options: ApiRequestOptions | undefined,
     event: Electron.IpcMainInvokeEvent
   ): Promise<unknown>;
   showError(title: string, content: string): Promise<void>;
@@ -730,7 +735,7 @@ export class IpcRouter {
 
   async sendAPIRequest(
     endpoint: string,
-    options: NodeFetchRequestInit | undefined,
+    options: ApiRequestOptions | undefined,
     event: Electron.IpcMainInvokeEvent
   ) {
     this.assertValidSender(event);

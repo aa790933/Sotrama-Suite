@@ -10,4 +10,5 @@ export IS_TEST=true
 node ./scripts/verify-csv-parser.mjs || exit $?
 node ./scripts/verify-translation-generator.mjs || exit $?
 node ./scripts/verify-rust-utility-bridge.mjs || exit $?
+node ./scripts/verify-rust-api-client.mjs || exit $?
 bash ./scripts/runner.sh ./node_modules/.bin/tape $TEST_PATH | ./node_modules/.bin/tap-spec

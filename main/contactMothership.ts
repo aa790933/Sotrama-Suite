@@ -1,6 +1,5 @@
 import { app } from 'electron';
 import fs from 'fs';
-import fetch from 'node-fetch';
 import path from 'path';
 import { Creds } from 'utils/types';
 import { rendererLog } from './helpers';
@@ -55,13 +54,18 @@ export function getUrlAndTokenString(): Creds {
 
 export async function sendError(body: string, main: Main) {
   const { errorLogUrl, tokenString } = getUrlAndTokenString();
+  if (!errorLogUrl || !tokenString) return;
   const headers = {
     Authorization: tokenString,
     Accept: 'application/json',
     'Content-Type': 'application/json',
   };
 
-  await fetch(errorLogUrl, { method: 'POST', headers, body }).catch((err) => {
-    rendererLog(main, err);
-  });
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { sendTelemetryRequest } = require('./api.cjs') as typeof import('./api');
+    await sendTelemetryRequest(errorLogUrl, { method: 'POST', headers, body });
+  } catch (err) {
+    rendererLog(main, new Error('Could not send error telemetry through Rust HTTPS service'));
+  }
 }

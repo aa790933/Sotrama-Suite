@@ -12,12 +12,11 @@ on:
     branches: [main, dev]
     paths:
       - 'rust-backend/**'
+      - 'main/**'
+      - 'tests/appProtocol.spec.ts'
       - 'build/scripts/build.mjs'
-      - 'main/getLanguageMap.mjs'
-      - 'main/getPrintTemplates.mjs'
-      - 'main/rustUtility.mjs'
       - 'scripts/verify-rust-utility-bridge.mjs'
-      - 'main/ipc/**'
+      - 'scripts/verify-rust-api-client.mjs'
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
@@ -33,7 +32,6 @@ on:
       - 'utils/translationHelpers.mjs'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
-      - 'main/ipc/databaseContract.ts'
       - 'scripts/verify-rust-backend-boundaries.mjs'
       - 'utils/version.ts'
       - 'scripts/verify-rust-backend-package.mjs'
@@ -50,12 +48,11 @@ on:
   pull_request:
     paths:
       - 'rust-backend/**'
+      - 'main/**'
+      - 'tests/appProtocol.spec.ts'
       - 'build/scripts/build.mjs'
-      - 'main/getLanguageMap.mjs'
-      - 'main/getPrintTemplates.mjs'
-      - 'main/rustUtility.mjs'
       - 'scripts/verify-rust-utility-bridge.mjs'
-      - 'main/ipc/**'
+      - 'scripts/verify-rust-api-client.mjs'
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
@@ -71,7 +68,6 @@ on:
       - 'utils/translationHelpers.mjs'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
-      - 'main/ipc/databaseContract.ts'
       - 'scripts/verify-rust-backend-boundaries.mjs'
       - 'utils/version.ts'
       - 'scripts/verify-rust-backend-package.mjs'
@@ -131,6 +127,9 @@ jobs:
 
       - name: Verify Electron-to-Rust utility bridge
         run: node scripts/verify-rust-utility-bridge.mjs
+
+      - name: Verify Rust ERPNext API client contract
+        run: node scripts/verify-rust-api-client.mjs
 
       - name: Format, lint, and unit test
         run: |

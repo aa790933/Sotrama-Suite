@@ -48,7 +48,7 @@ for (const executable of matches) {
   }
 
   const output = `${startup.stdout ?? ''}\n${startup.stderr ?? ''}`;
-  if (startup.status !== 0 || !output.includes('--serve')) {
+  if (startup.status !== 0 || !output.includes('--serve') || !output.includes('--serve-api')) {
     throw new Error(
       `Packaged Rust backend startup smoke check failed (${executable}, status=${startup.status}):\n${output}`
     );

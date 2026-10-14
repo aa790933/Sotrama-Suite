@@ -120,6 +120,18 @@ test('assertAllowedApiEndpoint: rejects http and wrong prefix', (t) => {
     () => assertAllowedApiEndpoint('https://evil.com/'),
     /endpoint not allowed/
   );
+  t.throws(
+    () => assertAllowedApiEndpoint('https://user:secret@erp.example.com/api/method/books_integration.api.ping'),
+    /only https/
+  );
+  t.throws(
+    () => assertAllowedApiEndpoint('https://erp.example.com/other/api/method/books_integration.api.ping'),
+    /endpoint not allowed/
+  );
+  t.throws(
+    () => assertAllowedApiEndpoint('https://erp.example.com/api/method/books_integration.api.ping#fragment'),
+    /endpoint not allowed/
+  );
   t.end();
 });
 
