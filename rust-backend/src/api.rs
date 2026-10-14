@@ -8,7 +8,7 @@ use reqwest::{Client, Method, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
-use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWriteExt, BufReader, Stdout};
+use tokio::io::{AsyncBufRead, AsyncWriteExt, BufReader, Stdout};
 use tokio::sync::{Mutex, Semaphore};
 use tracing::warn;
 
@@ -168,8 +168,8 @@ async fn execute(
     request: ApiRequest,
 ) -> Result<(u64, Value), (u64, &'static str)> {
     let id = request.id;
-    let url = validate_endpoint(&request.endpoint, request.purpose)
-        .map_err(|message| (id, message))?;
+    let url =
+        validate_endpoint(&request.endpoint, request.purpose).map_err(|message| (id, message))?;
     let method = match request.options.method.as_deref().unwrap_or("GET") {
         "GET" => Method::GET,
         "POST" => Method::POST,
@@ -219,6 +219,13 @@ async fn execute(
             headers.insert(name, value);
         }
     }
+    if request.purpose == ApiPurpose::Telemetry
+        && headers
+            .get("authorization")
+            .is_none_or(|value| value.as_bytes().is_empty())
+    {
+        return Err((id, "Telemetry requests require an authorization header"));
+    }
 
     let mut builder = client.request(method, url).headers(headers);
     if let Some(body) = request.options.body {
@@ -246,8 +253,9 @@ async fn execute(
         body.extend_from_slice(&chunk);
     }
     let value = match request.purpose {
-        ApiPurpose::Erpnext => serde_json::from_slice(&body)
-            .map_err(|_| (id, "ERPNext API returned invalid JSON"))?,
+        ApiPurpose::Erpnext => {
+            serde_json::from_slice(&body).map_err(|_| (id, "ERPNext API returned invalid JSON"))?
+        }
         // The legacy error reporter only awaited fetch and intentionally did
         // not parse the response body or reject non-2xx status codes.
         ApiPurpose::Telemetry => Value::Null,
@@ -315,20 +323,16 @@ mod tests {
 
     #[test]
     fn endpoint_requires_https_and_the_exact_integration_path() {
-        assert!(
-            validate_endpoint(
-                "https://erp.example/api/method/books_integration.api.sync",
-                ApiPurpose::Erpnext
-            )
-            .is_ok()
-        );
-        assert!(
-            validate_endpoint(
-                "http://erp.example/api/method/books_integration.api.sync",
-                ApiPurpose::Erpnext
-            )
-            .is_err()
-        );
+        assert!(validate_endpoint(
+            "https://erp.example/api/method/books_integration.api.sync",
+            ApiPurpose::Erpnext
+        )
+        .is_ok());
+        assert!(validate_endpoint(
+            "http://erp.example/api/method/books_integration.api.sync",
+            ApiPurpose::Erpnext
+        )
+        .is_err());
         assert!(validate_endpoint(
             "https://erp.example/other/api/method/books_integration.api.sync",
             ApiPurpose::Erpnext

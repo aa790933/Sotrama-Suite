@@ -1,3 +1,5 @@
+set -o pipefail
+
 TEST_PATH=$@
 
 if [ $# -eq 0 ]

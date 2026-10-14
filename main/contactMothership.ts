@@ -38,7 +38,7 @@ export function getUrlAndTokenString(): Creds {
     return empty;
   }
 
-  if (!telemetryUrl || !apiKey || !apiSecret) {
+  if (!errorLogUrl || !telemetryUrl || !apiKey || !apiSecret) {
     !inProduction &&
       // eslint-disable-next-line no-console
       console.log('incomplete telemetry creds, skipping logging');
@@ -63,9 +63,14 @@ export async function sendError(body: string, main: Main) {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { sendTelemetryRequest } = require('./api.cjs') as typeof import('./api');
+    const { sendTelemetryRequest } = require('./api.cjs') as {
+      sendTelemetryRequest: (
+        endpoint: string,
+        options: { method: 'POST'; headers: Record<string, string>; body: string }
+      ) => Promise<unknown>;
+    };
     await sendTelemetryRequest(errorLogUrl, { method: 'POST', headers, body });
-  } catch (err) {
+  } catch {
     rendererLog(main, new Error('Could not send error telemetry through Rust HTTPS service'));
   }
 }

@@ -122,6 +122,20 @@ test('Rust API client rejects malformed service frames without leaking payloads'
   client.close();
 });
 
+test('Rust API client rejects unknown response IDs and invalid response envelopes', async () => {
+  const unexpected = makeClient();
+  const pending = unexpected.client.request(endpoint, {});
+  unexpected.child.stdout.write(JSON.stringify({ id: 999, result: [] }) + '\n');
+  await assert.rejects(pending, /unexpected response ID/);
+  assert.equal(unexpected.child.killed, true);
+
+  const invalid = makeClient();
+  const malformedEnvelope = invalid.client.request(endpoint, {});
+  invalid.child.stdout.write(JSON.stringify({ id: 1, result: [], error: { message: 'bad' } }) + '\n');
+  await assert.rejects(malformedEnvelope, /invalid response envelope/);
+  assert.equal(invalid.child.killed, true);
+});
+
 test('Rust API client separates telemetry HTTPS POSTs from the ERPNext route policy', async () => {
   const { client } = makeClient({ respond: (request, child) => {
     assert.equal(request.purpose, 'telemetry');
@@ -129,9 +143,10 @@ test('Rust API client separates telemetry HTTPS POSTs from the ERPNext route pol
     assert.equal(request.options.method, 'POST');
     process.nextTick(() => child.stdout.write(JSON.stringify({ id: request.id, result: null }) + '\n'));
   } });
-  assert.equal(await client.requestTelemetry(telemetryEndpoint, { method: 'POST', body: '{}' }), null);
+  assert.equal(await client.requestTelemetry(telemetryEndpoint, { method: 'POST', headers: { Authorization: 'token secret' }, body: '{}' }), null);
   await assert.rejects(client.requestTelemetry('http://logs.example.com/api/error', { method: 'POST', body: '{}' }), /valid HTTPS URL/);
   await assert.rejects(client.requestTelemetry(telemetryEndpoint, { method: 'GET' }), /must use POST/);
+  await assert.rejects(client.requestTelemetry(telemetryEndpoint, { method: 'POST', body: '{}' }), /authorization header/);
   client.close();
 });
 
@@ -162,4 +177,33 @@ test('Rust API client kills timed-out service work and starts a fresh child for 
   children[1].stdout.write(JSON.stringify({ id: sent.id, result: { recovered: true } }) + '\n');
   assert.deepEqual(await recovered, { recovered: true });
   timed.client.close();
+});
+
+test('Rust API client rejects pending calls when the process exits and recovers on next call', async () => {
+  const children = [];
+  const client = new RustApiClient({
+    requestTimeoutMs: 1000,
+    resolveExecutable: () => 'sotrama-backend-test',
+    baseEnv: { PATH: 'safe-path' },
+    spawnProcess: () => {
+      const child = fakeChild();
+      children.push(child);
+      return child;
+    },
+  });
+  const pending = client.request(endpoint, {});
+  await new Promise((resolve) => setImmediate(resolve));
+  children[0].emit('close', 17, null);
+  await assert.rejects(pending, /stopped unexpectedly/);
+
+  const recovered = client.request(endpoint, {});
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(children.length, 2);
+  children[0].stdout.write(JSON.stringify({ id: 1, result: { fromOldProcess: true } }) + '\n');
+  await new Promise((resolve) => setImmediate(resolve));
+  const sent = JSON.parse(children[1].stdin.read().toString('utf8').trim());
+  assert.equal(sent.id, 2);
+  children[1].stdout.write(JSON.stringify({ id: sent.id, result: { recovered: true } }) + '\n');
+  assert.deepEqual(await recovered, { recovered: true });
+  client.close();
 });

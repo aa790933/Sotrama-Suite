@@ -8,13 +8,19 @@ const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const MAX_HEADERS = 64;
 
 function validateRequest(endpoint, options = {}, purpose = 'erpnext') {
+  if (purpose !== 'erpnext' && purpose !== 'telemetry') {
+    throw new Error('Unsupported HTTPS request purpose');
+  }
   if (typeof endpoint !== 'string') throw new Error('Invalid ERPNext API URL');
   let url;
   try { url = new URL(endpoint); } catch { throw new Error('Invalid ERPNext API URL'); }
   if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
     throw new Error('ERPNext API requests require a valid HTTPS URL');
   }
-  if (url.hash || (purpose === 'erpnext' && !url.pathname.startsWith('/api/method/books_integration.api.'))) {
+  if (
+    url.hash ||
+    (purpose === 'erpnext' && !url.pathname.startsWith('/api/method/books_integration.api.'))
+  ) {
     throw new Error('ERPNext API endpoint is not allowed');
   }
   if (options === undefined) options = {};
@@ -49,6 +55,11 @@ function validateRequest(endpoint, options = {}, purpose = 'erpnext') {
       throw new Error('API request headers exceed the size limit');
     }
   }
+  if (purpose === 'telemetry' && !Object.entries(headers).some(([name, value]) =>
+    name.toLowerCase() === 'authorization' && value.trim().length > 0
+  )) {
+    throw new Error('Telemetry requests require an authorization header');
+  }
   return { purpose, endpoint: url.href, options: { method, headers, ...(options.body === undefined ? {} : { body: options.body }) } };
 }
 
@@ -72,7 +83,7 @@ export class RustApiClient {
     this.pending = new Map();
     this.pendingBytes = 0;
     this.nextId = 1;
-    this.stdoutBuffer = '';
+    this.stdoutBuffer = Buffer.alloc(0);
   }
 
   async request(endpoint, options) {
@@ -119,16 +130,12 @@ export class RustApiClient {
           this.pending.delete(id);
           this.pendingBytes -= pending.bytes;
           clearTimeout(pending.timeout);
-          pending.reject(new Error('Could not send HTTPS request to Rust service'));
+          this.failChild(child, new Error('Could not send HTTPS request to Rust service'));
+          try { child.kill(); } catch {}
         });
       } catch {
-        const pending = this.pending.get(id);
-        if (pending) {
-          this.pending.delete(id);
-          this.pendingBytes -= pending.bytes;
-          clearTimeout(pending.timeout);
-          pending.reject(new Error('Could not send HTTPS request to Rust service'));
-        }
+        this.failChild(child, new Error('Could not send HTTPS request to Rust service'));
+        try { child.kill(); } catch {}
       }
     });
   }
@@ -155,7 +162,7 @@ export class RustApiClient {
         }
         if (fragment.length) this.stdoutBuffer = Buffer.concat([this.stdoutBuffer, fragment]);
         if (newline === -1) break;
-        this.onLine(this.stdoutBuffer.toString('utf8'));
+        this.onLine(this.stdoutBuffer.toString('utf8'), child);
         this.stdoutBuffer = Buffer.alloc(0);
         start = newline + 1;
       }
@@ -167,29 +174,47 @@ export class RustApiClient {
     return child;
   }
 
-  onLine(line) {
+  onLine(line, child = this.child) {
+    if (!child || this.child !== child) return;
     if (Buffer.byteLength(line, 'utf8') > MAX_RESPONSE_LINE_BYTES) {
-      this.failChild(this.child, new Error('Rust API response exceeded the 16 MiB protocol limit'));
+      this.failChild(child, new Error('Rust API response exceeded the 16 MiB protocol limit'));
+      try { child.kill(); } catch {}
       return;
     }
     let response;
     try { response = JSON.parse(line); } catch {
-      const child = this.child;
       this.failChild(child, new Error('Rust API service returned malformed JSON'));
       try { child?.kill(); } catch {}
       return;
     }
+    if (!Number.isSafeInteger(response?.id) || response.id < 1) {
+      this.failChild(child, new Error('Rust API service returned an invalid response ID'));
+      try { child.kill(); } catch {}
+      return;
+    }
     const pending = this.pending.get(response?.id);
-    if (!pending) return;
+    if (!pending) {
+      this.failChild(child, new Error('Rust API service returned an unexpected response ID'));
+      try { child.kill(); } catch {}
+      return;
+    }
+    const hasResult = Object.hasOwn(response, 'result');
+    const hasError = Object.hasOwn(response, 'error');
+    if (
+      hasResult === hasError ||
+      (hasError && (!response.error || typeof response.error.message !== 'string'))
+    ) {
+      this.failChild(child, new Error('Rust API service returned an invalid response envelope'));
+      try { child.kill(); } catch {}
+      return;
+    }
     this.pending.delete(response.id);
     this.pendingBytes -= pending.bytes;
     clearTimeout(pending.timeout);
-    if (response.error && typeof response.error.message === 'string') {
+    if (hasError) {
       pending.reject(new Error(response.error.message));
-    } else if (Object.hasOwn(response, 'result')) {
+    } else if (hasResult) {
       pending.resolve(response.result);
-    } else {
-      pending.reject(new Error('Rust API service returned an invalid response'));
     }
   }
 

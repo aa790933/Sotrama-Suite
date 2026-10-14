@@ -935,7 +935,7 @@ export class IpcRouter {
         async (
           event,
           endpoint: string,
-          options: NodeFetchRequestInit | undefined
+          options: ApiRequestOptions | undefined
         ) => this.sendAPIRequest(endpoint, options, event)
       )
     );

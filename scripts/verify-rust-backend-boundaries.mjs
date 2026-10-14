@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs] = await Promise.all([
+const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock] = await Promise.all([
   read('main/ipc/databaseContract.ts'),
   read('main/ipc/rustDatabaseAdapter.ts'),
   read('main/ipc/router.ts'),
@@ -34,6 +34,9 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('main/ipc/policies.ts'),
   read('scripts/verify-rust-backend-package.mjs'),
   read('docs/architecture/rust-backend.md'),
+  read('main/contactMothership.ts'),
+  read('package.json'),
+  read('yarn.lock'),
 ]);
 
 assert.match(contract, /export interface RouterDatabase/,
@@ -88,6 +91,8 @@ assert.doesNotMatch(translationBridge, /from ['"]utils\/csvParser/,
   'translation CSV parsing must not remain duplicated in the JavaScript bridge');
 assert.match(utilityBridge, /safeUtilityEnvironment/,
   'Rust utility processes must not inherit database credentials or unrelated secrets');
+assert.doesNotMatch(utilityBridge + translationBridge + templateBridge, /import\.meta\.url/,
+  'Rust utility bridges must remain safe when esbuild bundles their ESM sources into the CommonJS Electron host');
 assert.match(utilityBridge, /MAX_OUTPUT_BYTES/,
   'Rust utility output must be bounded before JSON parsing');
 assert.match(utilityBridge, /dependencies\.spawnProcess/,
@@ -131,18 +136,39 @@ assert.match(apiService, /Policy::none\(\)/,
   'ERPNext API requests must not follow redirects to unvalidated targets');
 assert.match(apiService, /MAX_CONCURRENT_REQUESTS/,
   'the Rust API server must bound concurrent network work');
+assert.match(apiService, /acquire_owned\(\)\.await[\s\S]*?tokio::spawn/,
+  'the Rust API server must apply backpressure before spawning work so queued tasks are bounded');
 assert.match(apiService, /books_integration\.api\./,
   'the Rust API server must enforce the ERPNext integration path');
+assert.match(apiService, /ApiPurpose::Telemetry[\s\S]*?Telemetry requests must use POST/,
+  'telemetry requests must use a separate POST-only purpose');
+assert.match(apiService, /Telemetry requests require an authorization header/,
+  'the Rust telemetry transport must require its credential header');
 assert.match(apiClient, /safeUtilityEnvironment\(baseEnv\)/,
   'the persistent API process must not inherit database credentials or unrelated secrets');
 assert.match(apiClient, /maxPendingRequests/,
   'the persistent API client must bound outstanding requests');
 assert.match(apiClient, /requestTimeoutMs/,
   'the persistent API client must time out requests');
+assert.match(apiClient, /Rust service was restarted/,
+  'the API bridge must terminate timed-out work instead of leaving network requests running');
+assert.match(apiClient, /Buffer\.concat\(\[this\.stdoutBuffer, fragment\]\)/,
+  'the API bridge must bound individual frames without rejecting a chunk containing multiple responses');
 assert.doesNotMatch(apiBridge, /node-fetch/,
   'the API adapter must not retain the legacy Node HTTP implementation');
 assert.match(router, /from '\.\.\/api\.cjs'/,
   'the IPC router must load the API bridge through the CommonJS-compatible adapter');
+assert.match(contactMothership, /sendTelemetryRequest\(errorLogUrl/,
+  'main-process error telemetry must use the Rust HTTPS transport');
+assert.doesNotMatch(contactMothership, /node-fetch/,
+  'the legacy Node fetch implementation must be removed from the telemetry sender');
+const manifest = JSON.parse(packageManifest);
+assert.equal(manifest.dependencies?.['node-fetch'], undefined,
+  'the obsolete Node fetch runtime dependency must be removed after all callers migrate');
+assert.equal(manifest.devDependencies?.['@types/node-fetch'], undefined,
+  'the obsolete Node fetch type dependency must be removed after all callers migrate');
+assert.doesNotMatch(yarnLock, /(?:^|\n)(?:"node-fetch@npm:2"|"@types\/node-fetch@npm:\^2\.6\.1"):/,
+  'the lockfile must not retain obsolete direct Node fetch resolutions');
 assert.match(router, /from '\.\.\/getLanguageMap\.cjs'/,
   'the IPC router must load Rust resource bridges compatibly with the CommonJS test runner');
 assert.match(router, /from '\.\.\/getPrintTemplates\.cjs'/,
