@@ -5,10 +5,11 @@ use sqlx::mysql::MySqlRow;
 use sqlx::Column;
 use sqlx::Row;
 
+use crate::error::{BackendError, DbError};
 use crate::types::{FieldType, Row as RowMap, Schema};
 
 /// Decodes a row to the JSON the renderer converter expects; unknown columns decode as strings.
-pub fn decode_row(row: &MySqlRow, schema: Option<&Schema>) -> RowMap {
+pub fn decode_row(row: &MySqlRow, schema: Option<&Schema>) -> Result<RowMap, BackendError> {
     let mut out = Map::with_capacity(row.columns().len());
 
     for (index, column) in row.columns().iter().enumerate() {
@@ -17,16 +18,25 @@ pub fn decode_row(row: &MySqlRow, schema: Option<&Schema>) -> RowMap {
             .and_then(|s| s.field(name))
             .and_then(|f| f.field_type().ok());
 
-        let bytes: Option<Vec<u8>> = row.try_get(index).ok().flatten();
-        let Some(bytes) = bytes else {
-            out.insert(name.to_string(), Value::Null);
-            continue;
-        };
-
-        out.insert(name.to_string(), decode_value(&bytes, field_type));
+        out.insert(
+            name.to_string(),
+            decode_column(row.try_get(index), field_type)?,
+        );
     }
 
-    out
+    Ok(out)
+}
+
+/// Keeps SQL NULL distinct from a driver decoding failure.
+fn decode_column(
+    result: Result<Option<Vec<u8>>, sqlx::Error>,
+    field_type: Option<FieldType>,
+) -> Result<Value, BackendError> {
+    let bytes = result.map_err(|error| BackendError::from(DbError::from(error)))?;
+    Ok(match bytes {
+        Some(bytes) => decode_value(&bytes, field_type),
+        None => Value::Null,
+    })
 }
 
 /// Converts a raw column value using the schema's declared type.
@@ -94,6 +104,25 @@ pub fn encode_value(value: &Value, field_type: Option<FieldType>) -> crate::data
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sql_null_is_preserved_as_null() {
+        assert_eq!(
+            decode_column(Ok(None), Some(FieldType::Int)).unwrap(),
+            Value::Null
+        );
+    }
+
+    #[test]
+    fn driver_decode_errors_are_not_rewritten_as_null() {
+        let error = decode_column(
+            Err(sqlx::Error::Protocol("synthetic decode failure".into())),
+            Some(FieldType::Int),
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("synthetic decode failure"));
+    }
 
     #[test]
     fn integers_and_floats_decode_to_numbers() {

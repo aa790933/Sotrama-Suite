@@ -1,4 +1,3 @@
-import { FieldValueMap, SingleValue } from 'backend/database/types';
 import { cloneDeep } from 'lodash';
 import { Fyo } from 'fyo';
 import { Database } from 'fyo/database/Database';
@@ -10,8 +9,10 @@ import { getMapFromList } from 'utils';
 import {
   DatabaseBase,
   DatabaseDemuxBase,
+  FieldValueMap,
   GetAllOptions,
   QueryFilter,
+  SingleValue,
 } from 'utils/db/types';
 import { schemaTranslateables } from 'utils/translationHelpers';
 import { LanguageMap } from 'utils/types';

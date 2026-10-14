@@ -31,6 +31,13 @@ impl IpcServer {
     }
 
     pub async fn serve(self) -> std::io::Result<()> {
+        let result = self.serve_stdio().await;
+        // Release database connections on both clean EOF and stdio failures.
+        self.db.close().await;
+        result
+    }
+
+    async fn serve_stdio(&self) -> std::io::Result<()> {
         let stdin = BufReader::new(tokio::io::stdin());
         let mut lines = stdin.lines();
         let mut stdout = tokio::io::stdout();

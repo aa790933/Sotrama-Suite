@@ -9,9 +9,9 @@ import {
 } from './policies';
 import { IpcRouter } from './router';
 import { InMemoryConnectionStore } from './connectionStore';
-import type DatabaseCore from '../../backend/database/core';
+import type { RouterDatabase } from './databaseContract';
 
-function makeFakeDatabase(): DatabaseCore {
+function makeFakeDatabase(): RouterDatabase {
   return {
     getSchemaMap: () => ({}) as never,
     setDbConfig: () => {},
@@ -31,7 +31,7 @@ function makeFakeDatabase(): DatabaseCore {
     getNextAutoincrementId: async () => 1,
     getNextSeriesValue: async () => 1,
     rename: async () => {},
-  } as unknown as DatabaseCore;
+  } as unknown as RouterDatabase;
 }
 
 test('sanitizeDatabaseName: allows alphanum, dash, underscore', (t) => {
@@ -223,7 +223,7 @@ test('IpcRouter deep module: assertAllowedApiEndpoint is single source', (t) => 
   t.end();
 });
 
-test('IpcRouter seam is real — depends on DatabaseCore directly, no string dispatch', (t) => {
+test('IpcRouter seam uses the backend-independent RouterDatabase contract, no string dispatch', (t) => {
   const src = require('fs').readFileSync('main/ipc/router.ts', 'utf-8');
   t.ok(src.includes('interface DbOps'), 'DbOps interface exists');
   t.ok(

@@ -30,7 +30,7 @@ impl Db {
         create_if_missing: bool,
     ) -> Result<Self, BackendError> {
         let pool =
-            Pool::connect_with(config, pool::PoolSettings::from_env(), create_if_missing).await?;
+            Pool::connect_with(config, pool::PoolSettings::from_env()?, create_if_missing).await?;
         let country_code = if country_code.is_empty() || country_code == "-" {
             resolve_country_code(&pool).await?
         } else {

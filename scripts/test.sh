@@ -2,7 +2,8 @@ TEST_PATH=$@
 
 if [ $# -eq 0 ]
   then
-    TEST_PATH=./**/tests/**/*.spec.ts
+    # IPC boundary specs live beside their production modules, not in tests/.
+    TEST_PATH='./**/tests/**/*.spec.ts ./main/ipc/*.spec.ts'
 fi
 
 export IS_TEST=true

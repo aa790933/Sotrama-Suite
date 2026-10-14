@@ -50,6 +50,21 @@ type BaseFieldType = Exclude<
 
 export type RawValue = string | number | boolean | null;
 
+/** Custom field data loaded from persistence and merged into the schema registry. */
+export type RawCustomField = {
+  parent: string;
+  label: string;
+  fieldname: string;
+  fieldtype: FieldType;
+  isRequired?: boolean;
+  section?: string;
+  tab?: string;
+  options?: string;
+  target?: string;
+  references?: string;
+  default?: string;
+};
+
 export interface BaseField {
   fieldname: string;             // Column name in the db
   fieldtype: BaseFieldType;      // UI Descriptive field types that map to column types

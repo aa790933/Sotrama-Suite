@@ -15,8 +15,12 @@ on:
       - 'backend/database/runPatch.ts'
       - 'backend/database/types.ts'
       - 'backend/helpers.ts'
+      - 'utils/db/types.ts'
+      - 'main/ipc/databaseContract.ts'
+      - 'scripts/verify-rust-backend-boundaries.mjs'
       - 'utils/version.ts'
       - 'scripts/verify-rust-backend-package.mjs'
+      - 'scripts/verify-rust-backend-client-runtime.mjs'
       - 'scripts/verify-rust-patch-parity.mjs'
       - '.github/workflows/rust-backend.yml'
   pull_request:
@@ -29,8 +33,12 @@ on:
       - 'backend/database/runPatch.ts'
       - 'backend/database/types.ts'
       - 'backend/helpers.ts'
+      - 'utils/db/types.ts'
+      - 'main/ipc/databaseContract.ts'
+      - 'scripts/verify-rust-backend-boundaries.mjs'
       - 'utils/version.ts'
       - 'scripts/verify-rust-backend-package.mjs'
+      - 'scripts/verify-rust-backend-client-runtime.mjs'
       - 'scripts/verify-rust-patch-parity.mjs'
       - '.github/workflows/rust-backend.yml'
   workflow_dispatch:
@@ -53,6 +61,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |
@@ -70,6 +82,9 @@ jobs:
       - name: Verify Rust patch registry matches legacy registry
         run: node scripts/verify-rust-patch-parity.mjs
 
+      - name: Verify backend-independent database contract
+        run: node scripts/verify-rust-backend-boundaries.mjs
+
       - name: Format, lint, and unit test
         run: |
           cd rust-backend
@@ -81,11 +96,17 @@ jobs:
   # The unit tests prove the SQL and DDL generators are correct. These prove the
   # generated SQL actually runs, which is the part a pure test cannot cover.
   integration:
-    name: integration (mariadb)
+    name: integration (mariadb ${{ matrix.mariadb-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Exercise the supported MariaDB lines before making Rust the default
+        # database engine; SQL behavior and DDL metadata vary across releases.
+        mariadb-version: ['10.6', '10.11', '11.4']
     services:
       mariadb:
-        image: mariadb:11.4
+        image: mariadb:${{ matrix.mariadb-version }}
         env:
           MARIADB_ROOT_PASSWORD: root
         ports:
@@ -103,6 +124,10 @@ jobs:
       TEST_DB_NAME: sotrama_test
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
 
       - name: Install build dependencies
         run: |
@@ -142,6 +167,7 @@ jobs:
           SOTRAMA_DB_USER: ${{ env.TEST_DB_USER }}
           SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
           SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
+          SOTRAMA_COUNTRY_CODE: in
           SOTRAMA_BACKUP_DIR: ${{ runner.temp }}/sotrama-backups
         run: |
           cargo run --locked -- --migrate > first.json
@@ -308,9 +334,17 @@ jobs:
             '{"jsonrpc":"2.0","id":19,"method":"db.call","params":["exists","Item","legacy-item-fixture"]}' \
             '{"jsonrpc":"2.0","id":20,"method":"db.call","params":["exists","Item","ci-missing-item"]}' \
             '{"jsonrpc":"2.0","id":21,"method":"db.call","params":["count","Item",{"filters":{"trackItem":true}}]}' \
+            '{"jsonrpc":"2.0","id":22,"method":"db.call","params":["insert","Defaults",{"saveButtonColour":"#123456","posCashDenominations":[{"name":"ci-default-cash-denomination","denomination":100}]}]}' \
+            '{"jsonrpc":"2.0","id":23,"method":"db.call","params":["get","Defaults"]}' \
+            '{"jsonrpc":"2.0","id":24,"method":"db.call","params":["update","Defaults",{"saveButtonColour":"#654321","posCashDenominations":[{"name":"ci-default-cash-denomination","denomination":200}]}]}' \
+            '{"jsonrpc":"2.0","id":25,"method":"db.call","params":["get","Defaults"]}' \
+            '{"jsonrpc":"2.0","id":26,"method":"db.call","params":["update","Defaults",{"posCashDenominations":[]}]}' \
+            '{"jsonrpc":"2.0","id":27,"method":"db.call","params":["get","Defaults"]}' \
+            '{"jsonrpc":"2.0","id":28,"method":"db.call","params":["update","Defaults",{"saveButtonColour":"#MUST-ROLLBACK","posCashDenominations":[null]}]}' \
+            '{"jsonrpc":"2.0","id":29,"method":"db.call","params":["get","Defaults"]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 19 and
+            length == 27 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -345,7 +379,25 @@ jobs:
             (.[15].result.data | any(.name == "legacy-item-fixture" and .trackItem == true)) and
             .[16].jsonrpc == "2.0" and .[16].id == 19 and .[16].result.data == true and
             .[17].jsonrpc == "2.0" and .[17].id == 20 and .[17].result.data == false and
-            .[18].jsonrpc == "2.0" and .[18].id == 21 and .[18].result.data >= 1
+            .[18].jsonrpc == "2.0" and .[18].id == 21 and .[18].result.data >= 1 and
+            .[19].jsonrpc == "2.0" and .[19].id == 22 and
+            .[19].result.data.posCashDenominations[0].denomination == "100" and
+            .[20].jsonrpc == "2.0" and .[20].id == 23 and
+            .[20].result.data.saveButtonColour == "#123456" and
+            .[20].result.data.posCashDenominations[0].denomination == "100" and
+            .[21].jsonrpc == "2.0" and .[21].id == 24 and .[21].result.data == null and
+            .[22].jsonrpc == "2.0" and .[22].id == 25 and
+            .[22].result.data.saveButtonColour == "#654321" and
+            .[22].result.data.posCashDenominations[0].denomination == "200" and
+            .[23].jsonrpc == "2.0" and .[23].id == 26 and .[23].result.data == null and
+            .[24].jsonrpc == "2.0" and .[24].id == 27 and
+            (.[24].result.data.posCashDenominations | length) == 0 and
+            .[24].result.data.saveButtonColour == "#654321" and
+            .[25].jsonrpc == "2.0" and .[25].id == 28 and
+            (.[25].result.error.message | contains("must be an object")) and
+            .[26].jsonrpc == "2.0" and .[26].id == 29 and
+            .[26].result.data.saveButtonColour == "#654321" and
+            (.[26].result.data.posCashDenominations | length) == 0
           ' protocol.jsonl
 
           # Confirm the failed transaction left the original values in MariaDB,
@@ -357,6 +409,15 @@ jobs:
           test "$child_rows" = "0"
           parent_hsn=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT hsnCode FROM item WHERE name='legacy-item-fixture'")
           test "$parent_hsn" = "HSN-LEGACY"
+
+          # Single-document child rows are stored in their own table, never as
+          # a JSON/text blob in singlevalue, and updates must reconcile in place.
+          single_child_scalar=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM singlevalue WHERE parent='Defaults' AND fieldname='posCashDenominations'")
+          test "$single_child_scalar" = "0"
+          single_child_rows=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM defaultcashdenominations WHERE parent='Defaults'")
+          test "$single_child_rows" = "0"
+          single_scalar_after_child_failure=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT value FROM singlevalue WHERE parent='Defaults' AND fieldname='saveButtonColour'")
+          test "$single_scalar_after_child_failure" = "#654321"
 
           # Start two independent sidecars against a series that does not yet
           # exist. This exercises the first-row race as well as row locking.
@@ -373,6 +434,17 @@ jobs:
             .[0].result.data != .[1].result.data and
             ([.[].result.data] | sort) == [1, 2]
           ' series-a.jsonl series-b.jsonl
+
+      - name: Verify production TypeScript client against the Rust sidecar
+        env:
+          SOTRAMA_BACKEND_PATH: ${{ github.workspace }}/rust-backend/target/debug/sotrama-backend
+          SOTRAMA_DB_HOST: ${{ env.TEST_DB_HOST }}
+          SOTRAMA_DB_PORT: ${{ env.TEST_DB_PORT }}
+          SOTRAMA_DB_USER: ${{ env.TEST_DB_USER }}
+          SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
+          SOTRAMA_BACKUP_DIR: ${{ runner.temp }}/sotrama-backups
+        run: node --experimental-strip-types scripts/verify-rust-backend-client-runtime.mjs success
 
   build:
     name: build (${{ matrix.os }})
@@ -394,6 +466,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |
@@ -409,6 +485,16 @@ jobs:
       - name: Build release binary
         working-directory: rust-backend
         run: cargo build --locked --release
+
+      - name: Smoke test native binary startup
+        working-directory: rust-backend
+        run: cargo run --locked --release -- --help
+
+      - name: Verify application client propagates database startup failures
+        env:
+          SOTRAMA_BACKEND_PATH: ${{ github.workspace }}/rust-backend/target/release/${{ matrix.binary }}
+          SOTRAMA_DB_PASSWORD: runtime-smoke-secret
+        run: node --experimental-strip-types scripts/verify-rust-backend-client-runtime.mjs failure
 
       - uses: actions/upload-artifact@v4
         with:

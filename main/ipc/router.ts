@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import type { SelectFileOptions, SelectFileReturn } from 'utils/types';
 import { emitMainProcessError } from '../../backend/helpers';
-import type { FieldValueMap } from '../../backend/database/types';
+import type { FieldValueMap } from '../../utils/db/types';
 import type {
   DatabaseMethod,
   GetAllOptions,
@@ -43,7 +43,8 @@ import {
 } from './policies';
 import type { ConnectionStore } from './connectionStore';
 import { ElectronStoreConnectionStore } from './connectionStore';
-import { RustDatabaseAdapter, type RouterDatabase } from './rustDatabaseAdapter';
+import type { RouterDatabase } from './databaseContract';
+import { RustDatabaseAdapter } from './rustDatabaseAdapter';
 import { RustBackendClient } from './rustBackendClient';
 
 // Injected collaborators, so the router can be built without electron.

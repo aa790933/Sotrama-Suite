@@ -65,7 +65,7 @@ async fn fetch_rows(
 ) -> Result<Vec<RowMap>, BackendError> {
     let rows = stmt!(&st.sql, &st.params).fetch_all(&mut *conn).await;
     match rows {
-        Ok(rows) => Ok(rows.iter().map(|r| decode_row(r, schema)).collect()),
+        Ok(rows) => rows.iter().map(|row| decode_row(row, schema)).collect(),
         Err(e) => Err(DbError::from(e).into()),
     }
 }
@@ -141,7 +141,7 @@ pub async fn get(
 ) -> Result<Map<String, Value>, BackendError> {
     let schema = schema_of(registry, schema_name)?;
     if schema.is_single() {
-        return get_single(conn, schema_name).await;
+        return get_single(conn, registry, schema_name).await;
     }
     if name.is_empty() {
         return Err(BackendError::InvalidArgument(format!(
@@ -324,7 +324,8 @@ pub async fn insert(
     let mut values = values.clone();
 
     if schema.is_single() {
-        set_single_values(conn, schema_name, &values).await?;
+        set_single_values(conn, schema, &values).await?;
+        sync_children(conn, registry, schema, &values, false).await?;
         return Ok(values);
     }
 
@@ -399,7 +400,8 @@ pub async fn update(
 ) -> Result<(), BackendError> {
     let schema = schema_of(registry, schema_name)?;
     if schema.is_single() {
-        return set_single_values(conn, schema_name, values).await;
+        set_single_values(conn, schema, values).await?;
+        return sync_children(conn, registry, schema, values, true).await;
     }
 
     let name = values
@@ -452,11 +454,15 @@ async fn sync_children(
     values: &Map<String, Value>,
     is_update: bool,
 ) -> Result<(), BackendError> {
-    let parent_name = values
-        .get("name")
-        .and_then(Value::as_str)
-        .unwrap_or_default()
-        .to_string();
+    let parent_name = if schema.is_single() {
+        schema.name.clone()
+    } else {
+        values
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string()
+    };
 
     for field in schema.table_fields() {
         let Some(target) = field.target.as_deref() else {
@@ -684,6 +690,7 @@ pub async fn delete_all(
 /// Reads every stored value for a single-doc schema.
 pub async fn get_single(
     conn: &mut MySqlConnection,
+    registry: &Registry,
     schema_name: &str,
 ) -> Result<Map<String, Value>, BackendError> {
     let sql = "SELECT `fieldname`, `value` FROM `singlevalue` WHERE `parent` = ?";
@@ -709,6 +716,22 @@ pub async fn get_single(
             ),
         );
     }
+    let schema = schema_of(registry, schema_name)?;
+    for field in schema.table_fields() {
+        let Some(target) = field.target.as_deref() else {
+            continue;
+        };
+        out.insert(
+            field.fieldname.clone(),
+            Value::Array(
+                load_children(conn, registry, target, schema_name)
+                    .await?
+                    .into_iter()
+                    .map(Value::Object)
+                    .collect(),
+            ),
+        );
+    }
     Ok(out)
 }
 
@@ -717,13 +740,19 @@ pub async fn get_single(
 /// One statement per field rather than a batch, matching `#updateSingleValues`.
 async fn set_single_values(
     conn: &mut MySqlConnection,
-    schema_name: &str,
+    schema: &Schema,
     values: &Map<String, Value>,
 ) -> Result<(), BackendError> {
-    for (fieldname, value) in values {
-        if fieldname == "name" {
-            continue;
-        }
+    let schema_name = &schema.name;
+    // Match DatabaseCore#updateSingleValues: only persisted scalar schema
+    // fields are stored in singlevalue. Table/computed/unknown keys must not
+    // be serialized into a scalar setting when child rows are supplied.
+    for field in schema
+        .column_fields()
+        .filter(|field| field.fieldname != "name" && values.contains_key(&field.fieldname))
+    {
+        let fieldname = &field.fieldname;
+        let value = &values[fieldname];
         let bound = encode_value(value, None);
         let existing = sqlx::query_scalar::<_, String>(
             "SELECT `name` FROM `singlevalue` WHERE `parent` = ? AND `fieldname` = ? LIMIT 1",
@@ -804,7 +833,7 @@ pub async fn initialize_single_defaults(
                 missing.insert(field.fieldname.clone(), value);
             }
         }
-        set_single_values(conn, &schema.name, &missing).await?;
+        set_single_values(conn, schema, &missing).await?;
     }
     Ok(())
 }

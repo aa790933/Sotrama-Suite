@@ -40,16 +40,18 @@ impl Default for PoolSettings {
 
 impl PoolSettings {
     /// SOTRAMA_POOL_* overrides; pool size is an operational knob for shared servers.
-    pub fn from_env() -> Self {
+    pub fn from_env() -> Result<Self, BackendError> {
         let d = Self::default();
-        Self {
-            max_connections: env_u32("SOTRAMA_POOL_MAX", d.max_connections),
-            min_connections: env_u32("SOTRAMA_POOL_MIN", d.min_connections),
-            connect_timeout: env_secs("SOTRAMA_CONNECT_TIMEOUT_SECS", d.connect_timeout),
-            acquire_timeout: env_secs("SOTRAMA_ACQUIRE_TIMEOUT_SECS", d.acquire_timeout),
-            idle_timeout: env_secs("SOTRAMA_IDLE_TIMEOUT_SECS", d.idle_timeout),
-            max_lifetime: env_secs("SOTRAMA_MAX_LIFETIME_SECS", d.max_lifetime),
-        }
+        let settings = Self {
+            max_connections: env_u32("SOTRAMA_POOL_MAX", d.max_connections)?,
+            min_connections: env_u32("SOTRAMA_POOL_MIN", d.min_connections)?,
+            connect_timeout: env_secs("SOTRAMA_CONNECT_TIMEOUT_SECS", d.connect_timeout)?,
+            acquire_timeout: env_secs("SOTRAMA_ACQUIRE_TIMEOUT_SECS", d.acquire_timeout)?,
+            idle_timeout: env_secs("SOTRAMA_IDLE_TIMEOUT_SECS", d.idle_timeout)?,
+            max_lifetime: env_secs("SOTRAMA_MAX_LIFETIME_SECS", d.max_lifetime)?,
+        };
+        settings.validate()?;
+        Ok(settings)
     }
 
     fn validate(&self) -> Result<(), BackendError> {
@@ -76,19 +78,34 @@ impl PoolSettings {
     }
 }
 
-fn env_u32(key: &str, fallback: u32) -> u32 {
-    std::env::var(key)
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(fallback)
+fn env_u32(key: &str, fallback: u32) -> Result<u32, BackendError> {
+    let Ok(value) = std::env::var(key) else {
+        return Ok(fallback);
+    };
+    parse_u32(key, &value)
 }
 
-fn env_secs(key: &str, fallback: Duration) -> Duration {
-    std::env::var(key)
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .map(Duration::from_secs)
-        .unwrap_or(fallback)
+fn parse_u32(key: &str, value: &str) -> Result<u32, BackendError> {
+    value.parse().map_err(|_| {
+        BackendError::Db(DbError::new(format!(
+            "{key} must be a valid unsigned 32-bit integer"
+        )))
+    })
+}
+
+fn env_secs(key: &str, fallback: Duration) -> Result<Duration, BackendError> {
+    let Ok(value) = std::env::var(key) else {
+        return Ok(fallback);
+    };
+    parse_secs(key, &value)
+}
+
+fn parse_secs(key: &str, value: &str) -> Result<Duration, BackendError> {
+    value.parse::<u64>().map(Duration::from_secs).map_err(|_| {
+        BackendError::Db(DbError::new(format!(
+            "{key} must be a valid unsigned integer in seconds"
+        )))
+    })
 }
 
 /// The database handle: a pool plus the settings it was built with.
@@ -113,7 +130,7 @@ impl Pool {
     /// Fails here on a bad host instead of surfacing later as an unrelated error.
     #[allow(dead_code)]
     pub async fn connect(config: &MariaDBConfig) -> Result<Self, BackendError> {
-        Self::connect_with(config, PoolSettings::from_env(), false).await
+        Self::connect_with(config, PoolSettings::from_env()?, false).await
     }
 
     pub async fn connect_with(
@@ -159,7 +176,7 @@ impl Pool {
         let bring_up = async {
             let pool = MySqlPoolOptions::new()
                 .max_connections(settings.max_connections)
-                .min_connections(settings.min_connections.max(1))
+                .min_connections(settings.min_connections)
                 .acquire_timeout(settings.acquire_timeout)
                 .idle_timeout(Some(settings.idle_timeout))
                 .max_lifetime(Some(settings.max_lifetime))
@@ -238,6 +255,7 @@ mod tests {
     fn defaults_match_the_typescript_pool_size() {
         let s = PoolSettings::default();
         assert_eq!(s.max_connections, 10, "must match core.ts connectionLimit");
+        assert_eq!(s.min_connections, 0, "the pool should not keep an idle connection by default");
         assert_eq!(
             s.connect_timeout,
             Duration::from_secs(8),
@@ -284,13 +302,19 @@ mod tests {
     }
 
     #[test]
-    fn environment_overrides_parse() {
-        // The helper reads process env directly; test the parse contract
-        // rather than mutating the environment, which is unsafe under threads.
-        assert_eq!(env_u32("SOTRAMA_POOL_MISSING_FOR_TEST", 7), 7);
+    fn environment_overrides_are_strict_and_report_the_setting_name() {
+        assert_eq!(env_u32("SOTRAMA_POOL_MISSING_FOR_TEST", 7).unwrap(), 7);
         assert_eq!(
-            env_secs("SOTRAMA_POOL_MISSING_FOR_TEST", Duration::from_secs(3)),
+            env_secs("SOTRAMA_POOL_MISSING_FOR_TEST", Duration::from_secs(3)).unwrap(),
             Duration::from_secs(3)
         );
+        assert!(parse_u32("SOTRAMA_POOL_TEST_INVALID", "not-a-number")
+            .unwrap_err()
+            .to_string()
+            .contains("SOTRAMA_POOL_TEST_INVALID"));
+        assert!(parse_secs("SOTRAMA_CONNECT_TIMEOUT_SECS", "-1")
+            .unwrap_err()
+            .to_string()
+            .contains("SOTRAMA_CONNECT_TIMEOUT_SECS"));
     }
 }
