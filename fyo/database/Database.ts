@@ -1,5 +1,6 @@
 import { SchemaMap } from 'schemas/types';
-import { DatabaseBase, FieldValueMap, GetAllOptions, QueryFilter } from 'utils/db/types';
+import { DatabaseBase, GetAllOptions, QueryFilter } from 'utils/db/types';
+import { FieldValueMap } from 'backend/database/types';
 import { DocValue, DocValueMap } from 'fyo/core/types';
 
 /**

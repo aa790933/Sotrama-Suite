@@ -26,7 +26,7 @@ function splitCsvBlock(text: string, splitter = '\r\n'): string[] {
 
     if (
       c === '"' &&
-      ((text[i + 1] === '"' && text[i + 2] === '"') || text[i + 1] !== '"')
+      ((c[i + 1] === '"' && c[i + 2] === '"') || c[i + 1] !== '"')
     ) {
       inDq = !inDq;
     }
@@ -49,7 +49,7 @@ function splitCsvBlock(text: string, splitter = '\r\n'): string[] {
   return lines;
 }
 
-function splitCsvLine(line: string): string[] {
+export function splitCsvLine(line: string): string[] {
   line += ',';
 
   const items = [];
@@ -61,7 +61,7 @@ function splitCsvLine(line: string): string[] {
 
     if (
       c === '"' &&
-      ((line[i + 1] === '"' && line[i + 2] === '"') || line[i + 1] !== '"')
+      ((c[i + 1] === '"' && c[i + 2] === '"') || c[i + 1] !== '"')
     ) {
       inDq = !inDq;
     }
@@ -91,9 +91,9 @@ function unwrapDq(item: string): string {
 }
 
 function getFormattedRows(matrix: unknown[][]): string[] {
-  const formattedMatrix = [];
+  const formattedMatrix: string[] = [];
   for (const row of matrix) {
-    const formattedRow = [];
+    const formattedRow: string[] = [];
     for (const item of row) {
       const formattedItem = getFormattedItem(item);
       formattedRow.push(formattedItem);
@@ -146,5 +146,3 @@ function formatStringToCSV(item: string): string {
 
   return item;
 }
-
-export { splitCsvLine };

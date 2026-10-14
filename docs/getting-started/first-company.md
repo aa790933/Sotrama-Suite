@@ -38,4 +38,4 @@ Use the company selector to create a company or open one already configured. Eac
 
 ## Backup and recovery
 
-Before upgrades or schema migrations, create a MariaDB backup and verify that it can be restored. Restore is an operator workflow for the opt-in Rust backend, not an in-app button. Follow [Backup and restore](/guides/backup-restore) and verify representative records before using a restored database.
+Before upgrades or schema migrations, create a MariaDB backup and verify that it can be restored. Follow [Backup and restore](/guides/backup-restore) and verify representative records before using a restored database.

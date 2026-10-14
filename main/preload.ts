@@ -19,7 +19,6 @@ import type {
   TemplateFile,
 } from 'utils/types';
 import type {
-  ConnectionMetadata,
   HostProvisionConfig,
   InstallResult,
   MariaDBConfig,
@@ -339,55 +338,32 @@ const ipc = {
     get<K extends keyof ConfigMap>(key: K) {
       const value = config.get(key);
       // Never expose raw connections with passwords to renderer; return safe metadata
-      if (key === 'connections') {
-        if (!Array.isArray(value)) return [] as unknown as ConfigMap[K];
-        return (value as import('utils/mariadb-types').PersistedConnection[]).map(
-          (c) => ({
-            id: c.id,
-            companyName: c.companyName,
-            host: c.host,
-            port: c.port,
-            user: c.user,
-            database: c.database,
-            openCount: c.openCount,
-            display: toSafeDisplay(c),
-          })
-        ) as unknown as ConfigMap[K];
+      if (key === 'connections' && Array.isArray(value)) {
+        return (
+          value as unknown as import('utils/mariadb-types').PersistedConnection[]
+        ).map((c) => ({
+          id: c.id,
+          companyName: c.companyName,
+          host: c.host,
+          port: c.port,
+          user: c.user,
+          database: c.database,
+          openCount: c.openCount,
+          display: toSafeDisplay(c),
+        })) as unknown as ConfigMap[K];
       }
       if (key === 'lastSelectedFilePath' && typeof value === 'string') {
-        // JSON-looking values may contain credentials. Never return them raw,
-        // even when parsing or connection matching fails.
-        if (value.trimStart().startsWith('{')) {
-          try {
-            const { parseMariaDBConfigString } =
-              require('utils/mariadb-types') as typeof import('utils/mariadb-types');
-            const parsed = parseMariaDBConfigString(value);
-            const connections = config.get('connections');
-            const found = Array.isArray(connections)
-              ? connections.find(
-                  (connection) =>
-                    connection &&
-                    typeof connection === 'object' &&
-                    equalsConnection(connection, parsed)
-                )
-              : undefined;
-            return (found?.id ?? null) as unknown as ConfigMap[K];
-          } catch {
-            return null as unknown as ConfigMap[K];
-          }
-        }
+        // If it's a MariaDB JSON, don't expose raw password to renderer via store; return ID if available
         try {
           const { parseMariaDBConfigString } =
             require('utils/mariadb-types') as typeof import('utils/mariadb-types');
           const parsed = parseMariaDBConfigString(value);
-          const connections = config.get('connections');
-          const found = Array.isArray(connections)
-            ? connections.find((connection) => equalsConnection(connection, parsed))
-            : undefined;
+          // It's a MariaDB JSON — try to map to connection ID
+          const conns = config.get('connections' as never) as
+            import('utils/mariadb-types').PersistedConnection[] | undefined;
+          const found = conns?.find((c) => equalsConnection(c, parsed));
           if (found) return found.id as unknown as ConfigMap[K];
-        } catch {
-          // Legacy non-JSON values are returned unchanged below.
-        }
+        } catch {}
       }
       return value;
     },
@@ -440,16 +416,4 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('[preload] unhandledrejection:', event.reason);
 });
 
-export type IPC = Omit<typeof ipc, 'store'> & {
-  readonly store: {
-    readonly get: {
-      (key: 'connections'): ConnectionMetadata[];
-      <K extends Exclude<keyof ConfigMap, 'connections'>>(key: K): ConfigMap[K];
-    };
-    readonly set: <K extends Exclude<keyof ConfigMap, 'connections'>>(
-      key: K,
-      value: ConfigMap[K]
-    ) => void;
-    readonly delete: (key: keyof ConfigMap) => void;
-  };
-};
+export type IPC = typeof ipc;

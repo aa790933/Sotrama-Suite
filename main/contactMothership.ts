@@ -1,10 +1,10 @@
 import { app } from 'electron';
 import fs from 'fs';
+import fetch from 'node-fetch';
 import path from 'path';
 import { Creds } from 'utils/types';
 import { rendererLog } from './helpers';
 import type { Main } from 'main';
-import { sendTelemetryRequest } from './api';
 
 export function getUrlAndTokenString(): Creds {
   const inProduction = app.isPackaged;
@@ -39,7 +39,7 @@ export function getUrlAndTokenString(): Creds {
     return empty;
   }
 
-  if (!errorLogUrl || !telemetryUrl || !apiKey || !apiSecret) {
+  if (!telemetryUrl || !apiKey || !apiSecret) {
     !inProduction &&
       // eslint-disable-next-line no-console
       console.log('incomplete telemetry creds, skipping logging');
@@ -55,16 +55,13 @@ export function getUrlAndTokenString(): Creds {
 
 export async function sendError(body: string, main: Main) {
   const { errorLogUrl, tokenString } = getUrlAndTokenString();
-  if (!errorLogUrl || !tokenString) return;
   const headers = {
     Authorization: tokenString,
     Accept: 'application/json',
     'Content-Type': 'application/json',
   };
 
-  try {
-    await sendTelemetryRequest(errorLogUrl, { method: 'POST', headers, body });
-  } catch {
-    rendererLog(main, new Error('Could not send error telemetry through Rust HTTPS service'));
-  }
+  await fetch(errorLogUrl, { method: 'POST', headers, body }).catch((err) => {
+    rendererLog(main, err);
+  });
 }

@@ -1,6 +1,7 @@
+import { FieldValueMap } from 'backend/database/types';
 import { SchemaMap } from 'schemas/types';
 import { getSchemas } from 'schemas';
-import { DatabaseBase, FieldValueMap, GetAllOptions, QueryFilter } from 'utils/db/types';
+import { DatabaseBase, GetAllOptions, QueryFilter } from 'utils/db/types';
 import { Database } from './Database';
 import { DocValue, DocValueMap } from 'fyo/core/types';
 import { Converter } from 'fyo/core/converter';
@@ -358,6 +359,7 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
         const pattern = value.replace(/%/g, '');
         if (!actual.includes(pattern)) return false;
       }
+      // other ops not needed for minimal slice
     }
     return true;
   }

@@ -16,8 +16,6 @@ import registerAutoUpdaterListeners from './registerAutoUpdaterListeners';
 import registerIpcMainMessageListeners from './registerIpcMainMessageListeners';
 import registerProcessListeners from './registerProcessListeners';
 import { createProdRouter } from './ipc/router';
-import { resolveAppFilePath } from './resolveAppFilePath';
-export { resolveAppFilePath } from './resolveAppFilePath';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const sourceMapSupport = require('source-map-support') as {
@@ -416,6 +414,48 @@ export class Main {
       log.error('[main] render-process-gone (window):', details);
     });
   }
+}
+
+/**
+ * Maps an app:// URL onto a file under dist_electron/build/src.
+ *
+ * Vite emits asset references like `app://assets/index-HASH.js` (no leading
+ * slash), while the entry point is loaded as `app://./index.html`. Both shapes
+ * must resolve to real files inside the asar, otherwise the packaged app
+ * renders nothing.
+ */
+export function resolveAppFilePath(requestUrl: string): string {
+  const url = new URL(requestUrl);
+  let filePath: string;
+
+  if (url.host && url.host !== '.' && !url.pathname.includes('.')) {
+    // Host carries a directory segment without extension
+    filePath = path.join(
+      __dirname,
+      'src',
+      decodeURI(url.host),
+      decodeURI(url.pathname)
+    );
+  } else {
+    const pathname =
+      url.pathname === '/' && url.host !== '.' ? `/${url.host}` : url.pathname;
+    const hostPart = url.host === '.' ? '' : url.host;
+    filePath = path.join(
+      __dirname,
+      'src',
+      decodeURI(hostPart),
+      decodeURI(pathname)
+    );
+    if (filePath.endsWith(path.join('src', '.'))) {
+      filePath = path.join(__dirname, 'src', 'index.html');
+    }
+  }
+
+  if (filePath.endsWith(path.sep) || filePath.endsWith('/')) {
+    filePath = path.join(filePath, 'index.html');
+  }
+
+  return filePath;
 }
 
 function mimeTypeFor(filePath: string): string {

@@ -50,15 +50,18 @@ const serialNumberMap = {
 };
 
 test('create dummy items, locations, party & serialNumbers', async (t) => {
+  // Create Items
   for (const { name, rate } of Object.values(itemMap)) {
     const item = getItem(name, rate, false, true);
     await fyo.doc.getNewDoc(ModelNameEnum.Item, item).sync();
   }
 
+  // Create Locations
   for (const name of Object.values(locationMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.Location, { name }).sync();
   }
 
+  // Create Party
   await fyo.doc.getNewDoc(ModelNameEnum.Party, partyMap.partyOne).sync();
 
   t.ok(
@@ -66,6 +69,7 @@ test('create dummy items, locations, party & serialNumbers', async (t) => {
     'party created'
   );
 
+  // Create SerialNumbers
   for (const serialNumber of Object.values(serialNumberMap)) {
     const doc = fyo.doc.getNewDoc(ModelNameEnum.SerialNumber, serialNumber);
     await doc.sync();

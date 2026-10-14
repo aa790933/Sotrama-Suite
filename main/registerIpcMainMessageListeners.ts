@@ -1,68 +1,61 @@
 import { ipcMain, Menu, shell } from 'electron';
-import { emitMainProcessError } from 'backend/helpers';
+import { Main } from '../main';
 import { IPC_MESSAGES } from '../utils/messages';
-import { normalizeExternalUrl } from './externalUrlPolicy';
-import type { Main } from './bootstrap';
+import { emitMainProcessError } from 'backend/helpers';
 
-function isCurrentWindowSender(
-  main: Main,
-  event: Electron.IpcMainEvent
-): boolean {
-  return Boolean(main.mainWindow && event.sender === main.mainWindow.webContents);
-}
-
-export default function registerIpcMainMessageListeners(main: Main): void {
+export default function registerIpcMainMessageListeners(main: Main) {
   ipcMain.on(IPC_MESSAGES.OPEN_MENU, (event) => {
-    if (!isCurrentWindowSender(main, event)) return;
+    if (event.sender === null) {
+      return;
+    }
+
     const menu = Menu.getApplicationMenu();
-    if (!menu || !main.mainWindow) return;
-    menu.popup({ window: main.mainWindow });
+    if (menu === null) {
+      return;
+    }
+
+    menu.popup({ window: main.mainWindow! });
   });
 
-  ipcMain.on(IPC_MESSAGES.RELOAD_MAIN_WINDOW, (event) => {
-    if (isCurrentWindowSender(main, event)) main.mainWindow?.reload();
+  ipcMain.on(IPC_MESSAGES.RELOAD_MAIN_WINDOW, () => {
+    main.mainWindow!.reload();
   });
 
-  ipcMain.on(IPC_MESSAGES.MINIMIZE_MAIN_WINDOW, (event) => {
-    if (isCurrentWindowSender(main, event)) main.mainWindow?.minimize();
+  ipcMain.on(IPC_MESSAGES.MINIMIZE_MAIN_WINDOW, () => {
+    main.mainWindow!.minimize();
   });
 
-  ipcMain.on(IPC_MESSAGES.MAXIMIZE_MAIN_WINDOW, (event) => {
-    if (!isCurrentWindowSender(main, event) || !main.mainWindow) return;
-    if (main.mainWindow.isMaximized()) main.mainWindow.unmaximize();
-    else main.mainWindow.maximize();
+  ipcMain.on(IPC_MESSAGES.MAXIMIZE_MAIN_WINDOW, () => {
+    main.mainWindow!.isMaximized()
+      ? main.mainWindow!.unmaximize()
+      : main.mainWindow!.maximize();
   });
 
   ipcMain.on(IPC_MESSAGES.ISMAXIMIZED_MAIN_WINDOW, (event) => {
-    if (!isCurrentWindowSender(main, event)) return;
-    event.sender.send(IPC_MESSAGES.ISMAXIMIZED_RESULT, main.mainWindow?.isMaximized() ?? false);
+    const isMaximized = main.mainWindow?.isMaximized() ?? false;
+    event.sender.send(IPC_MESSAGES.ISMAXIMIZED_RESULT, isMaximized);
   });
 
   ipcMain.on(IPC_MESSAGES.ISFULLSCREEN_MAIN_WINDOW, (event) => {
-    if (!isCurrentWindowSender(main, event)) return;
-    event.sender.send(IPC_MESSAGES.ISFULLSCREEN_RESULT, main.mainWindow?.isFullScreen() ?? false);
+    const isFullscreen = main.mainWindow?.isFullScreen() ?? false;
+    event.sender.send(IPC_MESSAGES.ISFULLSCREEN_RESULT, isFullscreen);
   });
 
-  ipcMain.on(IPC_MESSAGES.CLOSE_MAIN_WINDOW, (event) => {
-    if (isCurrentWindowSender(main, event)) main.mainWindow?.close();
+  ipcMain.on(IPC_MESSAGES.CLOSE_MAIN_WINDOW, () => {
+    main.mainWindow!.close();
   });
 
-  ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (event, input: unknown) => {
-    if (!isCurrentWindowSender(main, event)) return;
-    const url = normalizeExternalUrl(input);
-    if (!url) {
-      // Do not echo attacker-controlled URLs: they may contain secrets.
-      emitMainProcessError(new Error('OPEN_EXTERNAL blocked: invalid or unsupported URL'));
+  ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (event, link: string) => {
+    if (event.sender !== main.mainWindow?.webContents) return;
+    if (typeof link !== 'string' || !(link.startsWith('https://') || link.startsWith('http://'))) {
+      emitMainProcessError(new Error(`OPEN_EXTERNAL blocked: ${link}`));
       return;
     }
-    void shell.openExternal(url).catch(() => {
-      emitMainProcessError(new Error('OPEN_EXTERNAL failed to open the requested URL'));
-    });
+    shell.openExternal(link).catch((err) => emitMainProcessError(err));
   });
 
-  ipcMain.on(IPC_MESSAGES.SHOW_ITEM_IN_FOLDER, (event, filePath: unknown) => {
-    if (!isCurrentWindowSender(main, event)) return;
-    if (typeof filePath !== 'string' || filePath.length === 0 || filePath.length > 32768) return;
-    shell.showItemInFolder(filePath);
+  ipcMain.on(IPC_MESSAGES.SHOW_ITEM_IN_FOLDER, (event, filePath: string) => {
+    if (event.sender !== main.mainWindow?.webContents) return;
+    return shell.showItemInFolder(filePath);
   });
 }

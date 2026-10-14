@@ -1,3 +1,4 @@
+import { FieldValueMap, SingleValue } from 'backend/database/types';
 import { cloneDeep } from 'lodash';
 import { Fyo } from 'fyo';
 import { Database } from 'fyo/database/Database';
@@ -9,10 +10,8 @@ import { getMapFromList } from 'utils';
 import {
   DatabaseBase,
   DatabaseDemuxBase,
-  FieldValueMap,
   GetAllOptions,
   QueryFilter,
-  SingleValue,
 } from 'utils/db/types';
 import { schemaTranslateables } from 'utils/translationHelpers';
 import { LanguageMap } from 'utils/types';
@@ -378,6 +377,7 @@ export class DatabaseHandler extends DatabaseBase {
     return count;
   }
 
+  // Update
   async rename(
     schemaName: string,
     oldName: string,
@@ -392,6 +392,7 @@ export class DatabaseHandler extends DatabaseBase {
     this.observer.trigger(`update:${schemaName}`, docValueMap);
   }
 
+  // Delete
   async delete(schemaName: string, name: string): Promise<void> {
     await this.backend.delete(schemaName, name);
     this.observer.trigger(`delete:${schemaName}`, name);

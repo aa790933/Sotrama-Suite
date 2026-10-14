@@ -1,6 +1,7 @@
 import { DatabaseError } from 'fyo/utils/errors';
+import { FieldValueMap } from 'backend/database/types';
 import { SchemaMap } from 'schemas/types';
-import { DatabaseBase, FieldValueMap, GetAllOptions, QueryFilter } from 'utils/db/types';
+import { DatabaseBase, GetAllOptions, QueryFilter } from 'utils/db/types';
 import { BackendResponse } from 'utils/ipc/types';
 import { Database } from './Database';
 import { DocValue, DocValueMap, RawValueMap } from 'fyo/core/types';

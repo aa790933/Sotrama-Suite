@@ -22,7 +22,7 @@ const sidebar = [
       { text: 'Overview', link: '/architecture/' },
       { text: 'Database layer', link: '/architecture/database' },
       { text: 'IPC protocol', link: '/architecture/ipc' },
-      { text: 'Rust migration status', link: '/architecture/rust-backend' },
+      { text: 'Application boundaries', link: '/architecture/application-boundaries' },
     ]
   },
   {
@@ -77,7 +77,7 @@ export default defineConfig({
     ],
     footer: {
       message: 'Licensed under AGPL-3.0-only.',
-      copyright: 'Built by aa790933 · Forked from Frappe Books',
+      copyright: 'Built by aa790933 Â· Forked from Frappe Books',
     },
     search: {
       provider: 'local',

@@ -74,18 +74,21 @@ const locationMap = {
 };
 
 test('Pricing Rule: create dummy item, party, pricing rules, free items, locations', async (t) => {
+  // Create Items
   for (const { name, rate } of Object.values(itemMap)) {
     const item = getItem(name, rate, false);
     await fyo.doc.getNewDoc(ModelNameEnum.Item, item).sync();
     t.ok(await fyo.db.exists(ModelNameEnum.Item, name), `Item: ${name} exists`);
   }
 
+  // Create Party
   await fyo.doc.getNewDoc(ModelNameEnum.Party, partyMap.partyOne).sync();
   t.ok(
     await fyo.db.exists(ModelNameEnum.Party, partyMap.partyOne.name),
     `Party: ${partyMap.partyOne.name} exists`
   );
 
+  // Create Pricing Rules
   for (const pricingRule of Object.values(pricingRuleMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.PricingRule, pricingRule).sync();
 
@@ -95,11 +98,13 @@ test('Pricing Rule: create dummy item, party, pricing rules, free items, locatio
     );
   }
 
+  // Create Locations
   for (const name of Object.values(locationMap)) {
     await fyo.doc.getNewDoc(ModelNameEnum.Location, { name }).sync();
     t.ok(await fyo.db.exists(ModelNameEnum.Location, name), `${name} exists`);
   }
 
+  // create MaterialReceipt
   const stockMovement = await getStockMovement(
     MovementTypeEnum.MaterialReceipt,
     new Date('2022-11-03T09:57:04.528'),

@@ -1,6 +1,5 @@
-import type { Field, RawValue } from '../../schemas/types';
+import type { Field, FieldType, RawValue } from '../../schemas/types';
 import type DatabaseCore from './core';
-export type { FieldValueMap } from '../../utils/db/types';
 
 export interface GetQueryBuilderOptions {
   offset?: number;
@@ -11,6 +10,11 @@ export interface GetQueryBuilderOptions {
 }
 
 export type ColumnDiff = { added: Field[]; removed: string[] };
+export type FieldValueMap = Record<
+  string,
+  RawValue | undefined | FieldValueMap[]
+>;
+
 export type AlterConfig = {
   schemaName: string;
   diff: ColumnDiff;
@@ -56,5 +60,22 @@ export type DbType =
   | 'binary';
 
 
-export type { RawCustomField } from '../../schemas/types';
-export type { SingleValue } from '../../utils/db/types';
+export type SingleValue<T> = {
+  fieldname: string;
+  parent: string;
+  value: T;
+}[];
+
+export type RawCustomField = {
+  parent: string;
+  label: string;
+  fieldname: string;
+  fieldtype: FieldType;
+  isRequired?: boolean;
+  section?: string;
+  tab?: string;
+  options?: string;
+  target?: string;
+  references?: string;
+  default?: string;
+};

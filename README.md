@@ -7,7 +7,7 @@
 
 <h1>Sotrama Suite</h1>
 
-**Desktop accounting backed by MariaDB**
+**Modern Accounting Made Simple**
 
 > Sotrama Suite is an open-source accounting software by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
@@ -22,14 +22,14 @@
 </div>
 <br />
 <div align="center">
-	<a href="https://github.com/aa790933/Sotrama-Suite">Source code</a>
+	<a href="https://github.com/aa790933/Sotrama-Suite">Website</a>
 	-
 	<a href="https://aa790933.github.io/Sotrama-Suite">Documentation</a>
 </div>
 
 ## Sotrama Suite
 
-Sotrama Suite is open-source desktop accounting software for small businesses. It includes bookkeeping, invoicing, payments, point-of-sale workflows, and financial reports, with company records stored in MariaDB.
+Sotrama Suite is an open-source accounting software aimed at simplifying financial management for businesses. With its clean and user-friendly interface, it streamlines accounting tasks for small and medium-sized enterprises, offering a seamless solution for modern businesses to manage their finances with ease.
 
 <details>
 <summary>Screenshots</summary>
@@ -44,43 +44,41 @@ Sotrama Suite is open-source desktop accounting software for small businesses. I
 
 ### Motivation
 
-Each desktop installation connects to a MariaDB database. To share a company across PCs, configure every installation to use the same database host and company database; the application does not synchronize disconnected copies.
+Sotrama Suite addresses a market gap where small businesses face expensive, complex accounting tools. It offers an intuitive, open-source solution that combines simplicity with essential features, empowering businesses to manage finances effectively—even offline.
 
 ### Key Features
 
-- **Dashboard**: Shows key financial data for the selected company.
-- **Point of Sale**: Supports retail sales through the integrated POS workflow.
-- **MariaDB storage**: Stores company records in a database that can run locally or on a reachable LAN host.
-- **Double-entry accounting**: Records accounting transactions across debit and credit accounts.
+- **Dashboard**: Provides an overview of key financial data and performance metrics.
+- **Point of Sale**: Simplifies retail transactions with an integrated POS system for easy sales processing.
+- **Works Offline**: Enables users to continue working without an internet connection and sync later.
+- **Double-entry accounting**: Ensures accurate financial tracking by recording each transaction in two accounts.
 - **Entries**
-  - **Invoicing**: Create and manage sales and purchase invoices.
-  - **Billing**: Record bills and track payments.
+  - **Invoicing**: Allows businesses to create and manage professional invoices effortlessly.
+  - **Billing**: Billing processes by generating bills and tracking payments.
   - **Payments**: Records and tracks payments received and made.
-  - **Journal Entries**: Record adjustments and other general-ledger transactions.
+  - **Journal Entries**: Records financial transactions in the general ledger with detailed notes and adjustments.
 - **Financial Reports**
-  - **General Ledger**: Review posted transactions by account.
-  - **Profit and Loss Statement**: Review income and expenses for a period.
-  - **Balance Sheet**: Review assets, liabilities, and equity at a point in time.
-  - **Trial Balance**: Compare debit and credit balances across accounts.
+  - **General Ledger**: Centralized record of all financial transactions, providing a comprehensive view of accounts.
+  - **Profit and Loss Statement**: Summarizes revenues, costs, and expenses to show business profitability.
+  - **Balance Sheet**: Displays a company’s assets, liabilities, and equity at a specific point in time.
+  - **Trial Balance**: Verifies the accuracy of accounting records by ensuring that debits and credits are balanced.
     <br/>
 
 ### Under the Hood
 
-- **Vue.js**: Renders the application's interface and components.
+- **Vue.js**: Vue.js powers the front-end of Sotrama Suite, enabling a reactive and component-based UI. It ensures seamless interactions and dynamic updates, giving users a modern, responsive experience.
 
-- **Electron**: Packages the desktop application for Windows, macOS, and Linux.
+- **Electron**: Electron is used to package Sotrama Suite as a standalone desktop application, allowing it to run offline and provide a native-like experience across Windows, macOS, and Linux.
 
-- **MariaDB**: Stores company data in a database on the same computer or on a reachable LAN host.
-
-- **Rust sidecar (opt-in)**: Provides an alternate MariaDB data layer while compatibility and recovery checks continue. The TypeScript database implementation remains the default.
+- **MariaDB**: Sotrama Suite uses MariaDB as its database backend. All financial data, transactions, and configurations are stored in a MariaDB database on the user's machine.
 
 ## Production Setup
 
 ### Manual
 
-Download and install the latest release for your platform from the [releases page](https://github.com/aa790933/Sotrama-Suite/releases).
+Download and install the latest release for your platform from the [releases page](https://github.com/aa790933/Sotrama-Suite/releases) .
 
-### Using Homebrew (macOS)
+### Using Homebrew (for MacOS and Linux)
 
 ```zsh
 brew install --cask sotrama-suite
@@ -96,7 +94,10 @@ brew install --cask sotrama-suite
 
 ### Pre-requisites
 
-Use Node.js 24.x and Corepack. The package declares Yarn 4.7.0, so use the checked-in package manager version instead of installing Yarn Classic globally.
+To get the dev environment up and running you need to first set up Node.js `v22.12.0` and npm. For this, we suggest using
+[nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+Next, you will need to install [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable).
 
 ### Clone and Run
 
@@ -110,11 +111,8 @@ git clone https://github.com/aa790933/Sotrama-Suite.git
 # change directory
 cd Sotrama-Suite
 
-# enable the package manager declared by package.json
-corepack enable
-
-# install dependencies from the checked-in lockfile
-yarn install
+# install dependencies
+yarn
 ```
 
 To run Sotrama Suite in development mode (with hot reload, etc):
@@ -157,7 +155,7 @@ computer) check the _Building_ section at
 
 So to build for linux you could use the `--linux` flag like so: `yarn build --linux`.
 
-## Contribute to Sotrama Suite
+## Want to Just Try Out or Contribute?
 
 If you want to contribute to Sotrama Suite, please check our [Contribution Guidelines](.github/CONTRIBUTING.md). There are many ways you can contribute even if you don't code:
 

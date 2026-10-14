@@ -1,13 +1,13 @@
-const path = require('node:path');
+import path from 'path';
 
 /**
  * Maps an app:// URL onto a file under dist_electron/build/src.
- * Vite emits both app://assets/... and app://./index.html; extensionless SPA
- * routes fall back to index.html. Both separator styles are normalized before
- * containment checks so Windows traversal strings are rejected on every OS.
  *
- * This stays in the Electron host: it is called for every protocol request and
- * spawning Rust for path resolution would add latency without domain value.
+ * Vite emits asset references like `app://assets/index-HASH.js` (no leading
+ * slash), while the entry point is loaded as `app://./index.html`. SPA routes
+ * like `app://./settings` or `app:///list/Account` have no file extension
+ * and must fallback to `src/index.html` so Vue Router can handle them.
+ * The fallback preserves asset resolution and blocks path traversal.
  */
 export function resolveAppFilePath(requestUrl: string): string {
   const baseDir = path.join(__dirname, 'src');
@@ -18,6 +18,8 @@ export function resolveAppFilePath(requestUrl: string): string {
 
   if (url.host && url.host !== '.' && url.host !== '') {
     hostPart = url.host;
+  } else if (url.host === '.' || url.host === '') {
+    hostPart = '';
   }
 
   if (url.host === '.' && url.pathname === '/') {
@@ -41,10 +43,10 @@ export function resolveAppFilePath(requestUrl: string): string {
     return path.join(baseDir, 'index.html');
   }
 
-  const portableHost = decodedHost.replace(/\\/g, '/');
-  const portablePath = decodedPath.replace(/\\/g, '/');
-  const cleanPath = portablePath.replace(/^\/+/, '');
-  const filePath = path.join(baseDir, portableHost, cleanPath);
+  const cleanPath = decodedPath.replace(/^\/+/, '');
+  const relative = path.join(decodedHost, cleanPath);
+  const filePath = path.join(baseDir, relative);
+
   const normalized = path.normalize(filePath);
   if (!normalized.startsWith(baseDir + path.sep) && normalized !== baseDir) {
     return path.join(baseDir, 'index.html');
@@ -54,7 +56,8 @@ export function resolveAppFilePath(requestUrl: string): string {
     return path.join(normalized, 'index.html');
   }
 
-  if (!path.extname(normalized)) {
+  const ext = path.extname(normalized);
+  if (!ext) {
     return path.join(baseDir, 'index.html');
   }
 

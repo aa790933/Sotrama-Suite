@@ -7,27 +7,10 @@
  */
 
 import { SchemaMap } from 'schemas/types';
-import type { RawValue } from 'schemas/types';
 
 type UnknownMap = Record<string, unknown>;
-
-/**
- * JSON-compatible database values shared by the Electron router, Rust IPC
- * adapter, renderer, and legacy backend. This contract must not depend on
- * either backend implementation.
- */
-export type FieldValueMap = Record<
-  string,
-  RawValue | undefined | FieldValueMap[]
->;
-
-/** Raw single-value rows shared by database adapters and the document handler. */
-export type SingleValue<T> = {
-  fieldname: string;
-  parent: string;
-  value: T;
-}[];
 export abstract class DatabaseBase {
+  // Create
   abstract insert(
     schemaName: string,
     fieldValueMap: UnknownMap
@@ -49,6 +32,7 @@ export abstract class DatabaseBase {
     ...fieldnames: ({ fieldname: string; parent?: string } | string)[]
   ): Promise<{ fieldname: string; parent: string; value: unknown }[]>;
 
+  // Update
   abstract rename(
     schemaName: string,
     oldName: string,
@@ -57,6 +41,7 @@ export abstract class DatabaseBase {
 
   abstract update(schemaName: string, fieldValueMap: UnknownMap): Promise<void>;
 
+  // Delete
   abstract delete(schemaName: string, name: string): Promise<void>;
   
   abstract deleteAll(schemaName:string, filters:QueryFilter): Promise<number>;

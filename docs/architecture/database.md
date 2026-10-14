@@ -9,8 +9,8 @@ The renderer uses the `Database` interface defined by the Fyo core. Its methods 
 
 The production adapter forwards calls through Electron IPC. The main process owns the connection pool, schema migrations, and database credentials. The in-memory adapter exists for tests and deliberately does not emulate MariaDB-specific locking, foreign keys, or information-schema behavior.
 
-## Rust implementation
+## Database implementation
 
-`rust-backend/src/database` separates connection-pool configuration, CRUD operations, SQL generation, schema migration, legacy patches, and backup/restore. SQL values are bound as parameters. Identifiers are validated and quoted by the query helpers because SQL parameters cannot represent table or column names.
+The TypeScript database implementation owns connection management, CRUD operations, SQL generation, schema migration, legacy patches, and the application's backup/restore workflow. SQL values must be bound as parameters. Dynamic identifiers must be validated against trusted schema metadata and quoted safely because SQL parameters cannot represent table or column names.
 
-MariaDB remains the authoritative store. Each desktop installation runs its own sidecar and connects to the configured host; the sidecar is not a database server.
+MariaDB is the authoritative store. Each desktop connects to the configured database host; the Electron application is a client and is not itself a database server. For multi-PC deployments, each desktop must use the same company database and suitable least-privilege database credentials.

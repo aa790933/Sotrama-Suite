@@ -12,9 +12,8 @@ This reference links the main implementation boundaries. The source code and tes
 | Application database interface | `fyo/database/Database.ts` |
 | TypeScript MariaDB implementation | `backend/database/core.ts` |
 | Electron IPC router | `main/ipc/router.ts` |
-| Rust sidecar client | `main/ipc/rustBackendClient.ts` |
-| Rust database implementation | `rust-backend/src/database/` |
+| MariaDB connection and database implementation | `backend/database/core.ts` |
 | Shared document schemas | `schemas/` |
-| Rust integration workflow | `.github/workflows/rust-backend.yml` |
+| Application build workflow | `.github/workflows/build.yml` |
 
 See [architecture](/architecture/) for the boundaries between these components and [development setup](/development/setup) for local commands.

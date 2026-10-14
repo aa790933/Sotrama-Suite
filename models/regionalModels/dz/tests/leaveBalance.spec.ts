@@ -123,7 +123,7 @@ test('Annual leave with insufficient balance is blocked at submit', async (t) =>
     'seed duration = 10 inclusive days'
   );
 
-  // (b) Sufficient balance: Feb 10 -> Feb 21 = 12 days.
+  // ---- (b) Sufficient balance: Feb 10 -> Feb 21 = 12 days. ----
   // remaining = 30 - 10(used) = 20; 12 <= 20 -> allowed; balance decreases to 8.
   const lb = fyo.doc.getNewDoc('LeaveApplication', {
     employee: emp.name,
@@ -140,7 +140,7 @@ test('Annual leave with insufficient balance is blocked at submit', async (t) =>
     'remaining balance decreased to 8 after B submits (30 - 10 seed - 12 B)'
   );
 
-  // (a) Insufficient balance: Mar 1 -> Mar 20 = 20 days.
+  // ---- (a) Insufficient balance: Mar 1 -> Mar 20 = 20 days. ----
   // remaining is now 8 (seed 10 + B 12 = 22 used); 20 > 8 -> BLOCKED.
   const lc = fyo.doc.getNewDoc('LeaveApplication', {
     employee: emp.name,

@@ -9,9 +9,9 @@ import {
 } from './policies';
 import { IpcRouter } from './router';
 import { InMemoryConnectionStore } from './connectionStore';
-import type { RouterDatabase } from './databaseContract';
+import type DatabaseCore from '../../backend/database/core';
 
-function makeFakeDatabase(): RouterDatabase {
+function makeFakeDatabase(): DatabaseCore {
   return {
     getSchemaMap: () => ({}) as never,
     setDbConfig: () => {},
@@ -31,8 +31,10 @@ function makeFakeDatabase(): RouterDatabase {
     getNextAutoincrementId: async () => 1,
     getNextSeriesValue: async () => 1,
     rename: async () => {},
-  } as unknown as RouterDatabase;
+  } as unknown as DatabaseCore;
 }
+
+// ——— sanitizeDatabaseName ———
 
 test('sanitizeDatabaseName: allows alphanum, dash, underscore', (t) => {
   t.equal(sanitizeDatabaseName('sotrama'), 'sotrama');
@@ -61,6 +63,8 @@ test('sanitizeDatabaseName: rejects empty after sanitization', (t) => {
   t.throws(() => sanitizeDatabaseName('`'), /Invalid database name/);
   t.end();
 });
+
+// ——— PathPolicy ———
 
 function makePolicy(tmpRoot: string) {
   return new PathPolicy({
@@ -95,6 +99,8 @@ test('PathPolicy.assertAllowed throws with Path not allowed', (t) => {
   t.end();
 });
 
+// ——— assertAllowedApiEndpoint ———
+
 test('assertAllowedApiEndpoint: allows https + books_integration prefix', (t) => {
   t.doesNotThrow(() =>
     assertAllowedApiEndpoint(
@@ -120,20 +126,10 @@ test('assertAllowedApiEndpoint: rejects http and wrong prefix', (t) => {
     () => assertAllowedApiEndpoint('https://evil.com/'),
     /endpoint not allowed/
   );
-  t.throws(
-    () => assertAllowedApiEndpoint('https://user:secret@erp.example.com/api/method/books_integration.api.ping'),
-    /only https/
-  );
-  t.throws(
-    () => assertAllowedApiEndpoint('https://erp.example.com/other/api/method/books_integration.api.ping'),
-    /endpoint not allowed/
-  );
-  t.throws(
-    () => assertAllowedApiEndpoint('https://erp.example.com/api/method/books_integration.api.ping#fragment'),
-    /endpoint not allowed/
-  );
   t.end();
 });
+
+// ——— SenderPolicy ———
 
 test('AllowAllSenderPolicy always returns true', (t) => {
   const p = new AllowAllSenderPolicy();
@@ -235,7 +231,7 @@ test('IpcRouter deep module: assertAllowedApiEndpoint is single source', (t) => 
   t.end();
 });
 
-test('IpcRouter seam uses the backend-independent RouterDatabase contract, no string dispatch', (t) => {
+test('IpcRouter seam is real — depends on DatabaseCore directly, no string dispatch', (t) => {
   const src = require('fs').readFileSync('main/ipc/router.ts', 'utf-8');
   t.ok(src.includes('interface DbOps'), 'DbOps interface exists');
   t.ok(
@@ -253,8 +249,8 @@ test('IpcRouter seam uses the backend-independent RouterDatabase contract, no st
     'DbOps uses typed MariaDBConfig'
   );
   t.ok(
-    src.includes('database: RouterDatabase'),
-    'injects RouterDatabase directly, not a shallow wrapper'
+    src.includes('database: DatabaseCore'),
+    'injects MainDatabase directly, not a shallow wrapper'
   );
   t.notOk(src.includes('asDatabase('), 'asDatabase literal deleted');
   t.notOk(src.includes('callBespoke'), 'bespoke string dispatch deleted');

@@ -3,23 +3,8 @@ import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 import { Main } from '../main';
 import { rendererLog } from './helpers';
 import { emitMainProcessError } from 'backend/helpers';
-import { closeRustApiClient } from './rustApiClient';
 
 export default function registerAppLifecycleListeners(main: Main) {
-  let apiClientShutdownStarted = false;
-  let apiClientShutdownComplete = false;
-  app.on('before-quit', (event) => {
-    if (apiClientShutdownComplete) return;
-    event.preventDefault();
-    if (apiClientShutdownStarted) return;
-    apiClientShutdownStarted = true;
-    void closeRustApiClient()
-      .catch(() => undefined)
-      .finally(() => {
-        apiClientShutdownComplete = true;
-        app.quit();
-      });
-  });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit();

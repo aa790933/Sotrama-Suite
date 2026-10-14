@@ -1,15 +1,10 @@
-import {
-  sendRustApiRequest,
-  sendRustTelemetryRequest,
-  type ApiRequestOptions,
-} from './rustApiClient';
+import fetch, { RequestInit } from 'node-fetch';
 
-/** Thin Electron-side adapter; HTTPS execution and response parsing live in Rust. */
-export function sendAPIRequest(endpoint: string, options?: ApiRequestOptions): Promise<unknown> {
-  return sendRustApiRequest(endpoint, options);
-}
-
-/** Error telemetry has its own purpose and HTTPS policy; it cannot widen ERPNext IPC. */
-export function sendTelemetryRequest(endpoint: string, options?: ApiRequestOptions): Promise<unknown> {
-  return sendRustTelemetryRequest(endpoint, options);
+export async function sendAPIRequest(
+  endpoint: string,
+  options: RequestInit | undefined
+) {
+  return (await fetch(endpoint, options)).json() as unknown as {
+    [key: string]: string | number | boolean;
+  }[];
 }

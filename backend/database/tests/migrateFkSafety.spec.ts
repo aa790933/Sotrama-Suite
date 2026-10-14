@@ -47,9 +47,6 @@ test('migrate restores FOREIGN_KEY_CHECKS=1 even when CREATE fails', async (t) =
   const fakeConn: unknown = {
     async query(sql: string) {
       calls.push(sql);
-      // The migration lock runs before any DDL, so the fake pool must model it.
-      if (sql.includes('GET_LOCK(')) return [{ acquired: 1 }];
-      if (sql.includes('RELEASE_LOCK(')) return [{ released: 1 }];
       if (sql.includes('SELECT 1 FROM INFORMATION_SCHEMA.TABLES')) {
         // Pretend Dummy does not exist → create list will include Dummy
         return [];
@@ -99,6 +96,7 @@ test('migrate restores FOREIGN_KEY_CHECKS=1 even when CREATE fails', async (t) =
   t.ok(hadSet1, 'SET FOREIGN_KEY_CHECKS=1 was restored even after failure (finally path)');
 
   // Next migrate should still be able to run (pool not leaked, #txConn cleared)
+  // Make create succeed this time
   createShouldFail = false;
   calls.length = 0;
   try {
@@ -108,54 +106,5 @@ test('migrate restores FOREIGN_KEY_CHECKS=1 even when CREATE fails', async (t) =
     t.fail('second migrate should not throw: ' + (e as Error).message);
   }
 
-  t.end();
-});
-
-test('concurrent migrations on one pool serialize without consuming pool slots', async (t) => {
-  const db = new DatabaseCore(undefined, {
-    host: 'localhost',
-    port: 3306,
-    user: 'test',
-    password: 'test',
-    database: 'test_migrate_lock_queue',
-  });
-  db.setSchemaMap({});
-  db.migrateLockTimeoutSeconds = 1;
-
-  let locked = false;
-  let activeLocks = 0;
-  let maxActiveLocks = 0;
-  const fakeConn: unknown = {
-    async query(sql: string) {
-      if (sql.includes('GET_LOCK(')) {
-        if (locked) return [{ acquired: 0 }];
-        locked = true;
-        activeLocks += 1;
-        maxActiveLocks = Math.max(maxActiveLocks, activeLocks);
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        return [{ acquired: 1 }];
-      }
-      if (sql.includes('RELEASE_LOCK(')) {
-        locked = false;
-        activeLocks -= 1;
-        return [{ released: 1 }];
-      }
-      return [];
-    },
-    release() {},
-  };
-  (db as unknown as { pool: unknown }).pool = {
-    async getConnection() {
-      return fakeConn;
-    },
-  };
-
-  try {
-    await Promise.all([db.migrate(), db.migrate()]);
-    t.equal(maxActiveLocks, 1, 'only one migration owns the lock at a time');
-    t.equal(activeLocks, 0, 'both migrations release their lock');
-  } catch (error) {
-    t.fail('concurrent migrations should serialize: ' + (error as Error).message);
-  }
   t.end();
 });

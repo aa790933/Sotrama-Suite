@@ -1,3 +1,4 @@
+import { RawCustomField } from 'backend/database/types';
 import { cloneDeep } from 'lodash';
 import { getListFromMap, getMapFromList } from 'utils';
 import regionalSchemas from './regional';
@@ -6,7 +7,6 @@ import type {
   DynamicLinkField,
   Field,
   OptionField,
-  RawCustomField,
   Schema,
   SchemaMap,
   SchemaStub,

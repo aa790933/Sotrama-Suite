@@ -5,22 +5,20 @@ description: How the Sotrama Suite desktop application is structured.
 
 # Architecture
 
-Sotrama Suite combines an Electron desktop host, a Vue renderer, and a MariaDB-backed application model. The renderer requests privileged work through a typed Electron IPC boundary; database connections and operating-system operations stay in the main process.
+Sotrama Suite combines an Electron desktop host, a Vue renderer, TypeScript application services, and MariaDB persistence. The renderer requests privileged work through a narrow Electron IPC boundary; database connections and operating-system operations stay in the main process.
 
 ```text
 Vue renderer
-    │ typed database calls
+    │ allow-listed IPC methods
     ▼
-Electron preload and IPC router
-    ├── host operations: files, dialogs, printing, provisioning
-    └── database adapter
-          ├── TypeScript DatabaseCore (current default)
-          └── Rust sidecar (explicit opt-in)
-                    │ JSON-RPC over stdio
-                    ▼
-                  MariaDB
+Electron preload
+    ▼
+Electron main process and IPC router
+    ├── host operations: files, dialogs, printing, provisioning, updates
+    └── TypeScript database services
+              │ MariaDB driver
+              ▼
+            MariaDB
 ```
 
-The Rust sidecar communicates over standard input and output using line-delimited JSON-RPC. Standard output is reserved for protocol messages; diagnostic logging goes to standard error. The sidecar does not expose a network port.
-
-The Rust adapter is an opt-in integration path until migration and data-conversion parity is demonstrated against populated databases on supported platforms. See [Rust backend status](/architecture/rust-backend), [database layer](/architecture/database), and [IPC protocol](/architecture/ipc).
+The Electron main process is the trust boundary for privileged operations and owns database connectivity. The renderer must not open database connections or receive database credentials. See [application boundaries](/architecture/application-boundaries), [database layer](/architecture/database), and [IPC protocol](/architecture/ipc).

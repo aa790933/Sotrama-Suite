@@ -20,6 +20,7 @@ test('IpcDatabaseAdapter — typed transport for CRUD subset', async (t) => {
       },
       async call(method: string, ...args: unknown[]) {
         calls.push({ method, args });
+        // Return minimal raw maps for CRUD
         if (method === 'insert') return { data: args[1] } as any;
         if (method === 'get') return { data: { name: args[1], email: 'a@b.com' } } as any;
         if (method === 'getAll') return { data: [{ name: 'Test', email: 'a@b.com' }] } as any;

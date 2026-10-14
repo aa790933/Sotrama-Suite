@@ -2,27 +2,12 @@ name: Publish
 
 on: workflow_dispatch
 
-permissions:
-  contents: write
-
 jobs:
   build-macos:
     runs-on: macos-15-intel
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust-backend
-
-      - name: Build Rust backend
-        working-directory: rust-backend
-        run: cargo build --locked --release
 
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
@@ -32,13 +17,11 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Enable Corepack and prepare Yarn 4.7.0
-        run: |
-          corepack enable
-          corepack prepare yarn@4.7.0 --activate
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Set Error Log Creds
         env:
@@ -71,11 +54,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --mac --publish always
-
-      - name: Verify Rust backend is included in the packaged app
-        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Tar files
         run: tar -cvf dist-macOS.tar dist_electron
@@ -92,18 +71,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust-backend
-
-      - name: Build Rust backend
-        working-directory: rust-backend
-        run: cargo build --locked --release
-
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 
@@ -112,13 +79,11 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Enable Corepack and prepare Yarn 4.7.0
-        run: |
-          corepack enable
-          corepack prepare yarn@4.7.0 --activate
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Set Error Log Creds
         env:
@@ -151,11 +116,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --mac --publish always
-
-      - name: Verify Rust backend is included in the packaged app
-        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Tar files
         run: tar -cvf dist-macOS-arm.tar dist_electron
@@ -172,37 +133,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust-backend
-
-      - name: Install Rust build dependencies
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y pkg-config libssl-dev
-
-      - name: Build Rust backend
-        working-directory: rust-backend
-        run: cargo build --locked --release
-
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-        
+
 
       - name: Setup Node.js LTS (24.x)
         uses: actions/setup-node@v7
         with:
           node-version: '24.x'
 
-      - name: Enable Corepack and prepare Yarn 4.7.0
-        run: |
-          corepack enable
-          corepack prepare yarn@4.7.0 --activate
-        
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Set Error Log Creds
         env:
@@ -219,11 +163,7 @@ jobs:
       - name: Run build
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         run: yarn build --linux --publish always
-
-      - name: Verify Rust backend is included in the packaged app
-        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Tar files
         run: tar -cvf dist-linux.tar dist_electron
@@ -243,18 +183,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust-backend
-
-      - name: Build Rust backend
-        working-directory: rust-backend
-        run: cargo build --locked --release
-
       - name: Enforce HTTPS for Git
         run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 
@@ -263,13 +191,11 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Enable Corepack and prepare Yarn 4.7.0
-        run: |
-          corepack enable
-          corepack prepare yarn@4.7.0 --activate
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Set Error Log Creds
         env:
@@ -302,7 +228,6 @@ jobs:
         uses: nick-fields/retry@v4
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          SOTRAMA_REQUIRE_RUST_BACKEND: '1'
         with:
           max_attempts: 3
           retry_wait_seconds: 60
@@ -311,9 +236,6 @@ jobs:
           shell: bash
           command: |
             yarn build --win --publish never
-
-      - name: Verify Rust backend is included in the packaged app
-        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Upload installers to GitHub release
         env:

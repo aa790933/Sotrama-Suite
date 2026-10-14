@@ -33,6 +33,7 @@ test('Memory adapter — typed seam proof: insert/get/getAll/exists', async (t) 
   t.ok(await fyo.db.exists('Party', 'TestParty'), 'exists true for inserted');
   t.notOk(await fyo.db.exists('Party', 'Missing'), 'exists false for missing');
 
+  // Update via same typed seam
   await fyo.db.update('Party', { name: 'TestParty', phone: '123' } as never);
   const updated = await fyo.db.get('Party', 'TestParty');
   t.equal(updated.phone, '123', 'update via typed seam preserved');

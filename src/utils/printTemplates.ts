@@ -415,6 +415,7 @@ async function getPrintTemplateDocValues(doc: Doc, fieldnames?: string[]) {
     fields = fields.filter((f) => fieldnames.includes(f.fieldname));
   }
 
+  // Set Formatted Doc Data
   for (const field of fields) {
     const { fieldname, fieldtype, meta } = field;
     if (fieldtype === FieldTypeEnum.Attachment || meta) {
@@ -446,6 +447,7 @@ async function getPrintTemplateDocValues(doc: Doc, fieldnames?: string[]) {
   values.entryType = doc.schema.name;
   values.entryLabel = doc.schema.label;
 
+  // Set Formatted Doc Link Data
   await doc.loadLinks();
   const links: PrintTemplateData = {};
   for (const [linkName, linkDoc] of Object.entries(doc.links ?? {})) {

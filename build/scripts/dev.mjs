@@ -3,7 +3,7 @@ import esbuild from 'esbuild';
 import { $ } from 'execa';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getMainProcessCommonConfig } from './helpers.ts';
+import { getMainProcessCommonConfig } from './helpers.mjs';
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 process.env['NODE_ENV'] = 'development';

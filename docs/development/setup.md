@@ -9,7 +9,6 @@ description: Prepare a local checkout for Sotrama Suite development.
 
 - Git
 - Node.js 24.x and Corepack, using the Yarn version declared by `package.json`
-- Rust stable and Cargo for the Rust sidecar
 - MariaDB for database integration work
 - Platform build prerequisites required by Electron and its native dependencies
 
@@ -29,13 +28,4 @@ yarn typecheck
 yarn test
 ```
 
-For Rust changes:
-
-```sh
-cd rust-backend
-cargo fmt --all -- --check
-cargo clippy --locked --all-targets -- -D warnings
-cargo test --locked
-```
-
-Database integration tests require a MariaDB instance configured with the `TEST_DB_*` variables used by the Rust workflow. Never point migration tests at a production database.
+Database integration tests require a disposable MariaDB instance configured with the `TEST_DB_*` variables used by the test suite. Never point migration tests at a production database.

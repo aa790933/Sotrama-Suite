@@ -1,31 +1,53 @@
-import { existsSync } from 'node:fs';
-import path from 'node:path';
-import { parseRustUtilityJson, runRustUtility } from './rustUtility';
+import fs from 'fs/promises';
+import path from 'path';
+import { TemplateFile } from 'utils/types';
 
-/** Print-template file loading lives in Rust; this module only bridges Electron IPC. */
-export async function getTemplates(posTemplateWidth?: number): Promise<unknown[]> {
-  if (posTemplateWidth !== undefined && !Number.isFinite(posTemplateWidth)) {
-    throw new Error('POS template width must be a finite number');
+export async function getTemplates(posTemplateWidth?: number) {
+  const paths = await getPrintTemplatePaths();
+  if (!paths) {
+    return [];
   }
 
-  const directory = resolveTemplatesDirectory();
-  if (!directory) return [];
+  const templates: TemplateFile[] = [];
+  for (const file of paths.files) {
+    const filePath = path.join(paths.root, file);
+    const template = await fs.readFile(filePath, 'utf-8');
+    const { mtime } = await fs.stat(filePath);
+    const width =
+      file?.split('-')[1]?.split('.')[0] === 'POS'
+        ? (posTemplateWidth ?? 0)
+        : 0;
+    const height = file?.split('-')[1]?.split('.')[0] === 'POS' ? 22 : 0;
 
-  const args = ['--print-templates', '--templates-dir', directory];
-  if (posTemplateWidth !== undefined) {
-    args.push('--pos-template-width', String(posTemplateWidth));
+    templates.push({
+      template,
+      file,
+      modified: mtime.toISOString(),
+      width,
+      height,
+    });
   }
-  const templates = parseRustUtilityJson(await runRustUtility(args), 'print templates');
-  if (!Array.isArray(templates)) {
-    throw new Error('Rust utility returned an invalid print-template list');
-  }
+
   return templates;
 }
 
-function resolveTemplatesDirectory(): string | undefined {
-  const candidates = [
-    process.resourcesPath ? path.resolve(process.resourcesPath, '../templates') : undefined,
-    path.resolve(process.cwd(), 'templates'),
-  ];
-  return candidates.find((candidate) => candidate && existsSync(candidate));
+async function getPrintTemplatePaths(): Promise<{
+  files: string[];
+  root: string;
+} | null> {
+  let root = path.join(process.resourcesPath, `../templates`);
+
+  try {
+    const files = await fs.readdir(root);
+    return { files, root };
+  } catch {
+    root = path.join(__dirname, '..', '..', `templates`);
+  }
+
+  try {
+    const files = await fs.readdir(root);
+    return { files, root };
+  } catch {
+    return null;
+  }
 }
