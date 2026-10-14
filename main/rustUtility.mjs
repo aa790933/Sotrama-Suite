@@ -1,18 +1,13 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
-const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
-
 export function resolveRustUtilityExecutable() {
   const binary = process.platform === 'win32' ? 'sotrama-backend.exe' : 'sotrama-backend';
   const candidates = [
     process.env.SOTRAMA_BACKEND_PATH,
     process.resourcesPath ? path.join(process.resourcesPath, binary) : undefined,
-    path.resolve(moduleDirectory, '../../rust-backend/target/release', binary),
-    path.resolve(moduleDirectory, '../../rust-backend/target/debug', binary),
     path.resolve(process.cwd(), 'rust-backend/target/release', binary),
     path.resolve(process.cwd(), 'rust-backend/target/debug', binary),
   ];

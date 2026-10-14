@@ -1,11 +1,8 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parseRustUtilityJson, runRustUtility } from './rustUtility.mjs';
 
 const LANGUAGE_CODE = /^[A-Za-z0-9_-]{1,32}$/;
-const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
-
 /** Translation parsing and map semantics live in Rust; this is only host IPC glue. */
 export async function getLanguageMap(code) {
   if (typeof code !== 'string' || !LANGUAGE_CODE.test(code)) {
@@ -27,7 +24,6 @@ export async function getLanguageMap(code) {
 function resolveTranslationsDirectory() {
   const candidates = [
     process.resourcesPath ? path.resolve(process.resourcesPath, '../translations') : undefined,
-    path.resolve(moduleDirectory, '../../translations'),
     path.resolve(process.cwd(), 'translations'),
   ];
   const directory = candidates.find((candidate) => candidate && existsSync(candidate));

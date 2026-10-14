@@ -276,7 +276,10 @@ mod tests {
     fn defaults_match_the_typescript_pool_size() {
         let s = PoolSettings::default();
         assert_eq!(s.max_connections, 10, "must match core.ts connectionLimit");
-        assert_eq!(s.min_connections, 0, "the pool should not keep an idle connection by default");
+        assert_eq!(
+            s.min_connections, 0,
+            "the pool should not keep an idle connection by default"
+        );
         assert_eq!(
             s.connect_timeout,
             Duration::from_secs(8),

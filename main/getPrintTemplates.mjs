@@ -1,9 +1,6 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parseRustUtilityJson, runRustUtility } from './rustUtility.mjs';
-
-const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 /** Print-template file loading lives in Rust; this module only bridges Electron IPC. */
 export async function getTemplates(posTemplateWidth) {
@@ -28,7 +25,6 @@ export async function getTemplates(posTemplateWidth) {
 function resolveTemplatesDirectory() {
   const candidates = [
     process.resourcesPath ? path.resolve(process.resourcesPath, '../templates') : undefined,
-    path.resolve(moduleDirectory, '../../templates'),
     path.resolve(process.cwd(), 'templates'),
   ];
   return candidates.find((candidate) => candidate && existsSync(candidate));

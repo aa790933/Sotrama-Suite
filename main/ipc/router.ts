@@ -655,7 +655,7 @@ export class IpcRouter {
     height: number,
     app: Electron.App
   ) {
-    const { saveHtmlAsPdf: fn } = await import('../saveHtmlAsPdf');
+    const { saveHtmlAsPdf: fn } = await import('../saveHtmlAsPdf.js');
     return fn(html, savePath, app as never, width, height);
   }
 
@@ -665,7 +665,7 @@ export class IpcRouter {
     height: number,
     app: Electron.App
   ) {
-    const { printHtmlDocument: fn } = await import('../printHtmlDocument');
+    const { printHtmlDocument: fn } = await import('../printHtmlDocument.js');
     return fn(html, app as never, width, height);
   }
 

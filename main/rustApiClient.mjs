@@ -84,6 +84,8 @@ export class RustApiClient {
     this.pendingBytes = 0;
     this.nextId = 1;
     this.stdoutBuffer = Buffer.alloc(0);
+    this.closing = false;
+    this.closePromise = null;
   }
 
   async request(endpoint, options) {
@@ -95,6 +97,7 @@ export class RustApiClient {
   }
 
   async requestForPurpose(endpoint, options, purpose) {
+    if (this.closing) throw new Error('Rust API service is shutting down');
     const request = validateRequest(endpoint, options, purpose);
     if (this.pending.size >= this.maxPendingRequests) {
       throw new Error(`ERPNext API request limit reached (${this.maxPendingRequests})`);
@@ -230,11 +233,35 @@ export class RustApiClient {
   }
 
   close() {
+    if (this.closePromise) return this.closePromise;
+    this.closing = true;
     const child = this.child;
-    if (!child) return;
-    this.failChild(child, new Error('Rust API service is shutting down'));
-    this.child = null;
-    try { child.kill(); } catch {}
+    if (!child) {
+      this.closePromise = Promise.resolve();
+      return this.closePromise;
+    }
+    this.closePromise = new Promise((resolve) => {
+      let settled = false;
+      let timeout;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        child.removeListener('close', finish);
+        child.removeListener('error', finish);
+        resolve();
+      };
+      child.once('close', finish);
+      child.once('error', finish);
+      timeout = setTimeout(finish, 1500);
+      this.failChild(child, new Error('Rust API service is shutting down'));
+      try {
+        if (!child.kill()) finish();
+      } catch {
+        finish();
+      }
+    });
+    return this.closePromise;
   }
 }
 
@@ -249,7 +276,9 @@ export function sendRustTelemetryRequest(endpoint, options) {
   return sharedClient.requestTelemetry(endpoint, options);
 }
 
-export function closeRustApiClient() {
-  sharedClient?.close();
-  sharedClient = undefined;
+export async function closeRustApiClient() {
+  const client = sharedClient;
+  if (!client) return;
+  await client.close();
+  if (sharedClient === client) sharedClient = undefined;
 }

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock] = await Promise.all([
+const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock, translationRuntime, translationHelpersEsm, translationHelpersCjs, rendererMisc, lifecycle] = await Promise.all([
   read('main/ipc/databaseContract.ts'),
   read('main/ipc/rustDatabaseAdapter.ts'),
   read('main/ipc/router.ts'),
@@ -37,6 +37,11 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('main/contactMothership.ts'),
   read('package.json'),
   read('yarn.lock'),
+  read('fyo/utils/translation.ts'),
+  read('utils/translationHelpers.mjs'),
+  read('utils/translationHelpers.cjs'),
+  read('src/utils/misc.ts'),
+  read('main/registerAppLifecycleListeners.ts'),
 ]);
 
 assert.match(contract, /export interface RouterDatabase/,
@@ -93,6 +98,18 @@ assert.match(utilityBridge, /safeUtilityEnvironment/,
   'Rust utility processes must not inherit database credentials or unrelated secrets');
 assert.doesNotMatch(utilityBridge + translationBridge + templateBridge, /import\.meta\.url/,
   'Rust utility bridges must remain safe when esbuild bundles their ESM sources into the CommonJS Electron host');
+assert.match(translationRuntime, /translationHelpers\.cjs/,
+  'the synchronous TypeScript translation runtime must import a CommonJS-compatible helper');
+assert.match(rendererHandler, /translationHelpers\.cjs/,
+  'the Fyo database handler must import the CommonJS-compatible translation helper');
+assert.match(rendererMisc, /translationHelpers\.cjs/,
+  'the renderer translation metadata import must be safe in the CommonJS test runner');
+assert.match(translationHelpersEsm, /from '\.\/translationHelpers\.cjs'/,
+  'the ESM translation helper must delegate to the CommonJS implementation');
+assert.doesNotMatch(translationHelpersEsm, /function getIndexFormat/,
+  'translation behavior must have one implementation rather than divergent ESM/CommonJS copies');
+assert.equal((workflow.match(/- 'utils\/translationHelpers\.cjs'/g) ?? []).length, 2,
+  'translation helper module-format changes must trigger both Rust workflow path filters');
 assert.match(utilityBridge, /MAX_OUTPUT_BYTES/,
   'Rust utility output must be bounded before JSON parsing');
 assert.match(utilityBridge, /dependencies\.spawnProcess/,
@@ -152,6 +169,8 @@ assert.match(apiClient, /requestTimeoutMs/,
   'the persistent API client must time out requests');
 assert.match(apiClient, /Rust service was restarted/,
   'the API bridge must terminate timed-out work instead of leaving network requests running');
+assert.match(apiClient, /child\.once\('close', finish\)/,
+  'Rust API shutdown must wait for child termination rather than only send a kill signal');
 assert.match(apiClient, /Buffer\.concat\(\[this\.stdoutBuffer, fragment\]\)/,
   'the API bridge must bound individual frames without rejecting a chunk containing multiple responses');
 assert.doesNotMatch(apiBridge, /node-fetch/,
@@ -160,6 +179,10 @@ assert.match(router, /from '\.\.\/api\.cjs'/,
   'the IPC router must load the API bridge through the CommonJS-compatible adapter');
 assert.match(contactMothership, /sendTelemetryRequest\(errorLogUrl/,
   'main-process error telemetry must use the Rust HTTPS transport');
+assert.match(lifecycle, /event\.preventDefault\(\)/,
+  'Electron must wait for the Rust HTTPS child to shut down before completing application quit');
+assert.match(lifecycle, /apiClientShutdownComplete[\s\S]*?app\.quit\(\)/,
+  'Rust HTTPS shutdown must re-enter the quit flow only after the child cleanup settles');
 assert.doesNotMatch(contactMothership, /node-fetch/,
   'the legacy Node fetch implementation must be removed from the telemetry sender');
 const manifest = JSON.parse(packageManifest);
@@ -175,7 +198,7 @@ assert.match(router, /from '\.\.\/getPrintTemplates\.cjs'/,
   'the IPC router must load the template bridge compatibly with the CommonJS test runner');
 assert.match(policies, /url\.pathname\.startsWith\('\/api\/method\/books_integration\.api\.'\)/,
   'the Electron IPC endpoint policy must validate the exact URL path, not a substring');
-for (const behavior of ['correlates responses', 'before spawning', 'pending request cap', 'times out', 'malformed service frames']) {
+for (const behavior of ['correlates responses', 'before spawning', 'pending request cap', 'times out', 'malformed service frames', 'unknown response IDs', 'process exits and recovers', 'telemetry HTTPS POSTs']) {
   assert.ok(apiClientTests.includes(behavior), `Rust API client regression coverage must include ${behavior}`);
 }
 assert.match(testRunner, /verify-rust-api-client\.mjs/,

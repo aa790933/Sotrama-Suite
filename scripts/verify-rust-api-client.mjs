@@ -114,6 +114,29 @@ test('Rust API client times out and rejects pending calls on shutdown', async ()
   await assert.rejects(pending, /shutting down/);
 });
 
+test('Rust API client shutdown waits for the child close event and blocks new requests', async () => {
+  const child = fakeChild();
+  child.kill = () => { child.killed = true; return true; };
+  const client = new RustApiClient({
+    requestTimeoutMs: 1000,
+    resolveExecutable: () => 'sotrama-backend-test',
+    baseEnv: { PATH: 'safe-path' },
+    spawnProcess: () => child,
+  });
+  const pending = client.request(endpoint, {});
+  await new Promise((resolve) => setImmediate(resolve));
+  const closing = client.close();
+  await assert.rejects(pending, /shutting down/);
+  await assert.rejects(client.request(endpoint, {}), /shutting down/);
+  let closeResolved = false;
+  void closing.then(() => { closeResolved = true; });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(closeResolved, false, 'shutdown must wait for process termination');
+  child.emit('close', 0, null);
+  await closing;
+  assert.equal(closeResolved, true);
+});
+
 test('Rust API client rejects malformed service frames without leaking payloads', async () => {
   const { client, child } = makeClient();
   const pending = client.request(endpoint, {});

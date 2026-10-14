@@ -6,7 +6,20 @@ import { emitMainProcessError } from 'backend/helpers';
 import { closeRustApiClient } from './rustApiClient.cjs';
 
 export default function registerAppLifecycleListeners(main: Main) {
-  app.on('before-quit', closeRustApiClient);
+  let apiClientShutdownStarted = false;
+  let apiClientShutdownComplete = false;
+  app.on('before-quit', (event) => {
+    if (apiClientShutdownComplete) return;
+    event.preventDefault();
+    if (apiClientShutdownStarted) return;
+    apiClientShutdownStarted = true;
+    void closeRustApiClient()
+      .catch(() => undefined)
+      .finally(() => {
+        apiClientShutdownComplete = true;
+        app.quit();
+      });
+  });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit();
