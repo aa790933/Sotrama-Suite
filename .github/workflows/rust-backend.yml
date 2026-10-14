@@ -41,8 +41,7 @@ on:
       - 'fyo/database/Database.ts'
       - 'fyo/core/dbHandler.ts'
       - 'fyo/utils/translation.ts'
-      - 'utils/translationHelpers.mjs'
-      - 'utils/translationHelpers.cjs'
+      - 'utils/translationHelpers.ts'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
       - 'scripts/verify-rust-backend-boundaries.mjs'
@@ -90,8 +89,7 @@ on:
       - 'fyo/database/Database.ts'
       - 'fyo/core/dbHandler.ts'
       - 'fyo/utils/translation.ts'
-      - 'utils/translationHelpers.mjs'
-      - 'utils/translationHelpers.cjs'
+      - 'utils/translationHelpers.ts'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
       - 'scripts/verify-rust-backend-boundaries.mjs'
@@ -171,7 +169,7 @@ jobs:
       - name: Verify translation and CSV regressions
         run: |
           node scripts/verify-csv-parser.mjs
-          node scripts/verify-translation-generator.mjs
+          node --experimental-strip-types scripts/verify-translation-generator.mjs
 
       - name: Run focused Electron IPC and host regressions
         shell: bash

@@ -1,16 +1,14 @@
 /** Properties of a schema which are to be translated, irrespective of nesting. */
-const schemaTranslateables = ['label', 'description', 'placeholder', 'section', 'tab'];
+export const schemaTranslateables = ['label', 'description', 'placeholder', 'section', 'tab'];
 
 /**
  * Convert interpolated strings to indexed placeholders for translation catalogs.
- * @param {unknown} inp
- * @returns {string}
  */
-function getIndexFormat(inp) {
-  let string;
-  let snippets;
+export function getIndexFormat(inp: unknown): string {
+  let string: string | undefined;
+  let snippets: string[] | undefined;
   if (typeof inp === 'string') string = inp;
-  else if (Array.isArray(inp)) snippets = inp;
+  else if (Array.isArray(inp) && inp.every((part) => typeof part === 'string')) snippets = inp;
   else throw new Error(`invalid input ${String(inp)} of type ${typeof inp}`);
   if (snippets === undefined) snippets = getSnippets(string);
   if (snippets.length === 1) return snippets[0];
@@ -22,8 +20,7 @@ function getIndexFormat(inp) {
   return str;
 }
 
-/** @param {string} str @returns {string[]} */
-function getSnippets(str) {
+export function getSnippets(str: string): string[] {
   let start = 0;
   const snippets = [...str.matchAll(/\${[^}]+}/g)].map((match) => {
     const end = match.index;
@@ -36,18 +33,10 @@ function getSnippets(str) {
   return snippets;
 }
 
-/** @param {string} str @returns {string} */
-function getWhitespaceSanitized(str) {
+export function getWhitespaceSanitized(str: string): string {
   return str.replace(/\s+/g, ' ').trim();
 }
 
-/** @param {string} str @returns {number[]} */
-function getIndexList(str) {
-  return [...str.matchAll(/\${([^}]+)}/g)].map(([, index]) => parseInt(index));
+export function getIndexList(str: string): number[] {
+  return [...str.matchAll(/\${([^}]+)}/g)].map(([, index]) => parseInt(index, 10));
 }
-
-exports.schemaTranslateables = schemaTranslateables;
-exports.getIndexFormat = getIndexFormat;
-exports.getSnippets = getSnippets;
-exports.getWhitespaceSanitized = getWhitespaceSanitized;
-exports.getIndexList = getIndexList;

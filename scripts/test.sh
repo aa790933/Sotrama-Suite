@@ -10,7 +10,7 @@ fi
 
 export IS_TEST=true
 node ./scripts/verify-csv-parser.mjs || exit $?
-node ./scripts/verify-translation-generator.mjs || exit $?
+node --experimental-strip-types ./scripts/verify-translation-generator.mjs || exit $?
 node --experimental-strip-types ./scripts/verify-rust-utility-bridge.mjs || exit $?
 node --experimental-strip-types ./scripts/verify-rust-api-client.mjs || exit $?
 node --experimental-strip-types ./scripts/verify-main-external-url.mjs || exit $?

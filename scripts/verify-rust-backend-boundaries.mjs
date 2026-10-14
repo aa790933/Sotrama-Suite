@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -8,7 +8,7 @@ const [externalUrlPolicy, printDocumentPolicy] = await Promise.all([
   read('main/printDocumentPolicy.ts'),
 ]);
 
-const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock, translationRuntime, translationHelpersEsm, translationHelpersCjs, rendererMisc, lifecycle, electronBuilderConfig] = await Promise.all([
+const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock, translationRuntime, translationHelpers, rendererMisc, lifecycle, electronBuilderConfig] = await Promise.all([
   read('main/ipc/databaseContract.ts'),
   read('main/ipc/rustDatabaseAdapter.ts'),
   read('main/ipc/router.ts'),
@@ -43,8 +43,7 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('package.json'),
   read('yarn.lock'),
   read('fyo/utils/translation.ts'),
-  read('utils/translationHelpers.mjs'),
-  read('utils/translationHelpers.cjs'),
+  read('utils/translationHelpers.ts'),
   read('src/utils/misc.ts'),
   read('main/registerAppLifecycleListeners.ts'),
   read('electron-builder-config.mjs'),
@@ -99,23 +98,21 @@ assert.match(translations, /MAX_TRANSLATION_BYTES/,
 assert.match(translations, /unterminated quoted field/,
   'malformed CSV quoting must fail closed');
 assert.doesNotMatch(translationBridge, /from ['"]utils\/csvParser/,
-  'translation CSV parsing must not remain duplicated in the JavaScript bridge');
+  'translation CSV parsing must remain in the Rust utility rather than the typed host adapter');
 assert.match(utilityBridge, /safeUtilityEnvironment/,
   'Rust utility processes must not inherit database credentials or unrelated secrets');
 assert.doesNotMatch(utilityBridge + translationBridge + templateBridge, /import\.meta\.url/,
   'Rust utility bridges must remain safe when esbuild bundles their ESM sources into the CommonJS Electron host');
-assert.match(translationRuntime, /translationHelpers\.cjs/,
-  'the synchronous TypeScript translation runtime must import a CommonJS-compatible helper');
-assert.match(rendererHandler, /translationHelpers\.cjs/,
-  'the Fyo database handler must import the CommonJS-compatible translation helper');
-assert.match(rendererMisc, /translationHelpers\.cjs/,
-  'the renderer translation metadata import must be safe in the CommonJS test runner');
-assert.match(translationHelpersEsm, /from '\.\/translationHelpers\.cjs'/,
-  'the ESM translation helper must delegate to the CommonJS implementation');
-assert.doesNotMatch(translationHelpersEsm, /function getIndexFormat/,
-  'translation behavior must have one implementation rather than divergent ESM/CommonJS copies');
-assert.equal((workflow.match(/- 'utils\/translationHelpers\.cjs'/g) ?? []).length, 2,
-  'translation helper module-format changes must trigger both Rust workflow path filters');
+assert.match(translationRuntime, /translationHelpers/,
+  'the synchronous TypeScript translation runtime must use the shared typed helper');
+assert.match(rendererHandler, /translationHelpers/,
+  'the Fyo database handler must use the shared typed translation helper');
+assert.match(rendererMisc, /translationHelpers/,
+  'renderer translation metadata must use the shared typed helper');
+assert.equal((translationHelpers.match(/export function getIndexFormat/g) ?? []).length, 1,
+  'translation behavior must have one TypeScript implementation');
+assert.equal((workflow.match(/- 'utils\/translationHelpers\.ts'/g) ?? []).length, 2,
+  'translation helper changes must trigger both Rust workflow path filters');
 assert.match(utilityBridge, /MAX_OUTPUT_BYTES/,
   'Rust utility output must be bounded before JSON parsing');
 assert.match(utilityBridge, /dependencies\.spawnProcess/,
@@ -236,6 +233,11 @@ assert.ok(!existsSync(new URL('../main/externalUrlPolicy.mjs', import.meta.url))
   'external URL policy must not retain its JavaScript module');
 assert.ok(!existsSync(new URL('../main/printDocumentPolicy.mjs', import.meta.url)),
   'print document policy must not retain its JavaScript module');
+const mainJavaScriptFiles = readdirSync(new URL('../main/', import.meta.url), {
+  recursive: true,
+}).filter((file) => /\.(?:js|mjs|cjs)$/i.test(file));
+assert.deepEqual(mainJavaScriptFiles, [],
+  'Electron main application code must be TypeScript; JavaScript belongs only in tooling');
 assert.match(buildScript, /!argv\.nopackage && !fs\.existsSync\(rustBackendPath\)/,
   'the real application packaging path must refuse to package without the native backend binary');
 assert.match(electronBuilderConfig, /fs\.existsSync\(rustBackendPath\)[\s\S]*?from: rustBackendPath, to: rustBackendName/,
@@ -258,11 +260,16 @@ for (const migratedBridge of [
   'rustUtility',
   'getLanguageMap',
   'getPrintTemplates',
+  'translationHelpers',
 ]) {
   for (const extension of ['mjs', 'cjs']) {
     assert.ok(!existsSync(new URL(`../main/${migratedBridge}.${extension}`, import.meta.url)),
       `${migratedBridge} must not retain a JavaScript ${extension.toUpperCase()} bridge`);
   }
+}
+for (const extension of ['mjs', 'cjs']) {
+  assert.ok(!existsSync(new URL(`../utils/translationHelpers.${extension}`, import.meta.url)),
+    `translationHelpers must not retain a JavaScript ${extension.toUpperCase()} implementation`);
 }
 
 console.log('Rust backend boundary checks passed.');

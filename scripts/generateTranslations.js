@@ -223,7 +223,7 @@ async function getSchemaTStrings() {
 }
 async function run() {
     // Load the shared ESM helper in Node and renderer contexts alike.
-    translationHelpers_1 = await import("../utils/translationHelpers.mjs");
+    translationHelpers_1 = await import("../utils/translationHelpers.ts");
     if (printHelp()) {
         return;
     }

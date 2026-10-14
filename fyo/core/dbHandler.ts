@@ -14,7 +14,7 @@ import {
   QueryFilter,
   SingleValue,
 } from 'utils/db/types';
-import { schemaTranslateables } from 'utils/translationHelpers.cjs';
+import { schemaTranslateables } from 'utils/translationHelpers';
 import { LanguageMap } from 'utils/types';
 import { Converter } from './converter';
 import {
