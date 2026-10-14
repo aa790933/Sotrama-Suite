@@ -750,5 +750,43 @@ test('db deleteAll', async (t) => {
     0
   );
 
+  await db.insert('Customer', {
+    name: 'customer-null-email',
+    phone: phoneOne,
+    email: null,
+    ...getDefaultMetaFieldValueMap(),
+  });
+  t.deepEqual(
+    await db.getAll('Customer', {
+      fields: ['name'],
+      filters: { email: null },
+    }),
+    [{ name: 'customer-null-email' }],
+    'getAll matches SQL NULL with an equality filter'
+  );
+  t.equal(
+    await db.count('Customer', { filters: { email: null } }),
+    1,
+    'count matches SQL NULL with an equality filter'
+  );
+  t.equal(
+    (await db.getAll('Customer', { filters: { email: ['!=', null] } })).length,
+    0,
+    'inequality against NULL selects only non-null values'
+  );
+  t.equal(
+    await db.deleteAll('Customer', { email: null }),
+    1,
+    'deleteAll matches SQL NULL with an equality filter'
+  );
+  await assertThrows(
+    async () => await db.deleteAll('Customer', {}),
+    'deleteAll refuses an empty filter'
+  );
+  await assertThrows(
+    async () => await db.deleteAll('Customer', { email: ['not in', []] }),
+    'deleteAll refuses a filter that matches every row'
+  );
+
   await db.close();
 });

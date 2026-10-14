@@ -4,7 +4,7 @@ import {
   getIndexList,
   getSnippets,
   getWhitespaceSanitized,
-} from '../../utils/translationHelpers';
+} from '../../utils/translationHelpers.mjs';
 import { ValueError } from './errors';
 
 export type TranslationArgs = boolean | number | string;

@@ -142,6 +142,22 @@ impl Condition {
             }
         }
 
+        // SQL equality comparisons with NULL are never true. Translate the
+        // renderer's equality/inequality filters to the corresponding NULL
+        // predicates instead of binding NULL into `= ?` or `!= ?`.
+        if self.value.is_null() {
+            match op_upper.as_str() {
+                "=" | "IS" => sql.push_str(&format!("{column} IS NULL")),
+                "!=" | "<>" | "IS NOT" => sql.push_str(&format!("{column} IS NOT NULL")),
+                _ => {
+                    return Err(BackendError::InvalidArgument(format!(
+                        "SQL operator {op_upper} cannot compare a column to NULL"
+                    )))
+                }
+            }
+            return Ok(());
+        }
+
         sql.push_str(&format!("{column} {op_upper} ?"));
         params.push(Bind::from(&self.value));
         Ok(())
@@ -344,6 +360,16 @@ pub fn build_delete(
     }
     let mut params = Vec::new();
     let where_sql = where_clause(filters, &mut params)?;
+    if where_sql
+        .strip_prefix(" WHERE ")
+        .unwrap_or_default()
+        .split(" AND ")
+        .all(|predicate| predicate.trim() == "1 = 1")
+    {
+        return Err(BackendError::InvalidArgument(
+            "deleteAll requires a restrictive filter; refusing to delete every row".into(),
+        ));
+    }
     Ok(Statement::new(
         format!("DELETE FROM {}{where_sql}", ident(table)?),
         params,
@@ -721,11 +747,45 @@ mod tests {
     }
 
     #[test]
-    fn null_filters_bind_as_null() {
+    fn delete_all_refuses_a_tautological_not_in_empty_filter() {
+        let err = build_delete("t", &filters(json!({ "name": ["not in", []] }))).unwrap_err();
+        assert!(err.to_string().contains("restrictive filter"));
+        assert!(build_delete(
+            "t",
+            &filters(json!({ "name": ["not in", []], "active": true }))
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn null_filters_emit_is_null_without_a_bind() {
         let mut params = Vec::new();
         let sql = where_clause(&filters(json!({ "party": null })), &mut params).unwrap();
-        assert_eq!(sql, " WHERE `party` = ?");
-        assert_eq!(params, vec![Bind::Null]);
+        assert_eq!(sql, " WHERE `party` IS NULL");
+        assert!(params.is_empty());
+    }
+
+    #[test]
+    fn null_inequality_filters_use_is_not_null_without_parameters() {
+        for operator in ["!=", "<>", "IS NOT"] {
+            let mut params = Vec::new();
+            let sql =
+                where_clause(&filters(json!({ "party": [operator, null] })), &mut params).unwrap();
+            assert_eq!(sql, " WHERE `party` IS NOT NULL", "operator: {operator}");
+            assert!(params.is_empty());
+        }
+    }
+
+    #[test]
+    fn null_comparison_rejects_order_and_pattern_operators() {
+        for operator in [">", "<", "LIKE", "NOT IN"] {
+            let err = where_clause(
+                &filters(json!({ "party": [operator, null] })),
+                &mut Vec::new(),
+            )
+            .unwrap_err();
+            assert!(err.to_string().contains("cannot compare a column to NULL"));
+        }
     }
 
     #[test]

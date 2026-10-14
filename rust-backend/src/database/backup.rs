@@ -56,7 +56,8 @@ pub async fn create(db: &Db, app_version: &str) -> Result<PathBuf, BackendError>
 
     let output = std::fs::File::create(&temp_path).map_err(io_error)?;
     let config = db.config();
-    let mut child = Command::new(&utility_path)
+    let mut command = Command::new(&utility_path);
+    command
         .arg("--single-transaction")
         .arg("--routines")
         .arg("--events")
@@ -64,7 +65,9 @@ pub async fn create(db: &Db, app_version: &str) -> Result<PathBuf, BackendError>
         .arg("--default-character-set=utf8mb4")
         .arg(format!("--host={}", config.host))
         .arg(format!("--port={}", config.port))
-        .arg(format!("--user={}", config.user))
+        .arg(format!("--user={}", config.user));
+    configure_client_ssl(&mut command)?;
+    let mut child = command
         .arg(&config.database)
         .env("MYSQL_PWD", &config.password)
         .stdin(Stdio::null())
@@ -197,7 +200,7 @@ pub async fn restore_to_new_database(
         .password(&config.password)
         .charset("utf8mb4")
         .collation("utf8mb4_unicode_ci")
-        .ssl_mode(MySqlSslMode::Disabled);
+        .ssl_mode(super::pool::ssl_mode_from_env()?);
     let admin_pool = MySqlPoolOptions::new()
         .max_connections(1)
         .acquire_timeout(std::time::Duration::from_secs(15))
@@ -246,7 +249,7 @@ pub async fn restore_to_new_database(
         .database(target_database)
         .charset("utf8mb4")
         .collation("utf8mb4_unicode_ci")
-        .ssl_mode(MySqlSslMode::Disabled);
+        .ssl_mode(super::pool::ssl_mode_from_env()?);
     let target_pool = match MySqlPoolOptions::new()
         .max_connections(1)
         .connect_with(target_options)
@@ -316,11 +319,14 @@ async fn import_dump(
 ) -> Result<(), BackendError> {
     let (utility, utility_path) = find_client_utility().await?;
     let input = std::fs::File::open(backup_path).map_err(io_error)?;
-    let mut child = Command::new(&utility_path)
+    let mut command = Command::new(&utility_path);
+    command
         .arg(format!("--host={}", config.host))
         .arg(format!("--port={}", config.port))
         .arg(format!("--user={}", config.user))
-        .arg("--default-character-set=utf8mb4")
+        .arg("--default-character-set=utf8mb4");
+    configure_client_ssl(&mut command)?;
+    let mut child = command
         .arg(target_database)
         .env("MYSQL_PWD", &config.password)
         .stdin(Stdio::from(input))
@@ -361,6 +367,25 @@ async fn import_dump(
         return Err(BackendError::Db(DbError::new(format!(
             "{utility} restore import failed with {status}: {stderr}"
         ))));
+    }
+    Ok(())
+}
+
+/// Apply the same validated TLS mode to the external MariaDB CLI tools used
+/// for dumps and restore imports. The verification modes use the client's
+/// server-certificate verification switch (hostname verification is stricter
+/// than the SQLx `verify-ca` policy, never weaker).
+fn configure_client_ssl(command: &mut Command) -> Result<(), BackendError> {
+    match super::pool::ssl_mode_from_env()? {
+        MySqlSslMode::Disabled => {
+            command.arg("--skip-ssl");
+        }
+        MySqlSslMode::Preferred | MySqlSslMode::Required => {
+            command.arg("--ssl");
+        }
+        MySqlSslMode::VerifyCa | MySqlSslMode::VerifyIdentity => {
+            command.arg("--ssl").arg("--ssl-verify-server-cert");
+        }
     }
     Ok(())
 }

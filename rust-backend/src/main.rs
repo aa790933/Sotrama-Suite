@@ -154,8 +154,20 @@ async fn main() -> Result<()> {
         }
     }
 
-    info!("serving on stdio");
-    ipc::IpcServer::new(db).serve().await?;
+    info!("serving on stdio; Ctrl-C requests graceful shutdown");
+    tokio::select! {
+        result = ipc::IpcServer::new(db.clone()).serve() => result?,
+        signal = tokio::signal::ctrl_c() => {
+            match signal {
+                Ok(()) => info!("shutdown signal received; closing database pool"),
+                Err(error) => {
+                    db.close().await;
+                    return Err(error.into());
+                }
+            }
+            db.close().await;
+        }
+    }
     Ok(())
 }
 

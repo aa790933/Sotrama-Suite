@@ -39,5 +39,9 @@ assert.match(client, /split\(config\.password\)\.join\('\[REDACTED\]'\)/,
   'sidecar diagnostics must redact database credentials');
 assert.match(testRunner, /main\/ipc\/\*\.spec\.ts/,
   'the default test command must execute IPC boundary regression specs');
+assert.match(testRunner, /verify-csv-parser\.mjs/,
+  'the default test command must execute the CSV parser regression');
+assert.match(testRunner, /verify-translation-generator\.mjs/,
+  'the default test command must execute translation helper and CLI regressions');
 
 console.log('Rust backend boundary checks passed.');

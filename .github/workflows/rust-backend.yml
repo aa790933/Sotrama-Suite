@@ -16,12 +16,16 @@ on:
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
+      - 'backend/database/tests/testCore.spec.ts'
       - 'backend/database/runPatch.ts'
       - 'backend/database/types.ts'
       - 'backend/helpers.ts'
       - 'fyo/core/converter.ts'
       - 'fyo/database/Database.ts'
       - 'fyo/core/dbHandler.ts'
+      - 'fyo/utils/translation.ts'
+      - 'src/utils/misc.ts'
+      - 'utils/translationHelpers.mjs'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
       - 'main/ipc/databaseContract.ts'
@@ -32,6 +36,7 @@ on:
       - 'scripts/verify-rust-patch-parity.mjs'
       - 'scripts/test.sh'
       - 'scripts/verify-csv-parser.mjs'
+      - 'utils/csvParser.js'
       - 'scripts/generateTranslations.js'
       - 'scripts/verify-translation-generator.mjs'
       - 'package.json'
@@ -44,12 +49,16 @@ on:
       - 'schemas/**'
       - 'backend/patches/**'
       - 'backend/database/core.ts'
+      - 'backend/database/tests/testCore.spec.ts'
       - 'backend/database/runPatch.ts'
       - 'backend/database/types.ts'
       - 'backend/helpers.ts'
       - 'fyo/core/converter.ts'
       - 'fyo/database/Database.ts'
       - 'fyo/core/dbHandler.ts'
+      - 'fyo/utils/translation.ts'
+      - 'src/utils/misc.ts'
+      - 'utils/translationHelpers.mjs'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
       - 'main/ipc/databaseContract.ts'
@@ -60,6 +69,7 @@ on:
       - 'scripts/verify-rust-patch-parity.mjs'
       - 'scripts/test.sh'
       - 'scripts/verify-csv-parser.mjs'
+      - 'utils/csvParser.js'
       - 'scripts/generateTranslations.js'
       - 'scripts/verify-translation-generator.mjs'
       - 'package.json'
@@ -365,6 +375,8 @@ jobs:
             INSERT INTO singlevalue (name, parent, fieldname, value, createdBy, modifiedBy, created, modified)
               VALUES ('ci-null-single-value-key', 'SystemSettings', 'ci-null-single-value', NULL, '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6)),
                      ('ci-empty-single-value-key', 'SystemSettings', 'ci-empty-single-value', '', '__SYSTEM__', '__SYSTEM__', NOW(6), NOW(6));"
+          missing_uom_count=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT COUNT(*) FROM uom WHERE name='ci-no-such-uom-rollback'")
+          test "$missing_uom_count" = "0"
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"db.connect","params":[]}' \
             '{"jsonrpc":"2.0","id":2,"method":"db.call","params":["count","Item",{}]}' \
@@ -399,9 +411,11 @@ jobs:
             '{"jsonrpc":"2.0","id":33,"method":"db.call","params":["get","Payment","ci-patch-retry-payment",["date","clearanceDate","referenceId","amount","writeoff"]]}' \
             '{"jsonrpc":"2.0","id":36,"method":"db.call","params":["getSingleValues",{"fieldname":"ci-null-single-value","parent":"SystemSettings"},{"fieldname":"ci-empty-single-value","parent":"SystemSettings"}]}' \
             '{"jsonrpc":"2.0","id":37,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","definitelyNotAColumn":"must-not-be-ignored"}]}' \
+            '{"jsonrpc":"2.0","id":39,"method":"db.call","params":["getAll","Payment",{"fields":["name"],"filters":{"clearanceDate":null}}]}' \
+            '{"jsonrpc":"2.0","id":40,"method":"db.call","params":["update","Item",{"name":"legacy-item-fixture","hsnCode":"MUST-ROLLBACK-FK","uomConversions":[{"name":"ci-fk-rollback-child","uom":"ci-no-such-uom-rollback","conversionFactor":7}]}]}' \
             | cargo run --locked -- --serve --no-migrate > protocol.jsonl
           jq -s -e '
-            length == 33 and
+            length == 35 and
             .[0].jsonrpc == "2.0" and .[0].id == 1 and
             .[0].result.data.countryCode == "in" and
             .[1].jsonrpc == "2.0" and .[1].id == 2 and
@@ -475,7 +489,12 @@ jobs:
             .[32].jsonrpc == "2.0" and .[32].id == 37 and
             .[32].result.error.name == "DatabaseError" and
             .[32].result.error.errno == 1054 and
-            (.[32].result.error.message | ascii_downcase | contains("unknown column"))
+            (.[32].result.error.message | ascii_downcase | contains("unknown column")) and
+            .[33].jsonrpc == "2.0" and .[33].id == 39 and
+            (.[33].result.data | any(.name == "ci-patch-retry-payment")) and
+            .[34].jsonrpc == "2.0" and .[34].id == 40 and
+            .[34].result.error.name == "ForeignKeyError" and
+            .[34].result.error.errno == 1452
           ' protocol.jsonl
 
           single_value_state=$(docker exec "${{ job.services.mariadb.id }}" mariadb -N -uroot -proot sotrama_test -e "SELECT CONCAT(SUM(fieldname='ci-null-single-value' AND value IS NULL), ':', SUM(fieldname='ci-empty-single-value' AND value='')) FROM singlevalue WHERE parent='SystemSettings' AND fieldname IN ('ci-null-single-value', 'ci-empty-single-value')")

@@ -78,6 +78,27 @@ impl PoolSettings {
     }
 }
 
+/// Selects the TLS policy shared by normal connections and backup/restore.
+/// `disabled` remains the compatibility default for existing local installs;
+/// deployments should set `SOTRAMA_DB_SSL_MODE=verify-identity`.
+pub fn ssl_mode_from_env() -> Result<MySqlSslMode, BackendError> {
+    let value = std::env::var("SOTRAMA_DB_SSL_MODE").unwrap_or_else(|_| "disabled".into());
+    parse_ssl_mode(&value)
+}
+
+fn parse_ssl_mode(value: &str) -> Result<MySqlSslMode, BackendError> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "disabled" => Ok(MySqlSslMode::Disabled),
+        "preferred" => Ok(MySqlSslMode::Preferred),
+        "required" => Ok(MySqlSslMode::Required),
+        "verify-ca" => Ok(MySqlSslMode::VerifyCa),
+        "verify-identity" => Ok(MySqlSslMode::VerifyIdentity),
+        _ => Err(BackendError::Db(DbError::new(
+            "SOTRAMA_DB_SSL_MODE must be one of: disabled, preferred, required, verify-ca, verify-identity",
+        ))),
+    }
+}
+
 fn env_u32(key: &str, fallback: u32) -> Result<u32, BackendError> {
     let Ok(value) = std::env::var(key) else {
         return Ok(fallback);
@@ -166,7 +187,7 @@ impl Pool {
             // non-Latin party names depend on server configuration.
             .charset("utf8mb4")
             .collation("utf8mb4_unicode_ci")
-            .ssl_mode(MySqlSslMode::Disabled);
+            .ssl_mode(ssl_mode_from_env()?);
         if use_database {
             options = options.database(&config.database);
         }
@@ -290,6 +311,27 @@ mod tests {
     #[test]
     fn accepts_default_pool_settings() {
         assert!(PoolSettings::default().validate().is_ok());
+    }
+
+    #[test]
+    fn ssl_mode_configuration_is_explicit_and_strict() {
+        assert!(matches!(
+            parse_ssl_mode("disabled"),
+            Ok(MySqlSslMode::Disabled)
+        ));
+        assert!(matches!(
+            parse_ssl_mode("required"),
+            Ok(MySqlSslMode::Required)
+        ));
+        assert!(matches!(
+            parse_ssl_mode("verify-identity"),
+            Ok(MySqlSslMode::VerifyIdentity)
+        ));
+        assert!(matches!(
+            parse_ssl_mode("VERIFY-CA"),
+            Ok(MySqlSslMode::VerifyCa)
+        ));
+        assert!(parse_ssl_mode("required-but-ignore-errors").is_err());
     }
 
     #[test]

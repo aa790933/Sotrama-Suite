@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const csvParser_1 = require("../utils/csvParser");
-const translationHelpers_1 = require("../utils/translationHelpers");
+let translationHelpers_1;
 const translationsFolder = path_1.default.resolve(__dirname, '..', 'translations');
 const PATTERN = /(?<!\w)t`([^`]+)`/g;
 function shouldIgnore(p, ignoreList) {
@@ -222,6 +222,8 @@ async function getSchemaTStrings() {
     return await getTStringsFromJsonFileList(fileList);
 }
 async function run() {
+    // Load the shared ESM helper in Node and renderer contexts alike.
+    translationHelpers_1 = await import("../utils/translationHelpers.mjs");
     if (printHelp()) {
         return;
     }

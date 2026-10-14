@@ -10,7 +10,7 @@ import SetupWizardSchema from 'schemas/app/SetupWizard.json';
 import { Schema } from 'schemas/types';
 import { fyo } from 'src/initFyo';
 import { QueryFilter } from 'utils/db/types';
-import { schemaTranslateables } from 'utils/translationHelpers';
+import { schemaTranslateables } from 'utils/translationHelpers.mjs';
 import type { LanguageMap } from 'utils/types';
 import { PeriodKey } from './types';
 

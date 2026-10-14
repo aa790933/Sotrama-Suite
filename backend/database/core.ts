@@ -737,24 +737,7 @@ export default class DatabaseCore extends DatabaseBase {
     const filterParts = this.#getFiltersArray(filters);
     let sql = `SELECT COUNT(*) as count FROM ${this.#qn(schemaName)}`;
     const params: unknown[] = [];
-    if (filterParts.length > 0) {
-      const whereParts: string[] = [];
-      filterParts.forEach((p) => {
-        if (p[1] === 'in' && Array.isArray(p[2])) {
-          if (p[2].length === 0) {
-            whereParts.push('1 = 0');
-          } else {
-            const placeholders = p[2].map(() => '?').join(', ');
-            whereParts.push(`\`${p[0]}\` IN (${placeholders})`);
-            params.push(...(p[2] as unknown[]));
-          }
-        } else {
-          whereParts.push(`\`${p[0]}\` ${p[1]} ?`);
-          params.push(p[2]);
-        }
-      });
-      sql += ' WHERE ' + whereParts.join(' AND ');
-    }
+    sql += this.#buildWhereClause(filterParts, params);
     const result = (await this.query(sql, params)) as { count: number | string | bigint }[];
     const raw = result[0]?.count;
     if (typeof raw === 'bigint') return Number(raw);
@@ -984,27 +967,21 @@ export default class DatabaseCore extends DatabaseBase {
 
   #buildDeleteSql(schemaName: string, filters: QueryFilter) {
     const parts = this.#getFiltersArray(filters);
+    if (parts.length === 0) {
+      throw new ValueError(
+        'deleteAll requires a filter; refusing to delete every row'
+      );
+    }
     const sqlParts: string[] = [`DELETE FROM ${this.#qn(schemaName)}`];
     const params: unknown[] = [];
-
-    if (parts.length > 0) {
-      const whereParts: string[] = [];
-      parts.forEach((p) => {
-        if (p[1] === 'in' && Array.isArray(p[2])) {
-          if (p[2].length === 0) {
-            whereParts.push('1 = 0');
-          } else {
-            const placeholders = p[2].map(() => '?').join(', ');
-            whereParts.push(`\`${p[0]}\` IN (${placeholders})`);
-            params.push(...(p[2] as unknown[]));
-          }
-        } else {
-          whereParts.push(`\`${p[0]}\` ${p[1]} ?`);
-          params.push(p[2]);
-        }
-      });
-      sqlParts.push(' WHERE ' + whereParts.join(' AND '));
+    const whereClause = this.#buildWhereClause(parts, params);
+    const predicates = whereClause.slice(' WHERE '.length).split(' AND ');
+    if (predicates.every((predicate) => predicate.trim() === '1 = 1')) {
+      throw new ValueError(
+        'deleteAll requires a restrictive filter; refusing to delete every row'
+      );
     }
+    sqlParts.push(whereClause);
 
     return { sql: sqlParts.join(''), params };
   }
@@ -1021,25 +998,7 @@ export default class DatabaseCore extends DatabaseBase {
       .join(', ');
     let sql = `SELECT ${fieldList} FROM ${this.#qn(schemaName)}`;
     const filterParts = this.#getFiltersArray(filters);
-
-    if (filterParts.length > 0) {
-      const whereParts: string[] = [];
-      filterParts.forEach((p) => {
-        if (p[1] === 'in' && Array.isArray(p[2])) {
-          if (p[2].length === 0) {
-            whereParts.push('1 = 0');
-          } else {
-            const placeholders = p[2].map(() => '?').join(', ');
-            whereParts.push(`\`${p[0]}\` IN (${placeholders})`);
-            params.push(...(p[2] as unknown[]));
-          }
-        } else {
-          whereParts.push(`\`${p[0]}\` ${p[1]} ?`);
-          params.push(p[2]);
-        }
-      });
-      sql += ' WHERE ' + whereParts.join(' AND ');
-    }
+    sql += this.#buildWhereClause(filterParts, params);
 
     const { orderBy, groupBy, order } = options;
     const safeOrder = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
@@ -1072,6 +1031,49 @@ export default class DatabaseCore extends DatabaseBase {
     }
 
     return { sql, params };
+  }
+
+  #buildWhereClause(
+    filterParts: [string, string, unknown][],
+    params: unknown[]
+  ): string {
+    const whereParts: string[] = [];
+    for (const [field, operator, value] of filterParts) {
+      if (value === null) {
+        if (operator === '=' || operator === 'is') {
+          whereParts.push(`\`${field}\` IS NULL`);
+        } else if (
+          operator === '!=' ||
+          operator === '<>' ||
+          operator === 'is not'
+        ) {
+          whereParts.push(`\`${field}\` IS NOT NULL`);
+        } else {
+          throw new ValueError(
+            `SQL operator ${operator} cannot compare a column to NULL`
+          );
+        }
+        continue;
+      }
+
+      if (operator === 'in' || operator === 'not in') {
+        if (Array.isArray(value)) {
+          if (value.length === 0) {
+            whereParts.push(operator === 'in' ? '1 = 0' : '1 = 1');
+          } else {
+            const placeholders = value.map(() => '?').join(', ');
+            whereParts.push(`\`${field}\` ${operator.toUpperCase()} (${placeholders})`);
+            params.push(...value);
+          }
+          continue;
+        }
+      }
+
+      whereParts.push(`\`${field}\` ${operator} ?`);
+      params.push(value);
+    }
+
+    return whereParts.length > 0 ? ` WHERE ${whereParts.join(' AND ')}` : '';
   }
 
   async #getQueryBuilder(
