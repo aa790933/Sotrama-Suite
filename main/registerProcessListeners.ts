@@ -1,13 +1,14 @@
 import { app } from 'electron';
 import { CUSTOM_EVENTS, IPC_CHANNELS } from 'utils/messages';
+import type { Main } from './bootstrap';
 
-function reportToRenderer(main, ...args) {
+function reportToRenderer(main: Main, ...args: unknown[]): void {
   const window = main.mainWindow;
   if (!window || window.isDestroyed() || window.webContents.isDestroyed()) return;
   window.webContents.send(IPC_CHANNELS.LOG_MAIN_PROCESS_ERROR, ...args);
 }
 
-export default function registerProcessListeners(main) {
+export default function registerProcessListeners(main: Main): void {
   if (main.isDevelopment) {
     if (process.platform === 'win32') {
       process.on('message', (data) => {

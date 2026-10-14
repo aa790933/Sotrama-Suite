@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { normalizeExternalUrl } from '../main/externalUrlPolicy.mjs';
+import { normalizeExternalUrl } from '../main/externalUrlPolicy.ts';
 
 assert.equal(normalizeExternalUrl('https://example.com/path?q=1'), 'https://example.com/path?q=1');
 assert.equal(normalizeExternalUrl('http://localhost:3000/'), 'http://localhost:3000/');

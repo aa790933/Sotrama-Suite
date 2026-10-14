@@ -1,9 +1,10 @@
 import { app, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { emitMainProcessError } from '../backend/helpers';
-import { isExpectedUpdateError } from './helpers.js';
+import { isExpectedUpdateError } from './helpers';
+import type { Main } from './bootstrap';
 
-export default function registerAutoUpdaterListeners(main) {
+export default function registerAutoUpdaterListeners(main: Main): void {
   autoUpdater.autoDownload = false;
   autoUpdater.allowPrerelease = true;
   autoUpdater.autoInstallOnAppQuit = true;

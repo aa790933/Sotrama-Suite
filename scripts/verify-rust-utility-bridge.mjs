@@ -6,7 +6,7 @@ import {
   parseRustUtilityJson,
   runRustUtility,
   safeUtilityEnvironment,
-} from '../main/rustUtility.mjs';
+} from '../main/rustUtility.ts';
 
 function fakeChild() {
   const child = new EventEmitter();

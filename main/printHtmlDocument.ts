@@ -1,19 +1,25 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { getInitializedPrintWindow } from './saveHtmlAsPdf.js';
-import { validatePrintDocumentInput } from './printDocumentPolicy.mjs';
+import type { App } from 'electron';
+import { getInitializedPrintWindow } from './saveHtmlAsPdf';
+import { validatePrintDocumentInput } from './printDocumentPolicy';
 
-/** @param {string} html @param {import('electron').App} app @param {number} width @param {number} height */
-export async function printHtmlDocument(html, app, width, height) {
+export async function printHtmlDocument(
+  html: string,
+  app: App,
+  width: number,
+  height: number
+): Promise<boolean> {
   validatePrintDocumentInput(html, width, height);
   const tempDir = await fs.mkdtemp(path.join(app.getPath('temp'), 'sotrama-print-'));
   const tempFile = path.join(tempDir, 'document.html');
-  let printWindow;
+  let printWindow: Awaited<ReturnType<typeof getInitializedPrintWindow>> | undefined;
   try {
     await fs.writeFile(tempFile, html, { encoding: 'utf8', flag: 'wx' });
-    printWindow = await getInitializedPrintWindow(tempFile, width, height);
+    const window = await getInitializedPrintWindow(tempFile, width, height);
+    printWindow = window;
     return await new Promise((resolve) => {
-      printWindow.webContents.print(
+      window.webContents.print(
         { silent: false, printBackground: true },
         (success) => resolve(Boolean(success))
       );

@@ -1,13 +1,17 @@
 import { ipcMain, Menu, shell } from 'electron';
 import { emitMainProcessError } from 'backend/helpers';
 import { IPC_MESSAGES } from '../utils/messages';
-import { normalizeExternalUrl } from './externalUrlPolicy.mjs';
+import { normalizeExternalUrl } from './externalUrlPolicy';
+import type { Main } from './bootstrap';
 
-function isCurrentWindowSender(main, event) {
+function isCurrentWindowSender(
+  main: Main,
+  event: Electron.IpcMainEvent
+): boolean {
   return Boolean(main.mainWindow && event.sender === main.mainWindow.webContents);
 }
 
-export default function registerIpcMainMessageListeners(main) {
+export default function registerIpcMainMessageListeners(main: Main): void {
   ipcMain.on(IPC_MESSAGES.OPEN_MENU, (event) => {
     if (!isCurrentWindowSender(main, event)) return;
     const menu = Menu.getApplicationMenu();
@@ -43,7 +47,7 @@ export default function registerIpcMainMessageListeners(main) {
     if (isCurrentWindowSender(main, event)) main.mainWindow?.close();
   });
 
-  ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (event, input) => {
+  ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (event, input: unknown) => {
     if (!isCurrentWindowSender(main, event)) return;
     const url = normalizeExternalUrl(input);
     if (!url) {
@@ -56,7 +60,7 @@ export default function registerIpcMainMessageListeners(main) {
     });
   });
 
-  ipcMain.on(IPC_MESSAGES.SHOW_ITEM_IN_FOLDER, (event, filePath) => {
+  ipcMain.on(IPC_MESSAGES.SHOW_ITEM_IN_FOLDER, (event, filePath: unknown) => {
     if (!isCurrentWindowSender(main, event)) return;
     if (typeof filePath !== 'string' || filePath.length === 0 || filePath.length > 32768) return;
     shell.showItemInFolder(filePath);

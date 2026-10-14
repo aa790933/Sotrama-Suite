@@ -3,7 +3,7 @@ import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 import { Main } from '../main';
 import { rendererLog } from './helpers';
 import { emitMainProcessError } from 'backend/helpers';
-import { closeRustApiClient } from './rustApiClient.cjs';
+import { closeRustApiClient } from './rustApiClient';
 
 export default function registerAppLifecycleListeners(main: Main) {
   let apiClientShutdownStarted = false;

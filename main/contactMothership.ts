@@ -4,6 +4,7 @@ import path from 'path';
 import { Creds } from 'utils/types';
 import { rendererLog } from './helpers';
 import type { Main } from 'main';
+import { sendTelemetryRequest } from './api';
 
 export function getUrlAndTokenString(): Creds {
   const inProduction = app.isPackaged;
@@ -62,14 +63,7 @@ export async function sendError(body: string, main: Main) {
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const apiBridge = require('./api.cjs') as unknown as {
-      sendTelemetryRequest: (
-        endpoint: string,
-        options: { method: 'POST'; headers: Record<string, string>; body: string }
-      ) => Promise<unknown>;
-    };
-    await apiBridge.sendTelemetryRequest(errorLogUrl, { method: 'POST', headers, body });
+    await sendTelemetryRequest(errorLogUrl, { method: 'POST', headers, body });
   } catch {
     rendererLog(main, new Error('Could not send error telemetry through Rust HTTPS service'));
   }

@@ -8,10 +8,8 @@ const path = require('node:path');
  *
  * This stays in the Electron host: it is called for every protocol request and
  * spawning Rust for path resolution would add latency without domain value.
- * @param {string} requestUrl
- * @returns {string}
  */
-function resolveAppFilePath(requestUrl) {
+export function resolveAppFilePath(requestUrl: string): string {
   const baseDir = path.join(__dirname, 'src');
   const url = new URL(requestUrl);
 
@@ -62,5 +60,3 @@ function resolveAppFilePath(requestUrl) {
 
   return normalized;
 }
-
-module.exports = { resolveAppFilePath };

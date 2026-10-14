@@ -11,10 +11,10 @@ fi
 export IS_TEST=true
 node ./scripts/verify-csv-parser.mjs || exit $?
 node ./scripts/verify-translation-generator.mjs || exit $?
-node ./scripts/verify-rust-utility-bridge.mjs || exit $?
-node ./scripts/verify-rust-api-client.mjs || exit $?
-node ./scripts/verify-main-external-url.mjs || exit $?
-node ./scripts/verify-print-document-policy.mjs || exit $?
+node --experimental-strip-types ./scripts/verify-rust-utility-bridge.mjs || exit $?
+node --experimental-strip-types ./scripts/verify-rust-api-client.mjs || exit $?
+node --experimental-strip-types ./scripts/verify-main-external-url.mjs || exit $?
+node --experimental-strip-types ./scripts/verify-print-document-policy.mjs || exit $?
 node ./scripts/verify-preload-bridge.mjs || exit $?
 node ./scripts/verify-typed-renderer.mjs || exit $?
 node ./scripts/verify-rust-patch-parity.mjs || exit $?

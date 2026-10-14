@@ -27,10 +27,10 @@ import {
 } from '../provision/hostProvision';
 import { parseMariaDBConfigString } from '../../utils/mariadb-types';
 // getUrlAndTokenString / sendError are lazy-imported inside getCreds/sendError to avoid pulling electron at module load
-import { getLanguageMap } from '../getLanguageMap.cjs';
-import { getTemplates } from '../getPrintTemplates.cjs';
+import { getLanguageMap } from '../getLanguageMap';
+import { getTemplates } from '../getPrintTemplates';
 // isExpectedUpdateError is lazy-imported inside checkForUpdates to avoid pulling electron-store at module load
-import { sendAPIRequest } from '../api.cjs';
+import { sendAPIRequest } from '../api';
 import type { BackendResponse } from '../../utils/ipc/types';
 import {
   AppPaths,
@@ -655,7 +655,7 @@ export class IpcRouter {
     height: number,
     app: Electron.App
   ) {
-    const { saveHtmlAsPdf: fn } = await import('../saveHtmlAsPdf.js');
+    const { saveHtmlAsPdf: fn } = await import('../saveHtmlAsPdf');
     return fn(html, savePath, app as never, width, height);
   }
 
@@ -665,7 +665,7 @@ export class IpcRouter {
     height: number,
     app: Electron.App
   ) {
-    const { printHtmlDocument: fn } = await import('../printHtmlDocument.js');
+    const { printHtmlDocument: fn } = await import('../printHtmlDocument');
     return fn(html, app as never, width, height);
   }
 

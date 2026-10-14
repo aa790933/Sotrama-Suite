@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { parseRustUtilityJson, runRustUtility } from './rustUtility.mjs';
+import { parseRustUtilityJson, runRustUtility } from './rustUtility';
 
 /** Print-template file loading lives in Rust; this module only bridges Electron IPC. */
-export async function getTemplates(posTemplateWidth) {
+export async function getTemplates(posTemplateWidth?: number): Promise<unknown[]> {
   if (posTemplateWidth !== undefined && !Number.isFinite(posTemplateWidth)) {
     throw new Error('POS template width must be a finite number');
   }
@@ -22,7 +22,7 @@ export async function getTemplates(posTemplateWidth) {
   return templates;
 }
 
-function resolveTemplatesDirectory() {
+function resolveTemplatesDirectory(): string | undefined {
   const candidates = [
     process.resourcesPath ? path.resolve(process.resourcesPath, '../templates') : undefined,
     path.resolve(process.cwd(), 'templates'),

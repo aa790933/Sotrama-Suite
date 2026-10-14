@@ -159,3 +159,10 @@ These are project gates, not a claim of formal certification or a guarantee of a
 - Preserve unrelated working-tree changes; do not reset, discard, or overwrite user edits.
 - Do not make the Rust backend default, remove the TypeScript database reference path, or perform destructive schema work until the relevant gates are demonstrably passing.
 - Record each batch's changed paths, checks actually run, blocked checks, and remaining risk. Do not describe an unrun CI job, Cargo test, MariaDB integration, or packaged-app test as passing.
+
+## Current implementation checkpoint (2026-10-14)
+
+- The Rust sidecar contains MariaDB CRUD/child-row reconciliation, schema migration, ordered patch handlers, verified backup/restore, translation/template utility modes, and the bounded HTTPS integration/telemetry service.
+- TypeScript now owns the Electron-side Rust process adapters. The former JavaScript modules for the API adapter/client, utility runner, language/template adapters, URL/print policies, app protocol path resolver, print/PDF operations, updater listeners, process listeners, IPC message listeners, and shared main-process helpers have been moved to typed `.ts` modules while preserving the current security checks.
+- JavaScript in `scripts/`, `build/`, and package/build configuration remains tooling rather than application backend code. Remaining application JS should be audited by responsibility and migrated only when the runtime contract is safe to preserve.
+- **The backend migration is not complete.** The TypeScript `backend/database` implementation remains the default/reference path; the Rust database adapter is opt-in. Rust domain-service parity, broad MariaDB parity/recovery evidence, hosted CI results, and packaged Windows/macOS/Linux integration are still release gates. Do not enable Rust by default or delete the TypeScript reference backend until those gates pass.

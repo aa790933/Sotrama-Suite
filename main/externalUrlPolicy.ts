@@ -1,10 +1,8 @@
 /**
  * Parse and constrain renderer-requested external navigation before passing it
  * to Electron's shell. Credentials and non-web protocols are never accepted.
- * @param {unknown} input
- * @returns {string | null}
  */
-export function normalizeExternalUrl(input) {
+export function normalizeExternalUrl(input: unknown): string | null {
   if (typeof input !== 'string' || input.length === 0 || input.length > 8192) {
     return null;
   }

@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { safeUtilityEnvironment, resolveRustUtilityExecutable } from './rustUtility.mjs';
+import type { ChildProcessWithoutNullStreams, SpawnOptions } from 'node:child_process';
+import { safeUtilityEnvironment, resolveRustUtilityExecutable } from './rustUtility.ts';
 
 const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
 const MAX_RESPONSE_LINE_BYTES = 16 * 1024 * 1024;
@@ -7,7 +8,53 @@ const MAX_PENDING_REQUEST_BYTES = 16 * 1024 * 1024;
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const MAX_HEADERS = 64;
 
-function validateRequest(endpoint, options = {}, purpose = 'erpnext') {
+type ApiPurpose = 'erpnext' | 'telemetry';
+type ApiMethod = 'GET' | 'POST';
+
+export interface ApiRequestOptions {
+  method?: ApiMethod;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+interface ValidatedRequest {
+  purpose: ApiPurpose;
+  endpoint: string;
+  options: { method: ApiMethod; headers: Record<string, string>; body?: string };
+}
+
+interface PendingRequest {
+  resolve(value: unknown): void;
+  reject(reason: Error): void;
+  timeout: ReturnType<typeof setTimeout>;
+  bytes: number;
+}
+
+type ApiChild = Pick<ChildProcessWithoutNullStreams,
+  'stdin' | 'stdout' | 'stderr' | 'once' | 'removeListener' | 'kill'>;
+type ApiSpawn = (
+  executable: string,
+  args: string[],
+  options: SpawnOptions
+) => ApiChild;
+
+interface RustApiClientOptions {
+  requestTimeoutMs?: number;
+  maxPendingRequests?: number;
+  resolveExecutable?: () => string;
+  spawnProcess?: ApiSpawn;
+  baseEnv?: NodeJS.ProcessEnv;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validateRequest(
+  endpoint: unknown,
+  options: unknown = {},
+  purpose: ApiPurpose = 'erpnext'
+): ValidatedRequest {
   if (purpose !== 'erpnext' && purpose !== 'telemetry') {
     throw new Error('Unsupported HTTPS request purpose');
   }
@@ -24,7 +71,7 @@ function validateRequest(endpoint, options = {}, purpose = 'erpnext') {
     throw new Error('ERPNext API endpoint is not allowed');
   }
   if (options === undefined) options = {};
-  if (!options || typeof options !== 'object' || Array.isArray(options)) {
+  if (!isRecord(options)) {
     throw new Error('Invalid ERPNext API request options');
   }
   const method = options.method ?? 'GET';
@@ -37,8 +84,9 @@ function validateRequest(endpoint, options = {}, purpose = 'erpnext') {
     throw new Error('API request body exceeds the 4 MiB limit');
   }
   if (method === 'GET' && options.body !== undefined) throw new Error('GET API requests cannot include a body');
+  const body = options.body;
   const headers = options.headers ?? {};
-  if (!headers || typeof headers !== 'object' || Array.isArray(headers) || Object.keys(headers).length > MAX_HEADERS) {
+  if (!isRecord(headers) || Object.keys(headers).length > MAX_HEADERS) {
     throw new Error('Invalid API request headers');
   }
   let headerBytes = 0;
@@ -60,17 +108,39 @@ function validateRequest(endpoint, options = {}, purpose = 'erpnext') {
   )) {
     throw new Error('Telemetry requests require an authorization header');
   }
-  return { purpose, endpoint: url.href, options: { method, headers, ...(options.body === undefined ? {} : { body: options.body }) } };
+  return {
+    purpose,
+    endpoint: url.href,
+    options: {
+      method,
+      headers: headers as Record<string, string>,
+      ...(body === undefined ? {} : { body: body as string }),
+    },
+  };
 }
 
 export class RustApiClient {
+  private readonly requestTimeoutMs: number;
+  private readonly maxPendingRequests: number;
+  private readonly resolveExecutable: () => string;
+  private readonly spawnProcess: ApiSpawn;
+  private readonly env: NodeJS.ProcessEnv;
+  private child: ApiChild | null = null;
+  private readonly pending = new Map<number, PendingRequest>();
+  private pendingBytes = 0;
+  private nextId = 1;
+  private stdoutBuffer = Buffer.alloc(0);
+  private closing = false;
+  private closePromise: Promise<void> | null = null;
+
   constructor({
     requestTimeoutMs = 35_000,
     maxPendingRequests = 32,
     resolveExecutable = resolveRustUtilityExecutable,
-    spawnProcess = spawn,
+    spawnProcess = (executable, args, options) =>
+      spawn(executable, args, options) as ApiChild,
     baseEnv = process.env,
-  } = {}) {
+  }: RustApiClientOptions = {}) {
     if (!Number.isSafeInteger(maxPendingRequests) || maxPendingRequests < 1 || maxPendingRequests > 128) {
       throw new Error('maxPendingRequests must be an integer between 1 and 128');
     }
@@ -79,24 +149,21 @@ export class RustApiClient {
     this.resolveExecutable = resolveExecutable;
     this.spawnProcess = spawnProcess;
     this.env = safeUtilityEnvironment(baseEnv);
-    this.child = null;
-    this.pending = new Map();
-    this.pendingBytes = 0;
-    this.nextId = 1;
-    this.stdoutBuffer = Buffer.alloc(0);
-    this.closing = false;
-    this.closePromise = null;
   }
 
-  async request(endpoint, options) {
+  async request(endpoint: string, options?: ApiRequestOptions): Promise<unknown> {
     return this.requestForPurpose(endpoint, options, 'erpnext');
   }
 
-  async requestTelemetry(endpoint, options) {
+  async requestTelemetry(endpoint: string, options?: ApiRequestOptions): Promise<unknown> {
     return this.requestForPurpose(endpoint, options, 'telemetry');
   }
 
-  async requestForPurpose(endpoint, options, purpose) {
+  private async requestForPurpose(
+    endpoint: string,
+    options: ApiRequestOptions | undefined,
+    purpose: ApiPurpose
+  ): Promise<unknown> {
     if (this.closing) throw new Error('Rust API service is shutting down');
     const request = validateRequest(endpoint, options, purpose);
     if (this.pending.size >= this.maxPendingRequests) {
@@ -112,7 +179,7 @@ export class RustApiClient {
       throw new Error('ERPNext API pending requests exceed the 16 MiB aggregate limit');
     }
     const child = this.ensureChild();
-    return await new Promise((resolve, reject) => {
+    return await new Promise<unknown>((resolve, reject) => {
       const timeout = setTimeout(() => {
         const pending = this.pending.get(id);
         if (!pending) return;
@@ -143,7 +210,7 @@ export class RustApiClient {
     });
   }
 
-  ensureChild() {
+  private ensureChild(): ApiChild {
     if (this.child && this.child.stdin.writable) return this.child;
     const child = this.spawnProcess(this.resolveExecutable(), ['--serve-api'], {
       windowsHide: true,
@@ -152,7 +219,7 @@ export class RustApiClient {
     });
     this.child = child;
     this.stdoutBuffer = Buffer.alloc(0);
-    child.stdout.on('data', (chunk) => {
+    child.stdout.on('data', (chunk: Buffer) => {
       let start = 0;
       while (start < chunk.length) {
         const newline = chunk.indexOf(0x0a, start);
@@ -177,25 +244,30 @@ export class RustApiClient {
     return child;
   }
 
-  onLine(line, child = this.child) {
+  private onLine(line: string, child: ApiChild | null = this.child): void {
     if (!child || this.child !== child) return;
     if (Buffer.byteLength(line, 'utf8') > MAX_RESPONSE_LINE_BYTES) {
       this.failChild(child, new Error('Rust API response exceeded the 16 MiB protocol limit'));
       try { child.kill(); } catch {}
       return;
     }
-    let response;
+    let response: Record<string, unknown>;
     try { response = JSON.parse(line); } catch {
       this.failChild(child, new Error('Rust API service returned malformed JSON'));
       try { child?.kill(); } catch {}
       return;
     }
-    if (!Number.isSafeInteger(response?.id) || response.id < 1) {
+    if (!isRecord(response)) {
+      this.failChild(child, new Error('Rust API service returned an invalid response envelope'));
+      try { child.kill(); } catch {}
+      return;
+    }
+    if (typeof response.id !== 'number' || !Number.isSafeInteger(response.id) || response.id < 1) {
       this.failChild(child, new Error('Rust API service returned an invalid response ID'));
       try { child.kill(); } catch {}
       return;
     }
-    const pending = this.pending.get(response?.id);
+    const pending = this.pending.get(response.id);
     if (!pending) {
       this.failChild(child, new Error('Rust API service returned an unexpected response ID'));
       try { child.kill(); } catch {}
@@ -203,9 +275,10 @@ export class RustApiClient {
     }
     const hasResult = Object.hasOwn(response, 'result');
     const hasError = Object.hasOwn(response, 'error');
+    const responseError = response.error;
     if (
       hasResult === hasError ||
-      (hasError && (!response.error || typeof response.error.message !== 'string'))
+      (hasError && (!isRecord(responseError) || typeof responseError.message !== 'string'))
     ) {
       this.failChild(child, new Error('Rust API service returned an invalid response envelope'));
       try { child.kill(); } catch {}
@@ -215,13 +288,13 @@ export class RustApiClient {
     this.pendingBytes -= pending.bytes;
     clearTimeout(pending.timeout);
     if (hasError) {
-      pending.reject(new Error(response.error.message));
+      pending.reject(new Error((responseError as Record<string, unknown>).message as string));
     } else if (hasResult) {
       pending.resolve(response.result);
     }
   }
 
-  failChild(child, error) {
+  private failChild(child: ApiChild | null, error: Error): void {
     if (child && this.child !== child) return;
     if (child && this.child === child) this.child = null;
     for (const [id, pending] of this.pending) {
@@ -232,7 +305,7 @@ export class RustApiClient {
     }
   }
 
-  close() {
+  close(): Promise<void> {
     if (this.closePromise) return this.closePromise;
     this.closing = true;
     const child = this.child;
@@ -242,7 +315,7 @@ export class RustApiClient {
     }
     this.closePromise = new Promise((resolve) => {
       let settled = false;
-      let timeout;
+      let timeout: ReturnType<typeof setTimeout> | undefined;
       const finish = () => {
         if (settled) return;
         settled = true;
@@ -265,13 +338,13 @@ export class RustApiClient {
   }
 }
 
-let sharedClient;
-export function sendRustApiRequest(endpoint, options) {
+let sharedClient: RustApiClient | undefined;
+export function sendRustApiRequest(endpoint: string, options?: ApiRequestOptions): Promise<unknown> {
   sharedClient ??= new RustApiClient();
   return sharedClient.request(endpoint, options);
 }
 
-export function sendRustTelemetryRequest(endpoint, options) {
+export function sendRustTelemetryRequest(endpoint: string, options?: ApiRequestOptions): Promise<unknown> {
   sharedClient ??= new RustApiClient();
   return sharedClient.requestTelemetry(endpoint, options);
 }

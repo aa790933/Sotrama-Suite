@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { parseRustUtilityJson, runRustUtility } from './rustUtility.mjs';
+import { parseRustUtilityJson, runRustUtility } from './rustUtility';
 
 const LANGUAGE_CODE = /^[A-Za-z0-9_-]{1,32}$/;
 /** Translation parsing and map semantics live in Rust; this is only host IPC glue. */
-export async function getLanguageMap(code) {
+export async function getLanguageMap(code: string): Promise<Record<string, unknown>> {
   if (typeof code !== 'string' || !LANGUAGE_CODE.test(code)) {
     throw new Error('Invalid language code');
   }
@@ -18,10 +18,10 @@ export async function getLanguageMap(code) {
   if (!languageMap || typeof languageMap !== 'object' || Array.isArray(languageMap)) {
     throw new Error('Rust translation utility returned an invalid language map');
   }
-  return languageMap;
+  return languageMap as Record<string, unknown>;
 }
 
-function resolveTranslationsDirectory() {
+function resolveTranslationsDirectory(): string {
   const candidates = [
     process.resourcesPath ? path.resolve(process.resourcesPath, '../translations') : undefined,
     path.resolve(process.cwd(), 'translations'),

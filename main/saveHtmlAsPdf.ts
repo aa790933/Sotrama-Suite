@@ -1,7 +1,8 @@
 import { BrowserWindow } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { validatePrintDocumentInput } from './printDocumentPolicy.mjs';
+import type { App } from 'electron';
+import { validatePrintDocumentInput } from './printDocumentPolicy';
 
 /**
  * Render HTML through Electron's isolated print renderer and save its PDF.
@@ -12,7 +13,13 @@ import { validatePrintDocumentInput } from './printDocumentPolicy.mjs';
  * @param {number} width
  * @param {number} height
  */
-export async function saveHtmlAsPdf(html, savePath, app, width, height) {
+export async function saveHtmlAsPdf(
+  html: string,
+  savePath: string,
+  app: App,
+  width: number,
+  height: number
+): Promise<boolean> {
   validatePrintDocumentInput(html, width, height);
   if (typeof savePath !== 'string' || savePath.length === 0 || savePath.length > 32768) {
     throw new Error('PDF destination path is invalid');
@@ -20,7 +27,7 @@ export async function saveHtmlAsPdf(html, savePath, app, width, height) {
 
   const tempDir = await fs.mkdtemp(path.join(app.getPath('temp'), 'sotrama-print-'));
   const htmlPath = path.join(tempDir, 'document.html');
-  let printWindow;
+  let printWindow: BrowserWindow | undefined;
   try {
     await fs.writeFile(htmlPath, html, { encoding: 'utf8', flag: 'wx' });
     printWindow = await getInitializedPrintWindow(htmlPath, width, height);
@@ -40,8 +47,11 @@ export async function saveHtmlAsPdf(html, savePath, app, width, height) {
   }
 }
 
-/** @param {string} printFilePath @param {number} width @param {number} height */
-export async function getInitializedPrintWindow(printFilePath, width, height) {
+export async function getInitializedPrintWindow(
+  printFilePath: string,
+  width: number,
+  height: number
+): Promise<BrowserWindow> {
   const printWindow = new BrowserWindow({
     width: Math.floor(width * 28.333333),
     height: Math.floor(height * 28.333333),

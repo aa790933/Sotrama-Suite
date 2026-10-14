@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { validatePrintDocumentInput } from '../main/printDocumentPolicy.mjs';
+import { validatePrintDocumentInput } from '../main/printDocumentPolicy.ts';
 
 assert.doesNotThrow(() => validatePrintDocumentInput('<html>ok</html>', 8, 12));
 for (const [html, width, height] of [

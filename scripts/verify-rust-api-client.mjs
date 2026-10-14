@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import test from 'node:test';
-import { RustApiClient } from '../main/rustApiClient.mjs';
+import { RustApiClient } from '../main/rustApiClient.ts';
 
 const endpoint = 'https://erp.example.com/api/method/books_integration.api.sync';
 const telemetryEndpoint = 'https://logs.example.com/api/error';

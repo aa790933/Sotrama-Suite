@@ -1,9 +1,23 @@
 import { spawn } from 'node:child_process';
+import type { ChildProcessWithoutNullStreams, SpawnOptions } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 const MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
-export function resolveRustUtilityExecutable() {
+
+type UtilityChild = Pick<ChildProcessWithoutNullStreams, 'stdout' | 'stderr' | 'once' | 'kill'>;
+type UtilitySpawn = (
+  executable: string,
+  args: string[],
+  options: SpawnOptions
+) => UtilityChild;
+
+interface RustUtilityDependencies {
+  executable?: string;
+  spawnProcess?: UtilitySpawn;
+}
+
+export function resolveRustUtilityExecutable(): string {
   const binary = process.platform === 'win32' ? 'sotrama-backend.exe' : 'sotrama-backend';
   const candidates = [
     process.env.SOTRAMA_BACKEND_PATH,
@@ -18,19 +32,24 @@ export function resolveRustUtilityExecutable() {
   return executable;
 }
 
-export function safeUtilityEnvironment(source) {
+export function safeUtilityEnvironment(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const allowed = process.platform === 'win32'
     ? ['PATH', 'PATHEXT', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'HOME', 'USERPROFILE']
     : ['PATH', 'HOME', 'TMPDIR', 'LANG', 'LC_ALL'];
   return Object.fromEntries(allowed.filter((key) => source[key] !== undefined).map((key) => [key, source[key]]));
 }
 
-export function runRustUtility(args, timeoutMs = 5000, dependencies = {}) {
+export function runRustUtility(
+  args: string[],
+  timeoutMs = 5000,
+  dependencies: RustUtilityDependencies = {}
+): Promise<string> {
   const executable = dependencies.executable ?? resolveRustUtilityExecutable();
-  const spawnProcess = dependencies.spawnProcess ?? spawn;
+  const spawnProcess: UtilitySpawn = dependencies.spawnProcess ??
+    ((command, argv, options) => spawn(command, argv, options) as UtilityChild);
   return new Promise((resolve, reject) => {
     let settled = false;
-    const stdoutChunks = [];
+    const stdoutChunks: Buffer[] = [];
     let stdoutBytes = 0;
     let stderr = '';
     const child = spawnProcess(executable, args, {
@@ -39,19 +58,20 @@ export function runRustUtility(args, timeoutMs = 5000, dependencies = {}) {
       // Do not leak database credentials, API tokens or unrelated parent env.
       env: safeUtilityEnvironment(process.env),
     });
-    const finish = (error, output) => {
+    const finish = (error: Error | null, output?: string) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       if (error) reject(error);
-      else resolve(output);
+      else if (output !== undefined) resolve(output);
+      else reject(new Error('Rust utility completed without output'));
     };
     const timer = setTimeout(() => {
       child.kill();
       finish(new Error(`Rust utility timed out after ${timeoutMs} milliseconds`));
     }, timeoutMs);
 
-    child.stdout.on('data', (chunk) => {
+    child.stdout.on('data', (chunk: Buffer) => {
       if (stdoutBytes + chunk.length > MAX_OUTPUT_BYTES) {
         child.kill();
         finish(new Error('Rust utility output exceeded the 16 MiB limit'));
@@ -60,13 +80,13 @@ export function runRustUtility(args, timeoutMs = 5000, dependencies = {}) {
       stdoutChunks.push(chunk);
       stdoutBytes += chunk.length;
     });
-    child.stderr.on('data', (chunk) => {
+    child.stderr.on('data', (chunk: Buffer) => {
       stderr = `${stderr}${chunk.toString('utf8')}`.slice(-2048);
     });
-    child.once('error', (error) => {
+    child.once('error', (error: Error) => {
       finish(new Error(`Rust utility failed: ${error.message}`));
     });
-    child.once('close', (status) => {
+    child.once('close', (status: number | null) => {
       if (status !== 0) {
         finish(new Error(stderr.trim() || `Rust utility exited with code ${status}`));
         return;
@@ -76,8 +96,8 @@ export function runRustUtility(args, timeoutMs = 5000, dependencies = {}) {
   });
 }
 
-export function parseRustUtilityJson(output, label) {
-  let value;
+export function parseRustUtilityJson(output: string, label: string): unknown {
+  let value: unknown;
   try {
     value = JSON.parse(output);
   } catch {

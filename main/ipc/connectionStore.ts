@@ -13,7 +13,7 @@ import { sanitizeDatabaseName } from './policies';
  * Small ConnectionStore seam — abstracts PersistedConnection persistence.
  * Two adapters: ElectronStoreConnectionStore (prod, wraps electron-store via utils/config)
  * and InMemoryConnectionStore (test, plain Map). IpcRouter depends on this interface,
- * not on main/helpers.js → utils/config.ts → electron-store chain.
+ * not on main/helpers.ts → utils/config.ts → electron-store chain.
  */
 export interface ConnectionStore {
   findById(id: string): PersistedConnection | undefined;

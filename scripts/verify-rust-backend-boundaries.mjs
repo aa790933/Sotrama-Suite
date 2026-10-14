@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+const [externalUrlPolicy, printDocumentPolicy] = await Promise.all([
+  read('main/externalUrlPolicy.ts'),
+  read('main/printDocumentPolicy.ts'),
+]);
 
 const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, rendererHandler, client, testRunner, pool, backup, rustMain, translations, translationBridge, buildScript, templates, templateBridge, utilityBridge, workflow, utilityTests, bootstrap, appPathResolver, appProtocolTests, apiService, apiClient, apiBridge, apiClientTests, policies, packageVerifier, architectureDocs, contactMothership, packageManifest, yarnLock, translationRuntime, translationHelpersEsm, translationHelpersCjs, rendererMisc, lifecycle, electronBuilderConfig] = await Promise.all([
   read('main/ipc/databaseContract.ts'),
@@ -17,19 +22,19 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('rust-backend/src/database/backup.rs'),
   read('rust-backend/src/main.rs'),
   read('rust-backend/src/translations.rs'),
-  read('main/getLanguageMap.mjs'),
+  read('main/getLanguageMap.ts'),
   read('build/scripts/build.mjs'),
   read('rust-backend/src/templates.rs'),
-  read('main/getPrintTemplates.mjs'),
-  read('main/rustUtility.mjs'),
+  read('main/getPrintTemplates.ts'),
+  read('main/rustUtility.ts'),
   read('.github/workflows/rust-backend.yml'),
   read('scripts/verify-rust-utility-bridge.mjs'),
   read('main/bootstrap.ts'),
-  read('main/resolveAppFilePath.js'),
+  read('main/resolveAppFilePath.ts'),
   read('tests/appProtocol.spec.ts'),
   read('rust-backend/src/api.rs'),
-  read('main/rustApiClient.mjs'),
-  read('main/api.mjs'),
+  read('main/rustApiClient.ts'),
+  read('main/api.ts'),
   read('scripts/verify-rust-api-client.mjs'),
   read('main/ipc/policies.ts'),
   read('scripts/verify-rust-backend-package.mjs'),
@@ -124,10 +129,10 @@ assert.match(templates, /MAX_TOTAL_TEMPLATE_BYTES/,
   'Rust template loading must bound aggregate resource size');
 assert.match(templateBridge, /--print-templates/,
   'Electron template requests must be delegated to the Rust utility');
-assert.match(router, /from '\.\.\/getLanguageMap\.cjs'/,
-  'language-map IPC must use the JavaScript bridge to Rust');
-assert.match(router, /from '\.\.\/getPrintTemplates\.cjs'/,
-  'print-template IPC must use the JavaScript bridge to Rust');
+assert.match(router, /from '\.\.\/getLanguageMap'/,
+  'language-map IPC must use the typed Rust utility adapter');
+assert.match(router, /from '\.\.\/getPrintTemplates'/,
+  'print-template IPC must use the typed Rust utility adapter');
 assert.match(buildScript, /Rust backend binary is required for packaging/,
   'packaged apps must contain the Rust translation utility instead of shipping a broken language-map path');
 assert.match(bootstrap, /import \{ resolveAppFilePath \} from '\.\/resolveAppFilePath'/,
@@ -176,8 +181,8 @@ assert.match(apiClient, /Buffer\.concat\(\[this\.stdoutBuffer, fragment\]\)/,
   'the API bridge must bound individual frames without rejecting a chunk containing multiple responses');
 assert.doesNotMatch(apiBridge, /node-fetch/,
   'the API adapter must not retain the legacy Node HTTP implementation');
-assert.match(router, /from '\.\.\/api\.cjs'/,
-  'the IPC router must load the API bridge through the CommonJS-compatible adapter');
+assert.match(router, /from '\.\.\/api'/,
+  'the IPC router must call the typed Rust HTTPS adapter directly');
 assert.match(contactMothership, /sendTelemetryRequest\(errorLogUrl/,
   'main-process error telemetry must use the Rust HTTPS transport');
 assert.match(lifecycle, /event\.preventDefault\(\)/,
@@ -193,10 +198,10 @@ assert.equal(manifest.devDependencies?.['@types/node-fetch'], undefined,
   'the obsolete Node fetch type dependency must be removed after all callers migrate');
 assert.doesNotMatch(yarnLock, /(?:^|\n)(?:"node-fetch@npm:2"|"@types\/node-fetch@npm:\^2\.6\.1"):/,
   'the lockfile must not retain obsolete direct Node fetch resolutions');
-assert.match(router, /from '\.\.\/getLanguageMap\.cjs'/,
-  'the IPC router must load Rust resource bridges compatibly with the CommonJS test runner');
-assert.match(router, /from '\.\.\/getPrintTemplates\.cjs'/,
-  'the IPC router must load the template bridge compatibly with the CommonJS test runner');
+assert.match(router, /from '\.\.\/getLanguageMap'/,
+  'the IPC router must call the typed Rust language-map adapter');
+assert.match(router, /from '\.\.\/getPrintTemplates'/,
+  'the IPC router must call the typed Rust print-template adapter');
 assert.match(policies, /url\.pathname\.startsWith\('\/api\/method\/books_integration\.api\.'\)/,
   'the Electron IPC endpoint policy must validate the exact URL path, not a substring');
 for (const behavior of ['correlates responses', 'before spawning', 'pending request cap', 'times out', 'malformed service frames', 'unknown response IDs', 'process exits and recovers', 'telemetry HTTPS POSTs']) {
@@ -210,6 +215,27 @@ assert.match(workflow, /Verify Rust ERPNext API client contract/,
   'Rust CI must execute the ERPNext API client contract tests');
 assert.match(packageVerifier, /output\.includes\('--serve-api'\)/,
   'packaged executable smoke checks must verify the API server mode is present');
+
+for (const migratedModule of [
+  'helpers',
+  'printHtmlDocument',
+  'registerAutoUpdaterListeners',
+  'registerIpcMainMessageListeners',
+  'registerProcessListeners',
+  'resolveAppFilePath',
+  'saveHtmlAsPdf',
+]) {
+  assert.ok(!existsSync(new URL(`../main/${migratedModule}.js`, import.meta.url)),
+    `${migratedModule} must not retain a duplicate JavaScript application module`);
+}
+assert.doesNotMatch(externalUrlPolicy, /@param \{unknown\}/,
+  'external URL policy must expose a typed TypeScript input contract');
+assert.match(printDocumentPolicy, /html: unknown,[\s\S]*?width: unknown,[\s\S]*?height: unknown/,
+  'print document policy must validate all runtime inputs independently of TypeScript callers');
+assert.ok(!existsSync(new URL('../main/externalUrlPolicy.mjs', import.meta.url)),
+  'external URL policy must not retain its JavaScript module');
+assert.ok(!existsSync(new URL('../main/printDocumentPolicy.mjs', import.meta.url)),
+  'print document policy must not retain its JavaScript module');
 assert.match(buildScript, /!argv\.nopackage && !fs\.existsSync\(rustBackendPath\)/,
   'the real application packaging path must refuse to package without the native backend binary');
 assert.match(electronBuilderConfig, /fs\.existsSync\(rustBackendPath\)[\s\S]*?from: rustBackendPath, to: rustBackendName/,
@@ -224,6 +250,19 @@ assert.match(architectureDocs, /long-lived HTTPS request service/,
   'the Rust backend architecture documentation must describe the database-independent API service');
 for (const file of ['scripts/verify-rust-utility-bridge.mjs', 'scripts/verify-rust-api-client.mjs', 'scripts/verify-typed-renderer.mjs', 'build/scripts/build.mjs', 'electron-builder-config.mjs', 'scripts/verify-rust-backend-package.mjs']) {
   assert.ok(workflow.includes(`- '${file}'`), `Rust workflow path filters must include ${file}`);
+}
+
+for (const migratedBridge of [
+  'api',
+  'rustApiClient',
+  'rustUtility',
+  'getLanguageMap',
+  'getPrintTemplates',
+]) {
+  for (const extension of ['mjs', 'cjs']) {
+    assert.ok(!existsSync(new URL(`../main/${migratedBridge}.${extension}`, import.meta.url)),
+      `${migratedBridge} must not retain a JavaScript ${extension.toUpperCase()} bridge`);
+  }
 }
 
 console.log('Rust backend boundary checks passed.');

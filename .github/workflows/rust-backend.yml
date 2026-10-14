@@ -156,15 +156,15 @@ jobs:
         run: node scripts/verify-rust-backend-boundaries.mjs
 
       - name: Verify Electron-to-Rust utility bridge
-        run: node scripts/verify-rust-utility-bridge.mjs
+        run: node --experimental-strip-types scripts/verify-rust-utility-bridge.mjs
 
       - name: Verify Rust ERPNext API client contract
-        run: node scripts/verify-rust-api-client.mjs
+        run: node --experimental-strip-types scripts/verify-rust-api-client.mjs
 
       - name: Verify Electron URL, print and preload boundaries
         run: |
-          node scripts/verify-main-external-url.mjs
-          node scripts/verify-print-document-policy.mjs
+          node --experimental-strip-types scripts/verify-main-external-url.mjs
+          node --experimental-strip-types scripts/verify-print-document-policy.mjs
           node scripts/verify-preload-bridge.mjs
           node scripts/verify-typed-renderer.mjs
 
