@@ -2,8 +2,8 @@
 layout: home
 hero:
   name: Sotrama Suite
-  text: Desktop accounting backed by MariaDB
-  tagline: Open-source desktop accounting software for small businesses
+  text: Connected tools for business operations
+  tagline: An open-source, ERP-oriented desktop suite for small and medium-sized businesses
   image:
     src: /icon.png
     alt: Sotrama Suite Logo
@@ -19,14 +19,14 @@ hero:
       link: https://github.com/aa790933/Sotrama-Suite/releases
 
 features:
-  - title: Double-Entry Accounting
-    details: Record journal entries and review the general ledger and trial balance
+  - title: Connected business workflows
+    details: Bring supported sales, billing, payment, and financial workflows together around company data
   - title: Point of Sale (POS)
     details: Create retail sales through the point-of-sale workflow
   - title: Invoicing & Billing
     details: Create sales and purchase invoices, record bills, and track payments
-  - title: Financial Reports
-    details: Review Profit and Loss, Balance Sheet, General Ledger, and Trial Balance reports
+  - title: Financial records and reports
+    details: Review journal entries, Profit and Loss, Balance Sheet, General Ledger, and Trial Balance reports
   - title: MariaDB storage
     details: Stores company records in MariaDB, either on the same computer or on a reachable LAN host
   - title: Desktop application
@@ -55,7 +55,7 @@ features:
 
 <div class="custom-block tip" style="padding: 1.5rem;">
 <h3>Architecture</h3>
-<p>Read the architecture and backend guides</p>
+<p>Understand application layers, data access, and safe change boundaries</p>
 <a href="architecture/" class="vp-button-brand">Architecture overview</a>
 </div>
 

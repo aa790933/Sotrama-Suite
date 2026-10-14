@@ -1,6 +1,6 @@
 ---
 title: First company setup
-description: Create a company and review its accounting defaults.
+description: Create a company and review its initial business and financial settings.
 ---
 
 # First company setup
@@ -30,7 +30,7 @@ Currency, fiscal-year dates, and the chart of accounts can be prefilled from the
 
 ## Demo company
 
-The company selector offers **Create Demo** for a separate demonstration company. Use it to inspect example transactions and workflows without mixing them with the company you intend to use for accounting.
+The company selector offers **Create Demo** for a separate demonstration company. Use it to inspect example records and workflows without mixing them with the company you use for day-to-day operations.
 
 ## More than one company
 

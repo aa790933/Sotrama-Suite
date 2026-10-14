@@ -44,14 +44,14 @@ const sidebar = [
 
 export default defineConfig({
   title: 'Sotrama Suite',
-  description: 'Open-source desktop accounting software for small and medium businesses',
+  description: 'Open-source, ERP-oriented desktop tools for business operations, built with Vue, Electron, and MariaDB.',
   lang: 'en',
  base: '/Sotrama-Suite/',
 
   head: [
     ['meta', { name: 'theme-color', content: '#221166' }],
     ['meta', { property: 'og:title', content: 'Sotrama Suite' }],
-    ['meta', { property: 'og:description', content: 'Open-source desktop accounting backed by MariaDB.' }],
+    ['meta', { property: 'og:description', content: 'Connected business tools for sales, billing, payments, company data, and financial reporting.' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://aa790933.github.io/Sotrama-Suite/' }],
   ],

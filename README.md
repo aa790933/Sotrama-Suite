@@ -7,9 +7,9 @@
 
 <h1>Sotrama Suite</h1>
 
-**Modern Accounting Made Simple**
+**Open-Source Tools for Business Operations**
 
-> Sotrama Suite is an open-source accounting software by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
+> Sotrama Suite is an open-source, cross-platform business management suite by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/aa790933/Sotrama-Suite)](https://github.com/aa790933/Sotrama-Suite/releases)
 ![Platforms](https://img.shields.io/badge/platform-mac%2C%20windows%2C%20linux-yellowgreen)
@@ -29,7 +29,9 @@
 
 ## Sotrama Suite
 
-Sotrama Suite is an open-source accounting software aimed at simplifying financial management for businesses. With its clean and user-friendly interface, it streamlines accounting tasks for small and medium-sized enterprises, offering a seamless solution for modern businesses to manage their finances with ease.
+Sotrama Suite is an open-source desktop application for bringing practical business tools together in one place. Its direction is closer to an ERP-style suite than a single-purpose accounting product: business workflows should share company data and work together instead of living in disconnected tools. It is built for Windows, macOS, and Linux, with MariaDB-backed company data that can be hosted locally or on a trusted network.
+
+The current application focuses on the operational and financial workflows already implemented—sales and point of sale, invoices and bills, payments, journal entries, and financial reports. This description is a direction for the suite, not a claim that every ERP module (such as inventory, HR, manufacturing, or CRM) is already available.
 
 <details>
 <summary>Screenshots</summary>
@@ -44,24 +46,18 @@ Sotrama Suite is an open-source accounting software aimed at simplifying financi
 
 ### Motivation
 
-Sotrama Suite addresses a market gap where small businesses face expensive, complex accounting tools. It offers an intuitive, open-source solution that combines simplicity with essential features, empowering businesses to manage finances effectively—even offline.
+Sotrama Suite aims to give small and medium-sized businesses a practical, extensible collection of connected tools without requiring a collection of separate applications. The priority is to keep everyday workflows approachable, data consistent, and the application maintainable as the suite grows beyond its original financial-management focus.
 
 ### Key Features
 
-- **Dashboard**: Provides an overview of key financial data and performance metrics.
-- **Point of Sale**: Simplifies retail transactions with an integrated POS system for easy sales processing.
-- **Works Offline**: Enables users to continue working without an internet connection and sync later.
-- **Double-entry accounting**: Ensures accurate financial tracking by recording each transaction in two accounts.
-- **Entries**
-  - **Invoicing**: Allows businesses to create and manage professional invoices effortlessly.
-  - **Billing**: Billing processes by generating bills and tracking payments.
-  - **Payments**: Records and tracks payments received and made.
-  - **Journal Entries**: Records financial transactions in the general ledger with detailed notes and adjustments.
-- **Financial Reports**
-  - **General Ledger**: Centralized record of all financial transactions, providing a comprehensive view of accounts.
-  - **Profit and Loss Statement**: Summarizes revenues, costs, and expenses to show business profitability.
-  - **Balance Sheet**: Displays a company’s assets, liabilities, and equity at a specific point in time.
-  - **Trial Balance**: Verifies the accuracy of accounting records by ensuring that debits and credits are balanced.
+- **Business overview**: Dashboard views for the operational and financial data currently supported by the application.
+- **Sales and point of sale**: Handle retail sales through the integrated POS workflow.
+- **Invoices, bills, and payments**: Create sales and purchase documents and record money received or paid.
+- **Financial records**: Journal entries and double-entry posting for supported transactions.
+- **Reports**: General Ledger, Profit and Loss, Balance Sheet, and Trial Balance.
+- **Company setup**: Manage company-specific settings, currency, fiscal year, chart of accounts, and available country/tax defaults.
+- **Shared data**: Store company records in MariaDB locally or on a trusted LAN host.
+- **Cross-platform desktop**: Electron packages the application for Windows, macOS, and Linux.
     <br/>
 
 ### Under the Hood
@@ -70,7 +66,7 @@ Sotrama Suite addresses a market gap where small businesses face expensive, comp
 
 - **Electron**: Electron is used to package Sotrama Suite as a standalone desktop application, allowing it to run offline and provide a native-like experience across Windows, macOS, and Linux.
 
-- **MariaDB**: Sotrama Suite uses MariaDB as its database backend. All financial data, transactions, and configurations are stored in a MariaDB database on the user's machine.
+- **MariaDB**: Stores company records, transactions, and configuration. It can run locally or on a trusted LAN host.
 
 ## Production Setup
 
@@ -162,7 +158,7 @@ If you want to contribute to Sotrama Suite, please check our [Contribution Guide
 1. If you find any issues, no matter how small (even typos), you can [raise an issue](https://github.com/aa790933/Sotrama-Suite/issues/new) to inform us.
 2. You can help us with language support by [contributing translations](https://github.com/aa790933/Sotrama-Suite/wiki/Contributing-Translations).
 3. If you're an ardent user you can tell us what you would like to see.
-4. If you have accounting requirements, you can become an ardent user. 🙂
+4. Share the business workflows and tools you would like the suite to support next. 🙂
 
 If you want to contribute code then you can fork this repo, make changes and raise a PR. ([see how to](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork))
 
