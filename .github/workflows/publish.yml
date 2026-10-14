@@ -75,7 +75,7 @@ jobs:
         run: yarn build --mac --publish always
 
       - name: Verify Rust backend is included in the packaged app
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Tar files
         run: tar -cvf dist-macOS.tar dist_electron
@@ -155,7 +155,7 @@ jobs:
         run: yarn build --mac --publish always
 
       - name: Verify Rust backend is included in the packaged app
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Tar files
         run: tar -cvf dist-macOS-arm.tar dist_electron
@@ -223,7 +223,7 @@ jobs:
         run: yarn build --linux --publish always
 
       - name: Verify Rust backend is included in the packaged app
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Tar files
         run: tar -cvf dist-linux.tar dist_electron
@@ -313,7 +313,7 @@ jobs:
             yarn build --win --publish never
 
       - name: Verify Rust backend is included in the packaged app
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Upload installers to GitHub release
         env:

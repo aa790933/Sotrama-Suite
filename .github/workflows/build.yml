@@ -70,7 +70,7 @@ jobs:
         run: yarn build --publish never
 
       - name: Verify Rust backend is included in the packaged app
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
@@ -133,7 +133,7 @@ jobs:
         run: yarn build --win --publish never
 
       - name: Verify Rust backend is included in the packaged app
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v6

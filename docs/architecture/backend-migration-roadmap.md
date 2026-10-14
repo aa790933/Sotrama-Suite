@@ -7,7 +7,7 @@ description: Evidence-led plan for keeping the Electron/Vue application typed wh
 
 ## Decision
 
-Keep TypeScript as the default language for application code in the Electron main process, preload contracts, Vue renderer, models used by the renderer, and report presentation. Keep JavaScript for build/release scripts and other tooling where TypeScript adds no useful application contract. Do not convert typed application modules to plain JavaScript merely to reduce the `.ts` count.
+Keep TypeScript as the default language for application code in the Electron main process, preload contracts, Vue renderer, models used by the renderer, report presentation, build/release scripts, and repository-authored verification tooling. Runtime-generated JavaScript bundles are build artifacts, not source modules. Do not convert typed application modules to plain JavaScript merely to reduce the `.ts` count.
 
 Move backend domain rules, authoritative accounting operations, persistence, schema/patch execution, database lifecycle, and server-side integrations into Rust. TypeScript should call a small, explicitly versioned Rust protocol and translate results into renderer-facing shapes; it must not retain a second authoritative implementation of migrated business rules. Vue remains the presentation layer and Electron remains the desktop/OS integration layer.
 
@@ -50,7 +50,7 @@ The existing Rust architecture document records that the TypeScript database rem
 ### 1. Stabilize the language and process boundary
 
 - Keep strict TypeScript for app code and strengthen type checking incrementally; avoid introducing a second handwritten declaration layer for application modules that are already authored in TypeScript.
-- Restore application modules that were converted from typed `.ts` to plain `.js` without a runtime requirement for JavaScript. Keep `.mjs`/`.cjs` where a deliberate ESM/CommonJS tooling or bridge boundary requires it. Perform the restoration in reviewable cohorts and preserve the migration's functional fixes and regression tests.
+- Keep repository-authored scripts and configuration typed as `.ts` wherever their host supports Node's built-in type stripping or a TypeScript-aware config loader. Use JSON for declarative configuration where possible; generated `.js` bundles are expected build outputs and are not source files.
 - Upgrade TypeScript in stages: first evaluate TypeScript 6.0 compatibility and deprecations (including the current `baseUrl`/`ignoreDeprecations` configuration), then adopt TypeScript 7 only when `vue-tsc`, ESLint, build tooling, and all dependencies are compatible. Do not combine a compiler-major migration with a backend domain cutover.
 - Upgrade Electron 43 to a supported current release in a separate step, reviewing breaking changes, native dependencies, fuses, ASAR integrity, and sandbox behavior on every target OS.
 - Pin a tested stable Rust toolchain in CI and a repository toolchain file; update SQLx and other crates only with compatibility, advisory, license, and integration evidence.
@@ -164,5 +164,5 @@ These are project gates, not a claim of formal certification or a guarantee of a
 
 - The Rust sidecar contains MariaDB CRUD/child-row reconciliation, schema migration, ordered patch handlers, verified backup/restore, translation/template utility modes, and the bounded HTTPS integration/telemetry service.
 - TypeScript now owns the Electron-side Rust process adapters. The former JavaScript modules for the API adapter/client, utility runner, language/template adapters, URL/print policies, app protocol path resolver, print/PDF operations, updater listeners, process listeners, IPC message listeners, shared main-process helpers, and translation formatting helpers have been moved to typed `.ts` modules while preserving the current security checks.
-- JavaScript in `scripts/`, `build/`, and package/build configuration remains tooling rather than application backend code. Remaining application JS should be audited by responsibility and migrated only when the runtime contract is safe to preserve.
+- Repository-authored `.js`, `.mjs`, and `.cjs` source files are being removed from application, tooling, and configuration paths; generated Electron JavaScript bundles remain expected build artifacts. The boundary verifier enforces this distinction.
 - **The backend migration is not complete.** The TypeScript `backend/database` implementation remains the default/reference path; the Rust database adapter is opt-in. Rust domain-service parity, broad MariaDB parity/recovery evidence, hosted CI results, and packaged Windows/macOS/Linux integration are still release gates. Do not enable Rust by default or delete the TypeScript reference backend until those gates pass.

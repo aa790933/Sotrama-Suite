@@ -1,8 +1,5 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
-const { generateCSV, parseCSV } = require('../utils/csvParser.js');
+import { generateCSV, parseCSV } from '../utils/csvParser.ts';
 
 const source = [
   ['name', 'description'],

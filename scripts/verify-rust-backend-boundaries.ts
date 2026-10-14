@@ -23,21 +23,21 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('rust-backend/src/main.rs'),
   read('rust-backend/src/translations.rs'),
   read('main/getLanguageMap.ts'),
-  read('build/scripts/build.mjs'),
+  read('build/scripts/build.ts'),
   read('rust-backend/src/templates.rs'),
   read('main/getPrintTemplates.ts'),
   read('main/rustUtility.ts'),
   read('.github/workflows/rust-backend.yml'),
-  read('scripts/verify-rust-utility-bridge.mjs'),
+  read('scripts/verify-rust-utility-bridge.ts'),
   read('main/bootstrap.ts'),
   read('main/resolveAppFilePath.ts'),
   read('tests/appProtocol.spec.ts'),
   read('rust-backend/src/api.rs'),
   read('main/rustApiClient.ts'),
   read('main/api.ts'),
-  read('scripts/verify-rust-api-client.mjs'),
+  read('scripts/verify-rust-api-client.ts'),
   read('main/ipc/policies.ts'),
-  read('scripts/verify-rust-backend-package.mjs'),
+  read('scripts/verify-rust-backend-package.ts'),
   read('docs/architecture/rust-backend.md'),
   read('main/contactMothership.ts'),
   read('package.json'),
@@ -46,7 +46,7 @@ const [contract, adapter, router, sharedTypes, schemaIndex, rendererDb, renderer
   read('utils/translationHelpers.ts'),
   read('src/utils/misc.ts'),
   read('main/registerAppLifecycleListeners.ts'),
-  read('electron-builder-config.mjs'),
+  read('electron-builder-config.ts'),
 ]);
 
 assert.match(contract, /export interface RouterDatabase/,
@@ -73,9 +73,9 @@ assert.match(client, /split\(config\.password\)\.join\('\[REDACTED\]'\)/,
   'sidecar diagnostics must redact database credentials');
 assert.match(testRunner, /main\/ipc\/\*\.spec\.ts/,
   'the default test command must execute IPC boundary regression specs');
-assert.match(testRunner, /verify-csv-parser\.mjs/,
+assert.match(testRunner, /verify-csv-parser\.ts/,
   'the default test command must execute the CSV parser regression');
-assert.match(testRunner, /verify-translation-generator\.mjs/,
+assert.match(testRunner, /verify-translation-generator\.ts/,
   'the default test command must execute translation helper and CLI regressions');
 assert.match(pool, /\.ssl_mode\(ssl_mode_from_env\(\)\?\)/,
   'normal database connections must use the validated TLS policy');
@@ -120,7 +120,7 @@ assert.match(utilityBridge, /dependencies\.spawnProcess/,
 for (const behavior of ['safeUtilityEnvironment', 'timed-out child', 'nonzero exit', 'exceeding the hard cap', 'malformed JSON']) {
   assert.ok(utilityTests.includes(behavior), `Rust utility bridge regression coverage must include ${behavior}`);
 }
-assert.match(testRunner, /verify-rust-utility-bridge\.mjs/,
+assert.match(testRunner, /verify-rust-utility-bridge\.ts/,
   'the default test command must execute Rust utility bridge regressions');
 assert.match(templates, /MAX_TOTAL_TEMPLATE_BYTES/,
   'Rust template loading must bound aggregate resource size');
@@ -204,9 +204,9 @@ assert.match(policies, /url\.pathname\.startsWith\('\/api\/method\/books_integra
 for (const behavior of ['correlates responses', 'before spawning', 'pending request cap', 'times out', 'malformed service frames', 'unknown response IDs', 'process exits and recovers', 'telemetry HTTPS POSTs']) {
   assert.ok(apiClientTests.includes(behavior), `Rust API client regression coverage must include ${behavior}`);
 }
-assert.match(testRunner, /verify-rust-api-client\.mjs/,
+assert.match(testRunner, /verify-rust-api-client\.ts/,
   'the default test command must execute Rust API client regressions');
-assert.match(testRunner, /verify-preload-bridge\.mjs/,
+assert.match(testRunner, /verify-preload-bridge\.ts/,
   'the default test command must verify the typed preload bridge contract');
 assert.match(workflow, /Verify Rust ERPNext API client contract/,
   'Rust CI must execute the ERPNext API client contract tests');
@@ -229,15 +229,30 @@ assert.doesNotMatch(externalUrlPolicy, /@param \{unknown\}/,
   'external URL policy must expose a typed TypeScript input contract');
 assert.match(printDocumentPolicy, /html: unknown,[\s\S]*?width: unknown,[\s\S]*?height: unknown/,
   'print document policy must validate all runtime inputs independently of TypeScript callers');
-assert.ok(!existsSync(new URL('../main/externalUrlPolicy.mjs', import.meta.url)),
+assert.ok(!existsSync(new URL('../main/externalUrlPolicy.js', import.meta.url)),
   'external URL policy must not retain its JavaScript module');
-assert.ok(!existsSync(new URL('../main/printDocumentPolicy.mjs', import.meta.url)),
+assert.ok(!existsSync(new URL('../main/printDocumentPolicy.js', import.meta.url)),
   'print document policy must not retain its JavaScript module');
-const mainJavaScriptFiles = readdirSync(new URL('../main/', import.meta.url), {
-  recursive: true,
-}).filter((file) => /\.(?:js|mjs|cjs)$/i.test(file));
-assert.deepEqual(mainJavaScriptFiles, [],
-  'Electron main application code must be TypeScript; JavaScript belongs only in tooling');
+const excludedSourceDirectories = new Set([
+  '.git', '.yarn', 'node_modules', 'target', 'dist', 'dist_electron', 'coverage', 'release',
+]);
+function findJavaScriptSourceFiles(directory, relative = '') {
+  const matches = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && excludedSourceDirectories.has(entry.name)) continue;
+    const childRelative = relative ? `${relative}/${entry.name}` : entry.name;
+    const childPath = new URL(`../${childRelative}`, import.meta.url);
+    if (entry.isDirectory()) {
+      matches.push(...findJavaScriptSourceFiles(childPath, childRelative));
+    } else if (entry.isFile() && /\.(?:js|mjs|cjs)$/i.test(entry.name)) {
+      matches.push(childRelative);
+    }
+  }
+  return matches;
+}
+const javaScriptSourceFiles = findJavaScriptSourceFiles(new URL('../', import.meta.url));
+assert.deepEqual(javaScriptSourceFiles, [],
+  'repository-authored JavaScript, CommonJS, and ESM source files must be migrated; generated output is excluded');
 assert.match(buildScript, /!argv\.nopackage && !fs\.existsSync\(rustBackendPath\)/,
   'the real application packaging path must refuse to package without the native backend binary');
 assert.match(electronBuilderConfig, /fs\.existsSync\(rustBackendPath\)[\s\S]*?from: rustBackendPath, to: rustBackendName/,
@@ -246,11 +261,11 @@ assert.match(electronBuilderConfig, /output: packageDirPath/,
   'the configured package output matches the native artifact verifier root');
 assert.match(packageVerifier, /path\.resolve\('dist_electron', 'bundled'\)/,
   'the artifact verifier inspects the configured package output directory');
-assert.match(workflow, /name: Build release binary[\s\S]*?name: Package Electron app directory with the Rust backend[\s\S]*?name: Verify packaged Rust backend resource and startup[\s\S]*?node scripts\/verify-rust-backend-package\.mjs/,
+assert.match(workflow, /name: Build release binary[\s\S]*?name: Package Electron app directory with the Rust backend[\s\S]*?name: Verify packaged Rust backend resource and startup[\s\S]*?node --experimental-strip-types scripts\/verify-rust-backend-package\.ts/,
   'Rust CI builds the native executable, packages an Electron directory, and executes the packaged-resource smoke test in that order');
 assert.match(architectureDocs, /long-lived HTTPS request service/,
   'the Rust backend architecture documentation must describe the database-independent API service');
-for (const file of ['scripts/verify-rust-utility-bridge.mjs', 'scripts/verify-rust-api-client.mjs', 'scripts/verify-typed-renderer.mjs', 'build/scripts/build.mjs', 'electron-builder-config.mjs', 'scripts/verify-rust-backend-package.mjs']) {
+for (const file of ['scripts/verify-rust-utility-bridge.ts', 'scripts/verify-rust-api-client.ts', 'scripts/verify-typed-renderer.ts', 'build/scripts/build.ts', 'electron-builder-config.ts', 'scripts/verify-rust-backend-package.ts']) {
   assert.ok(workflow.includes(`- '${file}'`), `Rust workflow path filters must include ${file}`);
 }
 

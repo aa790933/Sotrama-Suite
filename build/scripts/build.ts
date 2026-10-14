@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as vite from 'vite';
-import { getMainProcessCommonConfig } from './helpers.mjs';
+import { getMainProcessCommonConfig } from './helpers.ts';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -172,7 +172,7 @@ function copyPackageJson() {
  * are passed on as builderArgs.
  */
 async function packageApp() {
-  const { default: sotramaSuiteConfig } = await import('../../electron-builder-config.mjs');
+  const { default: sotramaSuiteConfig } = await import('../../electron-builder-config.ts');
   const { configureBuildCommand } =
     await await import('electron-builder/out/builder.js');
 

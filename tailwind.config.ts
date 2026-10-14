@@ -6,8 +6,8 @@ const colors = JSON.parse(
 module.exports = {
   darkMode: ['class', 'class'],
   content: [
-    './src/**/*.{vue,js,ts,jsx,tsx}',
-    './fyo/**/*.{vue,js,ts,jsx,tsx}',
+    './src/**/*.{vue,ts,tsx}',
+    './fyo/**/*.{vue,ts,tsx}',
     './index.html',
   ],
   theme: {

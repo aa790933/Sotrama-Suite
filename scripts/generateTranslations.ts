@@ -1,25 +1,23 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const promises_1 = __importDefault(require("fs/promises"));
-const path_1 = __importDefault(require("path"));
-const csvParser_1 = require("../utils/csvParser");
-let translationHelpers_1;
-const translationsFolder = path_1.default.resolve(__dirname, '..', 'translations');
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseCSV, generateCSV } from '../utils/csvParser.ts';
+import { schemaTranslateables, getIndexFormat, getWhitespaceSanitized } from '../utils/translationHelpers.ts';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const translationsFolder = path.resolve(__dirname, '..', 'translations');
 const PATTERN = /(?<!\w)t`([^`]+)`/g;
 function shouldIgnore(p, ignoreList) {
-    const name = p.split(path_1.default.sep).at(-1) ?? '';
+    const name = p.split(path.sep).at(-1) ?? '';
     return ignoreList.includes(name);
 }
-async function getFileList(root, ignoreList, extPattern = /\.(js|ts|vue)$/) {
-    const contents = await promises_1.default.readdir(root);
+async function getFileList(root, ignoreList, extPattern = /\.(ts|vue)$/) {
+    const contents = await fs.readdir(root);
     const files = [];
     const promises = [];
     for (const c of contents) {
-        const absPath = path_1.default.resolve(root, c);
-        const isDir = (await promises_1.default.stat(absPath)).isDirectory();
+        const absPath = path.resolve(root, c);
+        const isDir = (await fs.stat(absPath)).isDirectory();
         if (isDir && !shouldIgnore(absPath, ignoreList)) {
             const pr = getFileList(absPath, ignoreList, extPattern).then((fl) => {
                 files.push(...fl);
@@ -37,7 +35,7 @@ async function getFileContents(fileList) {
     const contents = [];
     const promises = [];
     for (const fileName of fileList) {
-        const pr = promises_1.default.readFile(fileName, { encoding: 'utf-8' }).then((content) => {
+        const pr = fs.readFile(fileName, { encoding: 'utf-8' }).then((content) => {
             contents.push({ fileName, content });
         });
         promises.push(pr);
@@ -68,8 +66,8 @@ function getTStrings(content) {
 }
 function tStringFinder(content) {
     return [...content.matchAll(PATTERN)].map(([, t]) => {
-        t = (0, translationHelpers_1.getIndexFormat)(t);
-        return (0, translationHelpers_1.getWhitespaceSanitized)(t);
+        t = getIndexFormat(t);
+        return getWhitespaceSanitized(t);
     });
 }
 function tStringsToArray(tMap, tStrings) {
@@ -117,12 +115,12 @@ function getLanguageCode() {
     return process.argv[i + 1] ?? '';
 }
 function getTranslationFilePath(languageCode) {
-    return path_1.default.resolve(translationsFolder, `${languageCode}.csv`);
+    return path.resolve(translationsFolder, `${languageCode}.csv`);
 }
 async function regenerateTranslation(tArray, path) {
     // Removes old strings, adds new strings
-    const storedCSV = await promises_1.default.readFile(path, { encoding: 'utf-8' });
-    const storedMatrix = (0, csvParser_1.parseCSV)(storedCSV);
+    const storedCSV = await fs.readFile(path, { encoding: 'utf-8' });
+    const storedMatrix = parseCSV(storedCSV);
     const map = new Map();
     for (const row of storedMatrix) {
         const tstring = row[0];
@@ -134,8 +132,8 @@ async function regenerateTranslation(tArray, path) {
         const context = stored[1] ?? '';
         return [source, translation, context];
     });
-    const csv = (0, csvParser_1.generateCSV)(matrix);
-    await promises_1.default.writeFile(path, csv, { encoding: 'utf-8' });
+    const csv = generateCSV(matrix);
+    await fs.writeFile(path, csv, { encoding: 'utf-8' });
     console.log(`\tregenerated: ${path}`);
 }
 async function regenerateTranslations(languageCode, tArray) {
@@ -147,17 +145,17 @@ async function regenerateTranslations(languageCode, tArray) {
     }
     // regenerate all translation files
     console.log(`Language code not passed, regenerating all translations.`);
-    for (const filePath of await promises_1.default.readdir(translationsFolder)) {
+    for (const filePath of await fs.readdir(translationsFolder)) {
         if (!filePath.endsWith('.csv')) {
             continue;
         }
-        await regenerateTranslation(tArray, path_1.default.resolve(translationsFolder, filePath));
+        await regenerateTranslation(tArray, path.resolve(translationsFolder, filePath));
     }
 }
 async function writeTranslations(languageCode, tArray) {
     const path = getTranslationFilePath(languageCode);
     try {
-        const stat = await promises_1.default.stat(path);
+        const stat = await fs.stat(path);
         if (!stat.isFile()) {
             throw new Error(`${path} is not a translation file`);
         }
@@ -170,8 +168,8 @@ async function writeTranslations(languageCode, tArray) {
             throw err;
         }
         const matrix = tArray.map((s) => [s, '', '']);
-        const csv = (0, csvParser_1.generateCSV)(matrix);
-        await promises_1.default.writeFile(path, csv, { encoding: 'utf-8' });
+        const csv = generateCSV(matrix);
+        await fs.writeFile(path, csv, { encoding: 'utf-8' });
         console.log(`Generated translation file for '${languageCode}': ${path}`);
     }
 }
@@ -179,12 +177,12 @@ async function getTStringsFromJsonFileList(fileList) {
     const promises = [];
     const schemaTStrings = [];
     for (const filePath of fileList) {
-        const promise = promises_1.default
+        const promise = fs
             .readFile(filePath, { encoding: 'utf8' })
             .then((content) => {
             const schema = JSON.parse(content);
             const tStrings = [];
-            pushTStringsFromSchema(schema, tStrings, translationHelpers_1.schemaTranslateables);
+            pushTStringsFromSchema(schema, tStrings, schemaTranslateables);
             return tStrings;
         })
             .then((ts) => {
@@ -217,17 +215,17 @@ function pushTStringsFromSchema(map, array, translateables) {
     }
 }
 async function getSchemaTStrings() {
-    const root = path_1.default.resolve(__dirname, '../schemas');
+    const root = path.resolve(__dirname, '../schemas');
     const fileList = await getFileList(root, ['tests'], /\.json$/);
     return await getTStringsFromJsonFileList(fileList);
 }
 async function run() {
     // Load the shared ESM helper in Node and renderer contexts alike.
-    translationHelpers_1 = await import("../utils/translationHelpers.ts");
+
     if (printHelp()) {
         return;
     }
-    const root = path_1.default.resolve(__dirname, '..');
+    const root = path.resolve(__dirname, '..');
     const ignoreList = ['node_modules', 'dist_electron', 'scripts'];
     const languageCode = getLanguageCode();
     console.log();
@@ -237,13 +235,13 @@ async function run() {
     const schemaTStrings = await getSchemaTStrings();
     const tArray = tStringsToArray(tMap, schemaTStrings);
     try {
-        await promises_1.default.stat(translationsFolder);
+        await fs.stat(translationsFolder);
     }
     catch (err) {
         if (err.code !== 'ENOENT') {
             throw err;
         }
-        await promises_1.default.mkdir(translationsFolder);
+        await fs.mkdir(translationsFolder);
     }
     if (languageCode === '') {
         await regenerateTranslations('', tArray);

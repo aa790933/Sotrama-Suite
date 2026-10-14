@@ -18,7 +18,7 @@ assert.deepEqual(schemaTranslateables, ['label', 'description', 'placeholder', '
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const result = spawnSync(
   process.execPath,
-  ['--experimental-strip-types', path.join(root, 'scripts/generateTranslations.js'), '-h'],
+  ['--experimental-strip-types', path.join(root, 'scripts/generateTranslations.ts'), '-h'],
   {
     cwd: root,
     encoding: 'utf8',

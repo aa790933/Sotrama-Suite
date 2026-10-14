@@ -144,8 +144,8 @@ for (const [consumer, specifier, expected] of [
     `${consumer} resolves to the typed implementation`);
 }
 
-assert.match(testRunner, /verify-typed-renderer\.mjs/,
+assert.match(testRunner, /verify-typed-renderer\.ts/,
   'the default test command runs the typed renderer regression verifier');
-assert.equal((workflow.match(/'scripts\/verify-typed-renderer\.mjs'/g) ?? []).length, 2,
+assert.equal((workflow.match(/'scripts\/verify-typed-renderer\.ts'/g) ?? []).length, 2,
   'the typed renderer verifier is present in both CI path filters');
 console.log('Typed renderer boundary checks passed.');

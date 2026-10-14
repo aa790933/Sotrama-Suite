@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
  * which will be rendered by electron.
  *
  * For building the project, vite is used programmatically
- * see build/scripts/build.mjs for this.
+ * see build/scripts/build.ts for this.
  */
 export default () => {
   let port = 6969;

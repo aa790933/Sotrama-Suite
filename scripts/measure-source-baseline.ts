@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const excluded = new Set(['.git', '.yarn', 'node_modules', 'dist', 'release', 'target', 'coverage', 'build']);
-const sourceExtensions = new Set(['.ts', '.tsx', '.vue', '.rs', '.mjs', '.cjs', '.js']);
+const sourceExtensions = new Set(['.ts', '.tsx', '.vue', '.rs', ]);
 
 function category(relative) {
   const file = relative.replaceAll('\\', '/');

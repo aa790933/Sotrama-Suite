@@ -6,7 +6,7 @@ import ts from 'typescript';
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const [runtime, buildHelpers, hostTests, bootstrap, router, rendererListeners, rendererEntry, htmlEntry] = await Promise.all([
   read('main/preload.ts'),
-  read('build/scripts/helpers.mjs'),
+  read('build/scripts/helpers.ts'),
   read('tests/hostClient.flow.spec.ts'),
   read('main/bootstrap.ts'),
   read('main/ipc/router.ts'),

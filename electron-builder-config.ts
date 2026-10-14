@@ -1,4 +1,4 @@
-// App is tagged with a .mjs extension to allow ESM import
+// Keep the package configuration typed and load it through Node's TypeScript support.
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

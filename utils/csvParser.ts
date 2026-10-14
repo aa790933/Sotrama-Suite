@@ -1,5 +1,4 @@
-/** @param {string} text @returns {string[][]} */
-function parseCSV(text) {
+export function parseCSV(text: string): string[][] {
   //  Works on RFC 4180 csv
   let rows = splitCsvBlock(text);
   if (rows.length === 1) {
@@ -8,15 +7,13 @@ function parseCSV(text) {
   return rows.map(splitCsvLine);
 }
 
-/** @param {unknown[][]} matrix @returns {string} */
-function generateCSV(matrix) {
+export function generateCSV(matrix: unknown[][]): string {
   // Generates RFC 4180 csv
   const formattedRows = getFormattedRows(matrix);
   return formattedRows.join('\r\n');
 }
 
-/** @param {string} text @param {string} [splitter] @returns {string[]} */
-function splitCsvBlock(text, splitter = '\r\n') {
+function splitCsvBlock(text: string, splitter = '\r\n'): string[] {
   if (!text.endsWith(splitter)) {
     text += splitter;
   }
@@ -52,8 +49,7 @@ function splitCsvBlock(text, splitter = '\r\n') {
   return lines;
 }
 
-/** @param {string} line @returns {string[]} */
-function splitCsvLine(line) {
+function splitCsvLine(line: string): string[] {
   line += ',';
 
   const items = [];
@@ -84,8 +80,7 @@ function splitCsvLine(line) {
   return items;
 }
 
-/** @param {string} item @returns {string} */
-function unwrapDq(item) {
+function unwrapDq(item: string): string {
   const s = item.at(0);
   const e = item.at(-1);
   if (s === '"' && e === '"') {
@@ -95,8 +90,7 @@ function unwrapDq(item) {
   return item;
 }
 
-/** @param {unknown[][]} matrix @returns {string[]} */
-function getFormattedRows(matrix) {
+function getFormattedRows(matrix: unknown[][]): string[] {
   const formattedMatrix = [];
   for (const row of matrix) {
     const formattedRow = [];
@@ -110,8 +104,7 @@ function getFormattedRows(matrix) {
   return formattedMatrix;
 }
 
-/** @param {unknown} item @returns {string} */
-function getFormattedItem(item) {
+function getFormattedItem(item: unknown): string {
   if (typeof item === 'string') {
     return formatStringToCSV(item);
   }
@@ -131,8 +124,7 @@ function getFormattedItem(item) {
   return String(item);
 }
 
-/** @param {string} item @returns {string} */
-function formatStringToCSV(item) {
+function formatStringToCSV(item: string): string {
   let shouldDq = false;
   if (item.match(/^".*"$/)) {
     shouldDq = true;
@@ -155,4 +147,4 @@ function formatStringToCSV(item) {
   return item;
 }
 
-module.exports = { parseCSV, generateCSV, splitCsvLine };
+export { splitCsvLine };

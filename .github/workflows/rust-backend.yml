@@ -14,16 +14,16 @@ on:
       - 'rust-backend/**'
       - 'main/**'
       - 'tests/appProtocol.spec.ts'
-      - 'build/scripts/build.mjs'
-      - 'scripts/verify-rust-utility-bridge.mjs'
-      - 'scripts/verify-rust-api-client.mjs'
-      - 'scripts/verify-main-external-url.mjs'
-      - 'scripts/verify-print-document-policy.mjs'
-      - 'scripts/verify-preload-bridge.mjs'
-      - 'scripts/verify-typed-renderer.mjs'
+      - 'build/scripts/build.ts'
+      - 'scripts/verify-rust-utility-bridge.ts'
+      - 'scripts/verify-rust-api-client.ts'
+      - 'scripts/verify-main-external-url.ts'
+      - 'scripts/verify-print-document-policy.ts'
+      - 'scripts/verify-preload-bridge.ts'
+      - 'scripts/verify-typed-renderer.ts'
       - 'tests/hostClient.flow.spec.ts'
-      - 'build/scripts/helpers.mjs'
-      - 'electron-builder-config.mjs'
+      - 'build/scripts/helpers.ts'
+      - 'electron-builder-config.ts'
       - 'src/renderer.ts'
       - 'src/index.html'
       - 'src/renderer/**'
@@ -44,16 +44,16 @@ on:
       - 'utils/translationHelpers.ts'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
-      - 'scripts/verify-rust-backend-boundaries.mjs'
+      - 'scripts/verify-rust-backend-boundaries.ts'
       - 'utils/version.ts'
-      - 'scripts/verify-rust-backend-package.mjs'
-      - 'scripts/verify-rust-backend-client-runtime.mjs'
-      - 'scripts/verify-rust-patch-parity.mjs'
+      - 'scripts/verify-rust-backend-package.ts'
+      - 'scripts/verify-rust-backend-client-runtime.ts'
+      - 'scripts/verify-rust-patch-parity.ts'
       - 'scripts/test.sh'
-      - 'scripts/verify-csv-parser.mjs'
-      - 'utils/csvParser.js'
-      - 'scripts/generateTranslations.js'
-      - 'scripts/verify-translation-generator.mjs'
+      - 'scripts/verify-csv-parser.ts'
+      - 'utils/csvParser.ts'
+      - 'scripts/generateTranslations.ts'
+      - 'scripts/verify-translation-generator.ts'
       - 'package.json'
       - 'yarn.lock'
       - '.github/workflows/rust-backend.yml'
@@ -62,16 +62,16 @@ on:
       - 'rust-backend/**'
       - 'main/**'
       - 'tests/appProtocol.spec.ts'
-      - 'build/scripts/build.mjs'
-      - 'scripts/verify-rust-utility-bridge.mjs'
-      - 'scripts/verify-rust-api-client.mjs'
-      - 'scripts/verify-main-external-url.mjs'
-      - 'scripts/verify-print-document-policy.mjs'
-      - 'scripts/verify-preload-bridge.mjs'
-      - 'scripts/verify-typed-renderer.mjs'
+      - 'build/scripts/build.ts'
+      - 'scripts/verify-rust-utility-bridge.ts'
+      - 'scripts/verify-rust-api-client.ts'
+      - 'scripts/verify-main-external-url.ts'
+      - 'scripts/verify-print-document-policy.ts'
+      - 'scripts/verify-preload-bridge.ts'
+      - 'scripts/verify-typed-renderer.ts'
       - 'tests/hostClient.flow.spec.ts'
-      - 'build/scripts/helpers.mjs'
-      - 'electron-builder-config.mjs'
+      - 'build/scripts/helpers.ts'
+      - 'electron-builder-config.ts'
       - 'src/renderer.ts'
       - 'src/index.html'
       - 'src/renderer/**'
@@ -92,16 +92,16 @@ on:
       - 'utils/translationHelpers.ts'
       - 'utils/index.ts'
       - 'utils/db/types.ts'
-      - 'scripts/verify-rust-backend-boundaries.mjs'
+      - 'scripts/verify-rust-backend-boundaries.ts'
       - 'utils/version.ts'
-      - 'scripts/verify-rust-backend-package.mjs'
-      - 'scripts/verify-rust-backend-client-runtime.mjs'
-      - 'scripts/verify-rust-patch-parity.mjs'
+      - 'scripts/verify-rust-backend-package.ts'
+      - 'scripts/verify-rust-backend-client-runtime.ts'
+      - 'scripts/verify-rust-patch-parity.ts'
       - 'scripts/test.sh'
-      - 'scripts/verify-csv-parser.mjs'
-      - 'utils/csvParser.js'
-      - 'scripts/generateTranslations.js'
-      - 'scripts/verify-translation-generator.mjs'
+      - 'scripts/verify-csv-parser.ts'
+      - 'utils/csvParser.ts'
+      - 'scripts/generateTranslations.ts'
+      - 'scripts/verify-translation-generator.ts'
       - 'package.json'
       - 'yarn.lock'
       - '.github/workflows/rust-backend.yml'
@@ -148,28 +148,28 @@ jobs:
           workspaces: rust-backend
 
       - name: Verify Rust patch registry matches legacy registry
-        run: node scripts/verify-rust-patch-parity.mjs
+        run: node --experimental-strip-types scripts/verify-rust-patch-parity.ts
 
       - name: Verify backend-independent database contract
-        run: node scripts/verify-rust-backend-boundaries.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-boundaries.ts
 
       - name: Verify Electron-to-Rust utility bridge
-        run: node --experimental-strip-types scripts/verify-rust-utility-bridge.mjs
+        run: node --experimental-strip-types scripts/verify-rust-utility-bridge.ts
 
       - name: Verify Rust ERPNext API client contract
-        run: node --experimental-strip-types scripts/verify-rust-api-client.mjs
+        run: node --experimental-strip-types scripts/verify-rust-api-client.ts
 
       - name: Verify Electron URL, print and preload boundaries
         run: |
-          node --experimental-strip-types scripts/verify-main-external-url.mjs
-          node --experimental-strip-types scripts/verify-print-document-policy.mjs
-          node scripts/verify-preload-bridge.mjs
-          node scripts/verify-typed-renderer.mjs
+          node --experimental-strip-types scripts/verify-main-external-url.ts
+          node --experimental-strip-types scripts/verify-print-document-policy.ts
+          node --experimental-strip-types scripts/verify-preload-bridge.ts
+          node --experimental-strip-types scripts/verify-typed-renderer.ts
 
       - name: Verify translation and CSV regressions
         run: |
-          node scripts/verify-csv-parser.mjs
-          node --experimental-strip-types scripts/verify-translation-generator.mjs
+          node --experimental-strip-types scripts/verify-csv-parser.ts
+          node --experimental-strip-types scripts/verify-translation-generator.ts
 
       - name: Run focused Electron IPC and host regressions
         shell: bash
@@ -638,7 +638,7 @@ jobs:
           SOTRAMA_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
           SOTRAMA_DB_NAME: ${{ env.TEST_DB_NAME }}
           SOTRAMA_BACKUP_DIR: ${{ runner.temp }}/sotrama-backups
-        run: node --experimental-strip-types scripts/verify-rust-backend-client-runtime.mjs success
+        run: node --experimental-strip-types scripts/verify-rust-backend-client-runtime.ts success
 
   build:
     name: build (${{ matrix.os }})
@@ -689,16 +689,16 @@ jobs:
         run: cargo run --locked --release -- --help
 
       - name: Package Electron app directory with the Rust backend
-        run: node build/scripts/build.mjs --nosign --dir
+        run: node --experimental-strip-types build/scripts/build.ts --nosign --dir
 
       - name: Verify packaged Rust backend resource and startup
-        run: node scripts/verify-rust-backend-package.mjs
+        run: node --experimental-strip-types scripts/verify-rust-backend-package.ts
 
       - name: Verify application client propagates database startup failures
         env:
           SOTRAMA_BACKEND_PATH: ${{ github.workspace }}/rust-backend/target/release/${{ matrix.binary }}
           SOTRAMA_DB_PASSWORD: runtime-smoke-secret
-        run: node --experimental-strip-types scripts/verify-rust-backend-client-runtime.mjs failure
+        run: node --experimental-strip-types scripts/verify-rust-backend-client-runtime.ts failure
 
       - uses: actions/upload-artifact@v4
         with:
