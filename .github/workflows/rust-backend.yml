@@ -20,15 +20,15 @@ on:
       - 'scripts/verify-main-external-url.mjs'
       - 'scripts/verify-print-document-policy.mjs'
       - 'scripts/verify-preload-bridge.mjs'
-      - 'scripts/verify-renderer-js-migration.mjs'
+      - 'scripts/verify-typed-renderer.mjs'
       - 'tests/hostClient.flow.spec.ts'
       - 'build/scripts/helpers.mjs'
       - 'electron-builder-config.mjs'
-      - 'src/renderer.js'
+      - 'src/renderer.ts'
       - 'src/index.html'
       - 'src/renderer/**'
-      - 'src/errorHandling.js'
-      - 'utils/misc.js'
+      - 'src/errorHandling.ts'
+      - 'utils/misc.ts'
       - 'src/utils/**'
       - 'schemas/**'
       - 'backend/patches/**'
@@ -69,15 +69,15 @@ on:
       - 'scripts/verify-main-external-url.mjs'
       - 'scripts/verify-print-document-policy.mjs'
       - 'scripts/verify-preload-bridge.mjs'
-      - 'scripts/verify-renderer-js-migration.mjs'
+      - 'scripts/verify-typed-renderer.mjs'
       - 'tests/hostClient.flow.spec.ts'
       - 'build/scripts/helpers.mjs'
       - 'electron-builder-config.mjs'
-      - 'src/renderer.js'
+      - 'src/renderer.ts'
       - 'src/index.html'
       - 'src/renderer/**'
-      - 'src/errorHandling.js'
-      - 'utils/misc.js'
+      - 'src/errorHandling.ts'
+      - 'utils/misc.ts'
       - 'src/utils/**'
       - 'schemas/**'
       - 'backend/patches/**'
@@ -166,7 +166,7 @@ jobs:
           node scripts/verify-main-external-url.mjs
           node scripts/verify-print-document-policy.mjs
           node scripts/verify-preload-bridge.mjs
-          node scripts/verify-renderer-js-migration.mjs
+          node scripts/verify-typed-renderer.mjs
 
       - name: Verify translation and CSV regressions
         run: |

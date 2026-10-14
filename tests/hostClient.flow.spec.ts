@@ -47,7 +47,7 @@ test('App handles host/client and safe display', (t) => {
 });
 
 test('IPC getLanIp exists', (t) => {
-  const preload = fs.readFileSync('main/preload.js', 'utf-8');
+  const preload = fs.readFileSync('main/preload.ts', 'utf-8');
   const messages = fs.readFileSync('utils/messages.ts', 'utf-8');
   const router = fs.readFileSync('main/ipc/router.ts', 'utf-8');
   t.ok(preload.includes('getLanIp'), 'preload has getLanIp');

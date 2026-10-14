@@ -4,15 +4,14 @@ import path from 'node:path';
 import ts from 'typescript';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [runtime, declaration, buildHelpers, hostTests, bootstrap, router, rendererListeners, rendererEntry, htmlEntry] = await Promise.all([
-  read('main/preload.js'),
-  read('main/preload.d.ts'),
+const [runtime, buildHelpers, hostTests, bootstrap, router, rendererListeners, rendererEntry, htmlEntry] = await Promise.all([
+  read('main/preload.ts'),
   read('build/scripts/helpers.mjs'),
   read('tests/hostClient.flow.spec.ts'),
   read('main/bootstrap.ts'),
   read('main/ipc/router.ts'),
-  read('src/renderer/registerIpcRendererListeners.js'),
-  read('src/renderer.js'),
+  read('src/renderer/registerIpcRendererListeners.ts'),
+  read('src/renderer.ts'),
   read('src/index.html'),
 ]);
 
@@ -25,7 +24,6 @@ for (const method of [
   'registerConsoleLogListener',
 ]) {
   assert.match(runtime, new RegExp(`\\b${method}\\s*\\(`), `runtime preload exposes ${method}`);
-  assert.match(declaration, new RegExp(`\\b${method}\\s*:`), `IPC declaration includes ${method}`);
 }
 
 assert.match(runtime, /contextBridge\.exposeInMainWorld\('ipc', ipc\)/,
@@ -38,25 +36,25 @@ assert.match(runtime, /key === 'connections'[\s\S]*?toSafeDisplay\(c\)/,
   'connection reads expose safe metadata rather than persisted passwords');
 assert.match(runtime, /if \(key === 'connections'\)[\s\S]*?if \(!Array\.isArray\(value\)\)[\s\S]*?return \[\]/,
   'malformed persisted connection values fail closed instead of reaching the renderer');
-assert.match(runtime, /value\.trimStart\(\)\.startsWith\('\{'\)[\s\S]*?return found\?\.id \?\? null[\s\S]*?return null/,
+assert.match(runtime, /value\.trimStart\(\)\.startsWith\('\{'\)[\s\S]*?found\?\.id \?\? null[\s\S]*?return null/,
   'serialized or malformed connection credentials never fall through as raw renderer values');
-assert.match(declaration, /get: \(key: 'connections'\) => ConnectionMetadata\[\]/,
+assert.match(runtime, /export type IPC = Omit<typeof ipc, 'store'>/,
+  'the TypeScript preload owns the public IPC contract and runtime implementation');
+assert.match(runtime, /\(key: 'connections'\): ConnectionMetadata\[\]/,
   'the public IPC type models connection reads as password-free metadata');
-assert.match(declaration, /set: <K extends Exclude<keyof ConfigMap, 'connections'>>/,
+assert.match(runtime, /set: <K extends Exclude<keyof ConfigMap, 'connections'>>/,
   'the public IPC type prevents direct writes of credential-bearing connections');
-assert.match(buildHelpers, /path\.join\(root, 'main', 'preload\.js'\)/,
-  'esbuild uses the JavaScript preload runtime as its entrypoint');
-assert.doesNotMatch(buildHelpers, /path\.join\(root, 'main', 'preload\.ts'\)/,
-  'the deleted TypeScript preload is not a build input');
-assert.match(hostTests, /readFileSync\('main\/preload\.js'/,
-  'host onboarding regression tests inspect the runtime preload file');
-assert.match(bootstrap, /registerAppLifecycleListeners\.js/,
-  'Electron bootstrap imports the JavaScript lifecycle implementation');
+assert.match(buildHelpers, /path\.join\(root, 'main', 'preload\.ts'\)/,
+  'esbuild uses the typed preload as its source entrypoint');
+assert.match(hostTests, /readFileSync\('main\/preload\.ts'/,
+  'host onboarding regression tests inspect the typed preload source');
+assert.match(bootstrap, /registerAppLifecycleListeners(?:\.js)?['"]?;/,
+  'Electron bootstrap imports the typed lifecycle implementation');
 assert.match(router, /contactMothership/,
   'IPC telemetry callers remain connected to the migrated telemetry implementation');
 for (const listener of ['registerMainProcessErrorListener', 'registerTriggerFrontendActionListener', 'registerConsoleLogListener']) {
   assert.match(rendererListeners, new RegExp(`ipc\\.${listener}\\s*\\(`),
-    `renderer JavaScript listener registers ${listener}`);
+    `typed renderer listener registers ${listener}`);
 }
 assert.match(rendererListeners, /syncDocumentsToERPNext\(fyo\)/,
   'the renderer keeps ERPNext synchronization on the intended IPC-triggered path');
@@ -65,11 +63,9 @@ assert.match(rendererListeners, /fyo\.telemetry\.stop\(\)/,
 assert.match(rendererEntry, /registerIpcRendererListeners\(\)/,
   'the Vue renderer entrypoint installs its IPC listeners');
 assert.match(rendererEntry, /app\.mount\('body'\)/,
-  'the JavaScript renderer entrypoint still mounts the Vue application');
-assert.match(htmlEntry, /src="\.\/renderer\.js"/,
-  'the renderer HTML entry points to JavaScript, not the deleted TypeScript implementation');
-assert.doesNotMatch(htmlEntry, /renderer\.ts/,
-  'the HTML entry no longer depends on a TypeScript implementation');
+  'the TypeScript renderer entrypoint still mounts the Vue application');
+assert.match(htmlEntry, /src="\.\/renderer\.ts"/,
+  'the renderer HTML entry points to the TypeScript source');
 
 const config = ts.readConfigFile('tsconfig.json', ts.sys.readFile);
 assert.equal(config.error, undefined, 'TypeScript config parses for the preload type regression');

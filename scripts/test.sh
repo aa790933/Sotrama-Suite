@@ -16,7 +16,7 @@ node ./scripts/verify-rust-api-client.mjs || exit $?
 node ./scripts/verify-main-external-url.mjs || exit $?
 node ./scripts/verify-print-document-policy.mjs || exit $?
 node ./scripts/verify-preload-bridge.mjs || exit $?
-node ./scripts/verify-renderer-js-migration.mjs || exit $?
+node ./scripts/verify-typed-renderer.mjs || exit $?
 node ./scripts/verify-rust-patch-parity.mjs || exit $?
 node ./scripts/verify-rust-backend-boundaries.mjs || exit $?
 bash ./scripts/runner.sh ./node_modules/.bin/tape $TEST_PATH | ./node_modules/.bin/tap-spec

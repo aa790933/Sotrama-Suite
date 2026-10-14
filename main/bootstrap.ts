@@ -11,7 +11,7 @@ import {
 import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import path from 'path';
-import registerAppLifecycleListeners from './registerAppLifecycleListeners.js';
+import registerAppLifecycleListeners from './registerAppLifecycleListeners';
 import registerAutoUpdaterListeners from './registerAutoUpdaterListeners.js';
 import registerIpcMainMessageListeners from './registerIpcMainMessageListeners.js';
 import registerProcessListeners from './registerProcessListeners.js';
