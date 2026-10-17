@@ -97,6 +97,7 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+@reference "../../styles/index.css";
 input[type='number'] {
   @apply w-12 bg-transparent p-0.5;
 }

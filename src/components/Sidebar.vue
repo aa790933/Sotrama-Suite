@@ -13,11 +13,11 @@
           platform === 'Mac' && languageDirection === 'ltr' ? 'mt-10' : 'mt-1'
         "
       >
-        <img
-          src="../assets/img/sotrama-mark.svg"
-          alt=""
-          class="h-8 w-8 flex-shrink-0 rounded-lg"
-        />
+          <img
+            src="../assets/img/sotrama-mark.svg"
+            alt="Sotrama Suite"
+            class="h-8 w-8 flex-shrink-0 rounded-lg"
+          />
         <div class="min-w-0">
           <h6
             data-testid="company-name"

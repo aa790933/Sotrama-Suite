@@ -249,7 +249,8 @@ function getFeatureFlags(): string[] {
 }
 
 function getIssueUrlQuery(errorLogObj?: ErrorLog): string {
-  const baseUrl = 'https://github.com/aa790933/Sotrama-Suite/issues/new?labels=bug';
+  const baseUrl =
+    'https://github.com/aa790933/Sotrama-Suite/issues/new?labels=bug';
 
   const body = [
     '<h2>Description</h2>',

@@ -13,9 +13,9 @@
       />
       <div class="grid grid-cols-2 gap-6">
         <Button
-          variant="secondary"
           v-for="method in paymentMethods"
           :key="method"
+          variant="secondary"
           class="w-full py-5 bg-teal-500"
           @click="setPaymentMethodAndAmount(method)"
         >

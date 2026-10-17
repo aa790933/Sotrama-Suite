@@ -15,9 +15,7 @@
       />
     </div>
     <div class="flex border-t dark:border-gray-800 p-4">
-      <Button class="ml-auto" @click="done">{{
-        t`Done`
-      }}</Button>
+      <Button class="ml-auto" @click="done">{{ t`Done` }}</Button>
     </div>
   </div>
 </template>

@@ -57,11 +57,11 @@ jobs:
       - name: Provision MariaDB privileges and databases
         run: |
           docker exec ${{ job.services.mariadb.id }} mariadb -uroot -proot -e \
-            "GRANT ALL PRIVILEGES ON *.* TO 'sotra'@'%'; \
-             CREATE USER IF NOT EXISTS 'sotrama_app'@'%' IDENTIFIED BY 'password'; \
-             GRANT ALL PRIVILEGES ON *.* TO 'sotrama_app'@'%'; \
+            "CREATE USER IF NOT EXISTS 'sotra'@'%' IDENTIFIED BY 'password'; \
              CREATE DATABASE IF NOT EXISTS test_books_core; \
              CREATE DATABASE IF NOT EXISTS test_sotrama_app; \
+             GRANT ALL PRIVILEGES ON test_books_core.* TO 'sotra'@'%'; \
+             GRANT ALL PRIVILEGES ON test_sotrama_app.* TO 'sotra'@'%'; \
              FLUSH PRIVILEGES;"
 
       - name: Verify database connectivity
@@ -110,7 +110,7 @@ jobs:
       - name: Provision MariaDB database and grants
         run: |
           docker exec ${{ job.services.mariadb.id }} mariadb -uroot -proot -e \
-            "GRANT ALL PRIVILEGES ON *.* TO 'sotra'@'%'; FLUSH PRIVILEGES; CREATE DATABASE IF NOT EXISTS sotrama_uitest;"
+            "CREATE USER IF NOT EXISTS 'sotra'@'%' IDENTIFIED BY 'password'; CREATE DATABASE IF NOT EXISTS sotrama_uitest; GRANT ALL PRIVILEGES ON sotrama_uitest.* TO 'sotra'@'%'; FLUSH PRIVILEGES;"
 
       - name: Build source files (no sign, no package)
         run: yarn build --nosign --nopackage

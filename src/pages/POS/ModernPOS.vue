@@ -232,8 +232,8 @@
                   </slot>
                 </Button>
                 <Button
-                  variant="secondary"
                   v-if="isReturnInvoiceEnabledReturn"
+                  variant="secondary"
                   class="mt-2 w-full py-5"
                   :style="{
                     backgroundColor:
@@ -249,8 +249,8 @@
                   </slot>
                 </Button>
                 <Button
-                  variant="secondary"
                   v-else
+                  variant="secondary"
                   class="mt-2 w-full py-5"
                   :style="{
                     backgroundColor:
@@ -268,8 +268,8 @@
               </div>
             </div>
             <Button
-              variant="secondary"
               v-if="isReturnInvoiceEnabledReturn"
+              variant="secondary"
               class="mt-2 w-full py-5"
               :style="{
                 backgroundColor:

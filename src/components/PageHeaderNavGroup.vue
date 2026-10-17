@@ -76,6 +76,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@reference "../styles/index.css";
 .nav-link {
   @apply flex items-center justify-center bg-muted px-3 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }

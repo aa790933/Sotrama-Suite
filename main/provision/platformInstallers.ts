@@ -82,7 +82,10 @@ class WindowsInstaller implements PlatformInstaller {
     onProgress?.({ stage: 'Locating MariaDB configuration…', percent: 10 });
     const cfgPath = await resolveWindowsMariadbConfig();
     if (!cfgPath) {
-      onProgress?.({ stage: 'Configuration not found, skipping…', percent: 20 });
+      onProgress?.({
+        stage: 'Configuration not found, skipping…',
+        percent: 20,
+      });
       return { ok: true };
     }
     onProgress?.({ stage: 'Applying bind-address…', percent: 40 });
@@ -127,7 +130,10 @@ class WindowsInstaller implements PlatformInstaller {
     sql: string,
     onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
-    onProgress?.({ stage: 'Connecting as root to create app user…', percent: 50 });
+    onProgress?.({
+      stage: 'Connecting as root to create app user…',
+      percent: 50,
+    });
     return createAppUserViaDriver(port, rootPassword, sql);
   }
 }
@@ -214,7 +220,10 @@ class MacInstaller implements PlatformInstaller {
     const cfgPath = path.join(brewPrefix, 'my.cnf');
     const exists = await fs.pathExists(cfgPath);
     if (!exists) {
-      _onProgress?.({ stage: 'Configuration not found, skipping…', percent: 20 });
+      _onProgress?.({
+        stage: 'Configuration not found, skipping…',
+        percent: 20,
+      });
       return { ok: true };
     }
     _onProgress?.({ stage: 'Applying bind-address…', percent: 40 });
@@ -422,7 +431,10 @@ class LinuxInstaller implements PlatformInstaller {
     sql: string,
     _onProgress?: (event: InstallProgress) => void
   ): Promise<OpResult> {
-    _onProgress?.({ stage: 'Connecting as root to create app user…', percent: 50 });
+    _onProgress?.({
+      stage: 'Connecting as root to create app user…',
+      percent: 50,
+    });
     return createAppUserViaDriver(port, rootPassword, sql);
   }
 }
@@ -594,7 +606,13 @@ function runElevated(cmd: string, args: string[]): Promise<RunResult> {
     // Capture the elevated exit code explicitly: without it powershell.exe
     // exits 0 even when the child (msiexec/netsh) fails, hiding install errors.
     const psCommand = `$p = Start-Process -FilePath ${escapePowerShellArg(cmd)} -ArgumentList @(${escapedArgs}) -Verb RunAs -Wait -PassThru; exit $p.ExitCode`;
-    const psArgs = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psCommand];
+    const psArgs = [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-Command',
+      psCommand,
+    ];
     return runCommand('powershell.exe', psArgs);
   }
 

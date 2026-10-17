@@ -3,7 +3,13 @@ import { Converter } from 'fyo/core/converter';
 import { DocValue, DocValueMap, RawValueMap } from 'fyo/core/types';
 import { Verb } from 'fyo/telemetry/types';
 import { DEFAULT_USER } from 'fyo/utils/consts';
-import { ConflictError, DuplicateEntryError, MandatoryError, NotFoundError } from 'fyo/utils/errors';
+import {
+  ConflictError,
+  DuplicateEntryError,
+  MandatoryError,
+  NotFoundError,
+  ValueError,
+} from 'fyo/utils/errors';
 import Observable from 'fyo/utils/observable';
 import {
   DynamicLinkField,
@@ -25,7 +31,11 @@ import {
   setChildDocIdx,
   shouldApplyFormula,
 } from './helpers';
-import { setName, getCollisionFreeTemporaryName, isTemporaryNameLike } from './naming';
+import {
+  setName,
+  getCollisionFreeTemporaryName,
+  isTemporaryNameLike,
+} from './naming';
 import {
   Action,
   ChangeArg,
@@ -471,6 +481,29 @@ export class Doc extends Observable<DocValue | Doc[]> {
     fieldname: string,
     convertToDocValue = false
   ): Doc {
+    const field = this.fieldMap[fieldname];
+    if (!field || field.fieldtype !== FieldTypeEnum.Table) {
+      throw new ValueError(
+        `Cannot append a child row to "${fieldname}": it is not a table field on ${this.schemaName}.`
+      );
+    }
+
+    const childSchemaName = field.target;
+    if (
+      typeof childSchemaName !== 'string' ||
+      !childSchemaName ||
+      !this.fyo.schemaMap[childSchemaName]
+    ) {
+      throw new ValueError(
+        `Cannot append a child row to "${fieldname}" on ${this.schemaName}: its target schema is missing or invalid.`
+      );
+    }
+
+    if (docValueMap instanceof Doc) {
+      docValueMap.parentdoc ??= this;
+      return docValueMap;
+    }
+
     if (!this.name && this.schema.naming !== 'manual') {
       this.name = this.fyo.doc.getTemporaryName(this.schema);
     }
@@ -481,12 +514,6 @@ export class Doc extends Observable<DocValue | Doc[]> {
     docValueMap.parentSchemaName ??= this.schemaName;
     docValueMap.parentFieldname ??= fieldname;
 
-    if (docValueMap instanceof Doc) {
-      docValueMap.parentdoc ??= this;
-      return docValueMap;
-    }
-
-    const childSchemaName = (this.fieldMap[fieldname] as TargetField).target;
     const childDoc = this.fyo.doc.getNewDoc(
       childSchemaName,
       docValueMap,

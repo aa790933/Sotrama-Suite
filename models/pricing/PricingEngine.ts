@@ -163,8 +163,10 @@ export function summarizeTaxes(
   items: { account: string; rate: number; amount: Money }[],
   newZero: () => Money
 ): ({ account: string; rate: number; amount: Money } & { idx: number })[] {
-  const taxes: Record<string, { account: string; rate: number; amount: Money }> =
-    {};
+  const taxes: Record<
+    string,
+    { account: string; rate: number; amount: Money }
+  > = {};
   for (const { account, rate, amount } of items) {
     taxes[account] ??= { account, rate, amount: newZero() };
     taxes[account].amount = taxes[account].amount.add(amount);
@@ -189,13 +191,10 @@ export function sumWithTaxes(
   taxes: Money[],
   isReturn: boolean
 ): Money {
-  return taxes.reduce(
-    (a, b) => {
-      if (isReturn) {
-        return a.abs().add(b.abs()).neg();
-      }
-      return a.add(b.abs());
-    },
-    netTotal.abs()
-  );
+  return taxes.reduce((a, b) => {
+    if (isReturn) {
+      return a.abs().add(b.abs()).neg();
+    }
+    return a.add(b.abs());
+  }, netTotal.abs());
 }

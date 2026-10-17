@@ -45,8 +45,8 @@ import { toggleSidebar } from 'src/utils/ui';
     <button
       v-show="!showSidebar"
       class="absolute bottom-0 start-0 text-muted-foreground bg-card border border-border hover:bg-accent rounded rtl-rotate-180 p-1 m-4 shadow-sm"
-      @click="() => toggleSidebar()"
       :title="'Show sidebar'"
+      @click="() => toggleSidebar()"
     >
       <feather-icon name="chevrons-right" class="w-4 h-4" />
     </button>

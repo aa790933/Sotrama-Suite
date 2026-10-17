@@ -20,13 +20,21 @@
           class="mx-4 mt-4 mb-2 rounded-lg border border-border bg-card p-4"
           aria-labelledby="appearance-preferences-title"
         >
-          <h3 id="appearance-preferences-title" class="text-sm font-semibold text-foreground">
+          <h3
+            id="appearance-preferences-title"
+            class="text-sm font-semibold text-foreground"
+          >
             {{ t`Appearance` }}
           </h3>
           <p class="mt-1 text-sm text-foreground">
-            {{ t`Adjust interface text size. This preference is saved on this device.` }}
+            {{
+              t`Adjust interface text size. This preference is saved on this device.`
+            }}
           </p>
-          <label for="app-font-size" class="mt-3 block text-sm font-medium text-foreground">
+          <label
+            for="app-font-size"
+            class="mt-3 block text-sm font-medium text-foreground"
+          >
             {{ t`Interface text size` }}
           </label>
           <select
@@ -89,15 +97,7 @@
         class="mt-4 pb-4 px-4 text-xs text-muted-foreground flex flex-col gap-1"
       >
         <div>
-          Sotrama Suite — based on
-          <a
-            href="https://github.com/aa790933/Sotrama-Suite"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="underline hover:text-foreground"
-            >Sotrama Suite</a
-          >
-          by
+          Sotrama Suite by
           <a
             href="https://github.com/aa790933"
             target="_blank"
@@ -151,17 +151,17 @@ export default defineComponent({
       shortcuts: inject(shortcutsKey),
     };
   },
-  data() {
+  data(): {
+    errors: Record<string, string>;
+    activeTab: string;
+    groupedFields: null | UIGroupedFields;
+    appFontSize: number;
+  } {
     return {
       errors: {},
       activeTab: ModelNameEnum.AccountingSettings,
       groupedFields: null,
       appFontSize: 14,
-    } as {
-      errors: Record<string, string>;
-      activeTab: string;
-      groupedFields: null | UIGroupedFields;
-      appFontSize: number;
     };
   },
   computed: {

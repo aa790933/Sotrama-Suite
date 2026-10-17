@@ -38,7 +38,7 @@ const sotramaSuiteConfig = {
     ...optionalCopy('log_creds.txt', '../creds/log_creds.txt'),
     { from: path.join(root, 'translations'), to: '../translations' },
     { from: path.join(root, 'templates'), to: '../templates' },
-    { from: path.join(root, 'jobs'), to: 'jobs' },
+    { from: path.join(buildDirPath, 'jobs'), to: 'jobs' },
   ],
   extends: null,
   directories: {

@@ -64,7 +64,10 @@ export type ConnectionLike = Pick<
 >;
 
 /** Canonical Connection identity: host + port + database + user. */
-export function equalsConnection(a: ConnectionLike, b: ConnectionLike): boolean {
+export function equalsConnection(
+  a: ConnectionLike,
+  b: ConnectionLike
+): boolean {
   return (
     a.host === b.host &&
     a.port === b.port &&
@@ -128,7 +131,9 @@ export interface ConnectionMetadata {
   modified?: string;
 }
 
-export function toConnectionMetadata(conn: PersistedConnection): ConnectionMetadata {
+export function toConnectionMetadata(
+  conn: PersistedConnection
+): ConnectionMetadata {
   return {
     id: conn.id,
     companyName: conn.companyName,

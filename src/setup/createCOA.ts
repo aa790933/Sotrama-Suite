@@ -1,4 +1,5 @@
 import { Fyo } from 'fyo';
+import { ValidationError } from 'fyo/utils/errors';
 import {
   AccountRootType,
   COAChildAccount,
@@ -49,15 +50,31 @@ export class CreateCOA {
         child as COAChildAccount | COARootAccount
       );
 
-      const doc = this.fyo.doc.getNewDoc('Account', {
-        name: accountName,
-        parentAccount,
-        isGroup,
-        rootType,
-        accountType,
-      });
+      if (await this.fyo.db.exists('Account', accountName)) {
+        const existing = await this.fyo.db.get('Account', accountName);
+        const matchesChart =
+          (existing.parentAccount ?? null) === (parentAccount ?? null) &&
+          existing.rootType === rootType &&
+          (existing.accountType ?? '') === accountType &&
+          Boolean(existing.isGroup) === isGroup;
 
-      await doc.sync();
+        if (!matchesChart) {
+          throw new ValidationError(
+            this.fyo
+              .t`Account ${accountName} already exists with a different parent or account type.`
+          );
+        }
+      } else {
+        const doc = this.fyo.doc.getNewDoc('Account', {
+          name: accountName,
+          parentAccount,
+          isGroup,
+          rootType,
+          accountType,
+        });
+
+        await doc.sync();
+      }
       await this.createCOAAccounts(
         child as COAChildAccount,
         accountName,
@@ -97,7 +114,7 @@ async function getCOA(chartOfAccounts: string): Promise<COATree> {
       `../../fixtures/verified/${conCode}.json`
     )) as { default: { tree: COATree } };
     return countryCoaModule.default.tree;
-  } catch (e) {
+  } catch {
     return getStandardCOA();
   }
 }

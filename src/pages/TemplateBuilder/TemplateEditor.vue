@@ -204,6 +204,8 @@ function getCompletionOption(
 }
 </script>
 <style>
+@reference "../../styles/index.css";
+
 .cm-line {
   font-weight: 600;
 }
@@ -214,12 +216,12 @@ function getCompletionOption(
 
 .cm-gutters {
   border: none black !important;
-  border-right: 1px solid theme('colors.gray.200') !important;
+  border-right: 1px solid var(--color-gray-200) !important;
 }
 
 .dark .cm-gutters {
   border: none white !important;
-  border-right: 1px solid theme('colors.gray.800') !important;
+  border-right: 1px solid var(--color-gray-800) !important;
 }
 
 .cm-activeLine,
@@ -229,30 +231,30 @@ function getCompletionOption(
 
 .cm-tooltip-autocomplete {
   background-color: white !important;
-  border: 1px solid theme('colors.gray.200') !important;
+  border: 1px solid var(--color-gray-200) !important;
   @apply rounded shadow-lg overflow-hidden text-gray-900;
 }
 
 .dark .cm-tooltip-autocomplete {
   background-color: black !important;
-  border: 1px solid theme('colors.gray.800') !important;
+  border: 1px solid var(--color-gray-800) !important;
   @apply rounded shadow-lg overflow-hidden text-gray-100;
 }
 
 .cm-panels {
-  border-top: 1px solid theme('colors.gray.200') !important;
-  background-color: theme('colors.gray.50') !important;
-  color: theme('colors.gray.800') !important;
+  border-top: 1px solid var(--color-gray-200) !important;
+  background-color: var(--color-gray-50) !important;
+  color: var(--color-gray-800) !important;
 }
 
 .cm-button {
   background-image: none !important;
-  background-color: theme('colors.gray.200') !important;
-  color: theme('colors.gray.700') !important;
+  background-color: var(--color-gray-200) !important;
+  color: var(--color-gray-700) !important;
   border: none !important;
 }
 
 .cm-textfield {
-  border: 1px solid theme('colors.gray.200') !important;
+  border: 1px solid var(--color-gray-200) !important;
 }
 </style>

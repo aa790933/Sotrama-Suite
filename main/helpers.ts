@@ -13,18 +13,25 @@ import type {
 } from 'utils/mariadb-types';
 
 export function getPersistedConnections(): PersistedConnection[] {
-  return (config.get('connections' as never) as PersistedConnection[] | undefined) ?? [];
+  return (
+    (config.get('connections' as never) as PersistedConnection[] | undefined) ??
+    []
+  );
 }
 
 export function getConnectionsMetadata(): ConnectionMetadata[] {
   return getPersistedConnections().map(toConnectionMetadata);
 }
 
-export function findConnectionById(id: string): PersistedConnection | undefined {
+export function findConnectionById(
+  id: string
+): PersistedConnection | undefined {
   return getPersistedConnections().find((c) => c.id === id);
 }
 
-export function findConnectionByConfig(config: import('utils/mariadb-types').MariaDBConfig): PersistedConnection | undefined {
+export function findConnectionByConfig(
+  config: import('utils/mariadb-types').MariaDBConfig
+): PersistedConnection | undefined {
   return getPersistedConnections().find((c) => equalsConnection(c, config));
 }
 
@@ -51,7 +58,12 @@ export function upsertConnectionFromConfig(
     config.set('connections' as never, connections as never);
     return existing;
   }
-  const newId = id || `${companyName}-${cfg.host}-${cfg.port}-${cfg.database}-${Date.now()}`.replace(/\s+/g, '_');
+  const newId =
+    id ||
+    `${companyName}-${cfg.host}-${cfg.port}-${cfg.database}-${Date.now()}`.replace(
+      /\s+/g,
+      '_'
+    );
   const created = fromMariaDBConfigToPersisted(newId, companyName, cfg, 1);
   connections.push(created);
   config.set('connections' as never, connections as never);

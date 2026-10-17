@@ -33,7 +33,9 @@ export function downloadFile(
       let stalled: NodeJS.Timeout | null = setTimeout(() => {
         req.destroy(new Error('Download timeout'));
         // @ts-ignore destroy with error
-        try { res.destroy(new Error('Download stalled')); } catch {}
+        try {
+          res.destroy(new Error('Download stalled'));
+        } catch {}
       }, DOWNLOAD_TIMEOUT_MS);
       const clearStalled = () => {
         if (stalled) clearTimeout(stalled);
@@ -43,17 +45,26 @@ export function downloadFile(
         if (stalled) clearTimeout(stalled);
         stalled = setTimeout(() => {
           req.destroy(new Error('Download stalled'));
-          try { res.destroy(new Error('Download stalled')); } catch {}
+          try {
+            res.destroy(new Error('Download stalled'));
+          } catch {}
         }, DOWNLOAD_TIMEOUT_MS);
       };
       // Also enforce timeout on the request socket itself
-      try { req.setTimeout(DOWNLOAD_TIMEOUT_MS, () => req.destroy(new Error('Download timeout'))); } catch {}
-      try { res.setTimeout(DOWNLOAD_TIMEOUT_MS, () => { try { res.destroy(new Error('Download stalled')); } catch {} }); } catch {}
+      try {
+        req.setTimeout(DOWNLOAD_TIMEOUT_MS, () =>
+          req.destroy(new Error('Download timeout'))
+        );
+      } catch {}
+      try {
+        res.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
+          try {
+            res.destroy(new Error('Download stalled'));
+          } catch {}
+        });
+      } catch {}
       const status = res.statusCode ?? 0;
-      const rawLocation = res.headers.location as
-        | string
-        | string[]
-        | undefined;
+      const rawLocation = res.headers.location as string | string[] | undefined;
       const location = Array.isArray(rawLocation)
         ? rawLocation[0]
         : rawLocation;
@@ -68,9 +79,15 @@ export function downloadFile(
         res.resume();
         const nextUrl = new URL(location, url).toString();
         downloadFile(nextUrl, destPath, onProgress, redirects - 1)
-          .then((v) => { clearStalled(); resolve(v); })
+          .then((v) => {
+            clearStalled();
+            resolve(v);
+          })
           .catch((err) => {
-            void fs.remove(destPath).catch(() => undefined).finally(() => reject(err));
+            void fs
+              .remove(destPath)
+              .catch(() => undefined)
+              .finally(() => reject(err));
           });
         return;
       }
@@ -78,7 +95,10 @@ export function downloadFile(
         clearStalled();
         res.resume();
         const err = new Error(`Download failed (${status}): ${url}`);
-        void fs.remove(destPath).catch(() => undefined).finally(() => reject(err));
+        void fs
+          .remove(destPath)
+          .catch(() => undefined)
+          .finally(() => reject(err));
         return;
       }
       const total = Number(res.headers['content-length'] ?? 0);
@@ -96,18 +116,30 @@ export function downloadFile(
         }
       });
       res.pipe(file);
-      file.on('finish', () => { clearStalled(); file.close(() => resolve()); });
+      file.on('finish', () => {
+        clearStalled();
+        file.close(() => resolve());
+      });
       file.on('error', (err) => {
         clearStalled();
-        void fs.remove(destPath).catch(() => undefined).finally(() => reject(err));
+        void fs
+          .remove(destPath)
+          .catch(() => undefined)
+          .finally(() => reject(err));
       });
       res.on('error', (err) => {
         clearStalled();
-        void fs.remove(destPath).catch(() => undefined).finally(() => reject(err));
+        void fs
+          .remove(destPath)
+          .catch(() => undefined)
+          .finally(() => reject(err));
       });
     });
     req.on('error', (err) => {
-      void fs.remove(destPath).catch(() => undefined).finally(() => reject(err));
+      void fs
+        .remove(destPath)
+        .catch(() => undefined)
+        .finally(() => reject(err));
     });
   });
 }

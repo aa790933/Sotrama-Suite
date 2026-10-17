@@ -1,11 +1,11 @@
 :root {
-  /* Sotrama Suite brand tokens shared by the app and documentation. */
-  --sotrama-primary: #d94736;
-  --sotrama-primary-deep: #b52d22;
-  --sotrama-ink: #202126;
-  --sotrama-slate: #3f4652;
-  --sotrama-muted: #626b78;
-  --sotrama-paper: #fffaf5;
+  /* Sotrama Suite brand tokens copied from the maintained brand kit. */
+  --sotrama-primary: #E11D48;
+  --sotrama-primary-deep: #BE123C;
+  --sotrama-ink: #0F172A;
+  --sotrama-slate: #334155;
+  --sotrama-muted: #64748B;
+  --sotrama-paper: #F8FAFC;
   --sotrama-font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --sotrama-font-arabic: "IBM Plex Sans Arabic", "Inter", sans-serif;
 }

@@ -23,13 +23,13 @@ import { ModelNameEnum } from 'models/types';
 import { Money } from 'pesa';
 import { QueryFilter } from 'utils/db/types';
 import { AccountTypeEnum } from '../Account/types';
+import { PaymentMethod } from '../PaymentMethod/PaymentMethod';
 import { Invoice } from '../Invoice/Invoice';
 import { Party } from '../Party/Party';
 import { PaymentFor } from '../PaymentFor/PaymentFor';
 import { PaymentType, PaymentTypeEnum } from './types';
 import { PartyRoleEnum } from '../Party/types';
 import { TaxSummary } from '../TaxSummary/TaxSummary';
-import { PaymentMethod } from '../PaymentMethod/PaymentMethod';
 
 type AccountTypeMap = Record<AccountTypeEnum, string[] | undefined>;
 
@@ -418,7 +418,7 @@ export class Payment extends Transactional {
     for (const row of this.for ?? []) {
       const referenceDoc = (await this.fyo.doc.getDoc(
         row.referenceType as string,
-        row.referenceName as string
+        row.referenceName
       )) as Invoice;
 
       outstandingAmount = outstandingAmount.add(
@@ -554,6 +554,7 @@ export class Payment extends Transactional {
     const accounts = (await this.fyo.db.getAll(ModelNameEnum.Account, {
       fields: ['name', 'accountType'],
       filters: {
+        isGroup: false,
         accountType: [
           'in',
           [
@@ -745,7 +746,7 @@ export class Payment extends Transactional {
         for (const row of this.for ?? []) {
           const referenceDoc = (await this.fyo.doc.getDoc(
             row.referenceType as string,
-            row.referenceName as string
+            row.referenceName
           )) as Invoice;
 
           this.totalAmount = referenceDoc.outstandingAmount?.abs();
@@ -763,7 +764,7 @@ export class Payment extends Transactional {
       } else if ((value as Money).isZero()) {
         throw new ValidationError(
           this.fyo.t`Payment amount cannot be ${this.fyo.format(
-            value as Money,
+            value,
             'Currency'
           )}.`
         );
@@ -780,14 +781,18 @@ export class Payment extends Transactional {
   };
 
   static filters: FiltersMap = {
-    party: (doc: Doc) => {
+    party: (doc: Doc): QueryFilter => {
+      if (!doc) {
+        return {};
+      }
+
       const paymentType = (doc as Payment).paymentType;
       if (paymentType === 'Pay') {
-        return { role: ['in', ['Supplier', 'Both']] } as QueryFilter;
+        return { role: ['in', ['Supplier', 'Both']] };
       }
 
       if (paymentType === 'Receive') {
-        return { role: ['in', ['Customer', 'Both']] } as QueryFilter;
+        return { role: ['in', ['Customer', 'Both']] };
       }
 
       return {};
@@ -795,29 +800,55 @@ export class Payment extends Transactional {
     numberSeries: () => {
       return { referenceType: 'Payment' };
     },
-    account: (doc: Doc) => {
-      const paymentType = doc.paymentType as PaymentType;
-      const paymentMethod = doc.paymentMethod as PaymentMethod;
+    account: (doc: Doc): QueryFilter => {
+      if (!doc) {
+        return {};
+      }
+
+      const paymentType = (doc as Payment).paymentType;
+      const referenceType = (doc as Payment).referenceType;
+      const paymentMethod = (doc as Payment).paymentMethod;
 
       if (paymentType === 'Receive') {
+        if (referenceType === ModelNameEnum.PurchaseInvoice) {
+          return { accountType: 'Payable', isGroup: false };
+        }
+
         return { accountType: 'Receivable', isGroup: false };
       }
 
-      if (paymentMethod.name === 'Cash') {
+      if (paymentType !== 'Pay') {
+        return {};
+      }
+
+      if (paymentMethod === 'Cash') {
         return { accountType: 'Cash', isGroup: false };
       } else {
         return { accountType: ['in', ['Bank', 'Cash']], isGroup: false };
       }
     },
-    paymentAccount: (doc: Doc) => {
-      const paymentType = doc.paymentType as PaymentType;
-      const paymentMethod = doc.paymentMethod as PaymentMethod;
+    paymentAccount: (doc: Doc): QueryFilter => {
+      if (!doc) {
+        return {};
+      }
+
+      const paymentType = (doc as Payment).paymentType;
+      const referenceType = (doc as Payment).referenceType;
+      const paymentMethod = (doc as Payment).paymentMethod;
 
       if (paymentType === 'Pay') {
+        if (referenceType === ModelNameEnum.SalesInvoice) {
+          return { accountType: 'Receivable', isGroup: false };
+        }
+
         return { accountType: 'Payable', isGroup: false };
       }
 
-      if (paymentMethod.name === 'Cash') {
+      if (paymentType !== 'Receive') {
+        return {};
+      }
+
+      if (paymentMethod === 'Cash') {
         return { accountType: 'Cash', isGroup: false };
       } else {
         return { accountType: ['in', ['Bank', 'Cash']], isGroup: false };

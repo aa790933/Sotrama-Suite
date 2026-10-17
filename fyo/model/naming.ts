@@ -112,17 +112,17 @@ export async function getCollisionFreeTemporaryName(
   let idx = parseTemporarySuffix(afterName);
   for (let attempts = 0; attempts < 10000; attempts++, idx++) {
     const candidate = fyo.t`New ${label} ${String(idx).padStart(2, '0')}`;
-    if (!(await fyo.db.exists(schemaName, candidate as string))) {
-      return candidate as string;
+    if (!(await fyo.db.exists(schemaName, candidate))) {
+      return candidate;
     }
   }
 
-  return `${fyo.t`New ${label} ` as string}${getRandomString()}`;
+  return `${fyo.t`New ${label} `}${getRandomString()}`;
 }
 
 function parseTemporarySuffix(name?: string): number {
   const match = name?.match(/ (\d+)$/);
-  const parsed = match ? parseInt(match[1]!, 10) : NaN;
+  const parsed = match ? parseInt(match[1], 10) : NaN;
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 

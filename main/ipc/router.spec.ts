@@ -241,11 +241,11 @@ test('IpcRouter seam is real — depends on DatabaseCore directly, no string dis
   t.ok(src.includes('interface FileOps'), 'FileOps exists');
   t.ok(src.includes('interface AppOps'), 'AppOps exists');
   t.ok(
-    src.includes('checkDbExists(config: MariaDBConfig)'),
+    /checkDbExists\(\s*config:\s*MariaDBConfig\s*\)/.test(src),
     'InstallerOps uses typed MariaDBConfig, not loose opts'
   );
   t.ok(
-    src.includes('checkDbAccess(config: MariaDBConfig)'),
+    /checkDbAccess\(\s*config:\s*MariaDBConfig\s*\)/.test(src),
     'DbOps uses typed MariaDBConfig'
   );
   t.ok(
@@ -367,6 +367,79 @@ test('IpcRouter + InMemoryConnectionStore — real seam (DbOps via InMemory, no 
     router.dbOps !== undefined && router.installerOps !== undefined,
     true,
     'router has four sub-interfaces'
+  );
+  t.end();
+});
+
+test('concurrent company connections serialize configuration and initialization', async (t) => {
+  const store = new InMemoryConnectionStore();
+  const first = store.upsert('FirstCo', {
+    host: '127.0.0.1',
+    port: 3306,
+    user: 'u',
+    password: 'p',
+    database: 'first_company',
+  });
+  const second = store.upsert('SecondCo', {
+    host: '127.0.0.1',
+    port: 3306,
+    user: 'u',
+    password: 'p',
+    database: 'second_company',
+  });
+  const events: string[] = [];
+  const fakeDb = makeFakeDatabase();
+  fakeDb.setDbConfig = async (config) => {
+    events.push(`set-start:${config.database}`);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    events.push(`set-end:${config.database}`);
+  };
+  fakeDb.connectToDatabase = async (dbPath) => {
+    const config = store.resolve(dbPath);
+    events.push(`connect-start:${config.database}`);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    events.push(`connect-end:${config.database}`);
+    return 'in';
+  };
+
+  const router = new IpcRouter({
+    database: fakeDb,
+    windowProvider: {
+      getWindow: () => null,
+      isDevelopment: false,
+      isLinux: false,
+      checkedForUpdate: false,
+      icon: '',
+    },
+    app: { getPath: () => '/tmp/ud', getVersion: () => '0.0.0-test' } as never,
+    dialog: {} as never,
+    connectionStore: store,
+    senderPolicy: new AllowAllSenderPolicy(),
+    pathPolicy: new PathPolicy({
+      userData: '/tmp/ud',
+      temp: '/tmp/te',
+      documents: '/tmp/do',
+    }),
+  });
+
+  await Promise.all([
+    router.connectToDatabase(first.id),
+    router.connectToDatabase(second.id),
+  ]);
+
+  t.deepEqual(
+    events,
+    [
+      'set-start:first_company',
+      'set-end:first_company',
+      'connect-start:first_company',
+      'connect-end:first_company',
+      'set-start:second_company',
+      'set-end:second_company',
+      'connect-start:second_company',
+      'connect-end:second_company',
+    ],
+    'each company config and connect operation remains contiguous'
   );
   t.end();
 });

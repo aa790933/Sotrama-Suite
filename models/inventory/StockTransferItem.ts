@@ -214,11 +214,8 @@ export class StockTransferItem extends TransferItem {
         if (!this.item) {
           return this.rate ?? this.fyo.pesa(0);
         }
-        const rate = (await this.fyo.getValue(
-          'Item',
-          this.item as string,
-          'rate'
-        )) as undefined | Money;
+        const rate = (await this.fyo.getValue('Item', this.item, 'rate')) as
+          undefined | Money;
 
         if (!rate?.float && this.rate?.float) {
           return this.rate;
@@ -240,7 +237,7 @@ export class StockTransferItem extends TransferItem {
         return (
           ((await this.fyo.getValue(
             'Item',
-            this.item as string,
+            this.item,
             accountType
           )) as string) ?? ''
         );

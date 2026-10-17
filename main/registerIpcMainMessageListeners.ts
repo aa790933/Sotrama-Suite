@@ -47,7 +47,10 @@ export default function registerIpcMainMessageListeners(main: Main) {
 
   ipcMain.on(IPC_MESSAGES.OPEN_EXTERNAL, (event, link: string) => {
     if (event.sender !== main.mainWindow?.webContents) return;
-    if (typeof link !== 'string' || !(link.startsWith('https://') || link.startsWith('http://'))) {
+    if (
+      typeof link !== 'string' ||
+      !(link.startsWith('https://') || link.startsWith('http://'))
+    ) {
       emitMainProcessError(new Error(`OPEN_EXTERNAL blocked: ${link}`));
       return;
     }

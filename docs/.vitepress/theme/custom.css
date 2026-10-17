@@ -1,7 +1,7 @@
 :root {
-  --vp-c-brand-1: #BE123C;
+  --vp-c-brand-1: #E11D48;
   --vp-c-brand-2: #BE123C;
-  --vp-c-brand-3: #881337;
+  --vp-c-brand-3: #9F1239;
   --vp-c-brand-soft: rgb(225 29 72 / 10%);
   --vp-c-accent: #E11D48;
 
@@ -13,10 +13,10 @@
 }
 
 .dark {
-  --vp-c-brand-1: #FDA4AF;
-  --vp-c-brand-2: #FECDD3;
+  --vp-c-brand-1: #FB7185;
+  --vp-c-brand-2: #FDA4AF;
   --vp-c-brand-3: #FFE4E6;
-  --vp-c-brand-soft: rgb(253 164 175 / 14%);
+  --vp-c-brand-soft: rgb(225 29 72 / 14%);
   --vp-button-brand-text: var(--vp-c-bg);
   --vp-button-brand-hover-text: var(--vp-c-bg);
   --vp-button-brand-active-text: var(--vp-c-bg);
@@ -90,15 +90,17 @@
 }
 
 .VPButton.brand {
-  --vp-button-brand-bg: #BE123C;
-  --vp-button-brand-hover-bg: #BE123C;
-  --vp-button-brand-active-bg: #881337;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: #881337;
+  --vp-button-brand-hover-bg: #9F1239;
+  --vp-button-brand-active-bg: #4C0519;
 }
 
 .dark .VPButton.brand {
+  --vp-button-brand-text: #ffffff;
   --vp-button-brand-bg: #E11D48;
   --vp-button-brand-hover-bg: #BE123C;
-  --vp-button-brand-active-bg: #BE123C;
+  --vp-button-brand-active-bg: #881337;
 }
 
 @media (prefers-reduced-motion: reduce) {

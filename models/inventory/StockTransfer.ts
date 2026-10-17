@@ -573,7 +573,11 @@ export abstract class StockTransfer extends Transfer {
 
     let returnDocItems: DocValueMap[] = [];
 
-    const returnBalanceItemsQty = await getReturnBalance(this.fyo, this.schemaName, this.name);
+    const returnBalanceItemsQty = await getReturnBalance(
+      this.fyo,
+      this.schemaName,
+      this.name
+    );
     for (const item of docItems) {
       if (!returnBalanceItemsQty) {
         returnDocItems = docItems;

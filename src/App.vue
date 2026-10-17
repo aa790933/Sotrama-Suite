@@ -42,6 +42,10 @@
 <script lang="ts">
 import { RTL_LANGUAGES } from 'fyo/utils/consts';
 import { ModelNameEnum } from 'models/types';
+import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
+import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
+import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
+import '@fontsource/ibm-plex-sans-arabic/arabic-700.css';
 import { systemLanguageRef } from 'src/utils/refs';
 import { defineComponent, provide, ref, Ref } from 'vue';
 import WindowsTitleBar from './components/WindowsTitleBar.vue';
@@ -63,7 +67,11 @@ import { showDialog, showToast } from './utils/interactive';
 import { setLanguageMap } from './utils/language';
 import { updateConfigFiles } from './utils/misc';
 import { updatePrintTemplates } from './utils/printTemplates';
-import { getSafeConfigDetail, equalsConnection } from 'utils/mariadb-types';
+import {
+  equalsConnection,
+  getSafeConfigDetail,
+  parseMariaDBConfigString,
+} from 'utils/mariadb-types';
 import type { PersistedConnection } from 'utils/mariadb-types';
 import { Search } from './utils/search';
 import { Shortcuts } from './utils/shortcuts';
@@ -119,19 +127,19 @@ export default defineComponent({
       databaseSelector,
     };
   },
-  data() {
+  data(): {
+    activeScreen: null | Screen;
+    dbPath: string;
+    companyName: string;
+    darkMode: boolean | undefined;
+    hostRole: HostType | null;
+  } {
     return {
       activeScreen: null,
       dbPath: '',
       companyName: '',
       darkMode: false,
       hostRole: null,
-    } as {
-      activeScreen: null | Screen;
-      dbPath: string;
-      companyName: string;
-      darkMode: boolean | undefined;
-      hostRole: HostType | null;
     };
   },
   computed: {
@@ -221,8 +229,6 @@ export default defineComponent({
             filePath as never
           );
         } else {
-          const { parseMariaDBConfigString } =
-            await import('utils/mariadb-types');
           const cfg = parseMariaDBConfigString(filePath);
           const found = conns?.find((c) => equalsConnection(c, cfg));
           if (found)

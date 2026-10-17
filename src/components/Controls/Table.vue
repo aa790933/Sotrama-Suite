@@ -1,5 +1,5 @@
 <template>
-  <div v-if="tableFields?.length">
+  <div v-if="tableFields.length">
     <div v-if="showLabel" class="text-foreground text-sm font-medium mb-1">
       {{ df.label }}
     </div>
@@ -104,6 +104,7 @@ import {
   TableRow as UiTableRow,
 } from 'src/components/ui/table';
 import { fyo } from 'src/initFyo';
+import { resolveTableFields } from 'src/utils/tableFields';
 import { nextTick } from 'vue';
 import Base from './Base.vue';
 import TableRow from './TableRow.vue';
@@ -161,8 +162,11 @@ export default {
       return this.columnWidths[this.columnWidths.length - 1];
     },
     tableFields() {
-      const fields = fyo.schemaMap[this.df.target].tableFields ?? [];
-      return fields.map((fieldname) => fyo.getField(this.df.target, fieldname));
+      return resolveTableFields(
+        this.df?.target,
+        fyo.schemaMap,
+        (schemaName, fieldname) => fyo.getField(schemaName, fieldname)
+      );
     },
   },
   watch: {

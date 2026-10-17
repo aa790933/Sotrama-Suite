@@ -302,7 +302,7 @@ export abstract class Invoice extends Transactional {
     }
 
     await this.fyo.db.update(this.schemaName, {
-      name: this.name as string,
+      name: this.name,
       outstandingAmount: lpAddedBaseGrandTotal! || this.baseGrandTotal!,
     });
 
@@ -634,66 +634,74 @@ export abstract class Invoice extends Transactional {
       return;
     }
 
-    let returnDocItems: DocValueMap[] = [];
+    const returnDocItems: DocValueMap[] = [];
 
     const totalQtyOfReturnedItems: Record<
       string,
       number | { quantity?: number; batches?: Record<string, number> }
     > = await getReturnQtyTotal(this);
 
-    for (const item of docItems) {
-      if (item.isFreeItem) {
-        returnDocItems.push({
-          ...item,
-          name: undefined,
-          quantity: -(item.quantity as number),
-          transferQuantity: -(
-            (item.quantity as number) / (item.unitConversionFactor as number)
-          ),
-        });
+    const remainingByItem = new Map<string, number>();
+    const remainingByBatch = new Map<string, Map<string, number>>();
+    for (const [itemName, returnedData] of Object.entries(
+      totalQtyOfReturnedItems
+    )) {
+      if (typeof returnedData === 'number') {
+        remainingByItem.set(itemName, returnedData);
         continue;
       }
-      if (item.batch) {
-        const returnData = totalQtyOfReturnedItems[item.item as string];
-        if (typeof returnData === 'object' && returnData?.batches) {
-          returnDocItems = docItems.map((docItem: DocValueMap) => {
-            const qty = -returnData?.batches![docItem.batch as string] || 0;
-            const transferQty =
-              qty / ((docItem.unitConversionFactor as number) || 1);
-            return {
-              ...docItem,
-              name: undefined,
-              quantity: qty,
-              transferQuantity: transferQty,
-            };
-          });
-        }
-      } else {
-        returnDocItems = docItems.map((docItem: DocValueMap) => ({
-          ...docItem,
-          name: undefined,
-          quantity: -(totalQtyOfReturnedItems[docItem.item as string] || 0),
-          qty:
-            -(totalQtyOfReturnedItems[docItem.item as string] as number) /
-            (item.unitConversionFactor as number),
-          transferQuantity: -(
-            (totalQtyOfReturnedItems[docItem.item as string] as number) /
-            (item.unitConversionFactor as number)
-          ),
-        }));
-      }
 
-      for (const row of returnDocItems) {
-        row.itemDiscountedTotal = await this.getItemsDiscountedTotal(
-          row as InvoiceItem
-        );
-      }
-      break;
+      remainingByItem.set(itemName, returnedData.quantity ?? 0);
+      remainingByBatch.set(
+        itemName,
+        new Map(Object.entries(returnedData.batches ?? {}))
+      );
     }
 
-    returnDocItems = returnDocItems.filter(
-      (docItems) => (docItems.quantity as number) < 0
-    );
+    for (const item of docItems) {
+      const itemName = item.item as string | undefined;
+      if (!itemName) {
+        continue;
+      }
+
+      let remainingQuantity = 0;
+      if (item.batch) {
+        remainingQuantity =
+          remainingByBatch.get(itemName)?.get(item.batch as string) ?? 0;
+      } else {
+        remainingQuantity = remainingByItem.get(itemName) ?? 0;
+      }
+
+      const lineQuantity = Math.min(
+        Math.abs(Number(item.quantity) || 0),
+        Math.max(0, remainingQuantity)
+      );
+      const quantity = -lineQuantity;
+      if (quantity === 0) {
+        continue;
+      }
+
+      if (item.batch) {
+        remainingByBatch
+          .get(itemName)
+          ?.set(item.batch as string, remainingQuantity - lineQuantity);
+      } else {
+        remainingByItem.set(itemName, remainingQuantity - lineQuantity);
+      }
+
+      const conversionFactor = Number(item.unitConversionFactor) || 1;
+      const returnItem: DocValueMap = {
+        ...item,
+        name: undefined,
+        quantity,
+        qty: quantity / conversionFactor,
+        transferQuantity: quantity / conversionFactor,
+      };
+      returnItem.itemDiscountedTotal = await this.getItemsDiscountedTotal(
+        returnItem as InvoiceItem
+      );
+      returnDocItems.push(returnItem);
+    }
 
     const returnDocData = {
       ...docData,
@@ -900,7 +908,10 @@ export abstract class Invoice extends Transactional {
       return;
     }
 
-    const names = returnInvoices.map(({ name }) => name).join(', ');
+    const names = returnInvoices
+      .map(({ name }) => name)
+      .filter((name): name is string => typeof name === 'string')
+      .join(', ');
     throw new ValidationError(
       this.fyo
         .t`Cannot cancel ${this.name} because of the following ${this.schema.label}: ${names}`
@@ -1017,7 +1028,7 @@ export abstract class Invoice extends Transactional {
     currency: {
       formula: async () => {
         if (!this.party) {
-          return this.fyo.singles.SystemSettings!.currency as string;
+          return this.fyo.singles.SystemSettings!.currency;
         }
         const currency = (await this.fyo.getValue(
           'Party',
@@ -1028,7 +1039,7 @@ export abstract class Invoice extends Transactional {
         if (!getIsNullOrUndef(currency)) {
           return currency;
         }
-        return this.fyo.singles.SystemSettings!.currency as string;
+        return this.fyo.singles.SystemSettings!.currency;
       },
       dependsOn: ['party'],
     },
@@ -1451,7 +1462,11 @@ export abstract class Invoice extends Transactional {
 
       if (isAuto) {
         const stock =
-          (await getQuantity(this.fyo, {item: item, location: location!, toDate: data.date})) ?? 0;
+          (await getQuantity(this.fyo, {
+            item: item,
+            location: location!,
+            toDate: data.date,
+          })) ?? 0;
 
         if (stock < (quantity as number)) {
           continue;
@@ -1801,13 +1816,10 @@ export abstract class Invoice extends Transactional {
     ];
     const couponCodeByName = new Map<string, CouponCode>();
     if (couponNames.length) {
-      const couponCodes = (await this.fyo.db.getAll(
-        ModelNameEnum.CouponCode,
-        {
-          fields: ['*'],
-          filters: { name: ['in', couponNames], isEnabled: true },
-        }
-      )) as CouponCode[];
+      const couponCodes = (await this.fyo.db.getAll(ModelNameEnum.CouponCode, {
+        fields: ['*'],
+        filters: { name: ['in', couponNames], isEnabled: true },
+      })) as CouponCode[];
       for (const couponCode of couponCodes) {
         couponCodeByName.set(couponCode.name as string, couponCode);
       }
@@ -1893,6 +1905,9 @@ export abstract class Invoice extends Transactional {
       const pricingRuleDocsForItem = pricingRuleDocNames
         .map((name) => pricingRuleByName.get(name))
         .filter((rule): rule is PricingRule => !!rule);
+      pricingRuleDocsForItem.sort(
+        (a, b) => Number(b.priority ?? 0) - Number(a.priority ?? 0)
+      );
 
       if (
         pricingRuleDocsForItem.length &&

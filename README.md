@@ -8,7 +8,7 @@
 > Sotrama Suite is an open-source, cross-platform business management suite by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/aa790933/Sotrama-Suite)](https://github.com/aa790933/Sotrama-Suite/releases)
-![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-c9362b)
+![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-d94736)
 ![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-26272b)
 [![Publish](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml/badge.svg)](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml)
 
@@ -58,9 +58,11 @@ Sotrama Suite aims to give small and medium-sized businesses a practical, extens
 
 ### Under the Hood
 
-- **Vue.js**: Vue.js powers the front-end of Sotrama Suite, enabling a reactive and component-based UI. It ensures seamless interactions and dynamic updates, giving users a modern, responsive experience.
+- **Vue.js and TypeScript**: A reactive, component-based renderer with typed application services.
 
-- **Electron**: Electron is used to package Sotrama Suite as a standalone desktop application, allowing it to run offline and provide a native-like experience across Windows, macOS, and Linux.
+- **Tailwind CSS 4 and shadcn-vue**: A shared CSS-first theme, accessible interface primitives, and Reka UI components for consistent light/dark and RTL behavior.
+
+- **Electron**: Packages Sotrama Suite as a desktop application for Windows, macOS, and Linux.
 
 - **MariaDB**: Stores company records, transactions, and configuration. It can run locally or on a trusted LAN host.
 
@@ -138,6 +140,8 @@ To build Sotrama Suite and create an installer:
 # start the electron app
 yarn build
 ```
+
+To regenerate the desktop and documentation image assets from the maintained SVG sources, run `yarn assets:generate`, then verify their dimensions and container formats with `yarn assets:check`.
 
 **Note: Build Target**
 

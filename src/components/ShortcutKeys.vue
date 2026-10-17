@@ -26,6 +26,7 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+@reference "../styles/index.css";
 .key-common {
   font-family: monospace;
   font-weight: 600;

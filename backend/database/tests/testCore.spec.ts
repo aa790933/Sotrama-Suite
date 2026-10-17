@@ -17,16 +17,32 @@ const testDbConfig = getTestDbConfig('test_books_core');
 const schemaMap = getBuiltTestSchemaMap();
 
 async function ensureTestDb() {
-  const adminDb = new DatabaseCore(undefined, {
-    ...testDbConfig,
-    // The MariaDB service does not guarantee a user-created `test` database.
-    // Use the always-present system schema for administrative DDL instead.
-    database: 'mysql',
-  });
-  await adminDb.connect();
-  await adminDb.query(`DROP DATABASE IF EXISTS ${testDbConfig.database}`);
-  await adminDb.query(`CREATE DATABASE ${testDbConfig.database}`);
-  await adminDb.close();
+  const db = new DatabaseCore(undefined, testDbConfig);
+  await db.connect();
+  try {
+    const rows = (await db.query(
+      `SELECT TABLE_NAME AS tableName FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'`
+    )) as { tableName: string }[];
+    const existing = new Set(rows.map(({ tableName }) => tableName.toLowerCase()));
+
+    // Drop child tables before their parents, using the same dependency order
+    // used by this test schema. This keeps cleanup inside the dedicated test
+    // database and does not require CREATE/DROP DATABASE privileges.
+    for (const schemaName of Object.keys(schemaMap).reverse()) {
+      const tableName = schemaName.toLowerCase();
+      if (existing.has(tableName)) {
+        await db.query(`DROP TABLE IF EXISTS \`${tableName}\``);
+        existing.delete(tableName);
+      }
+    }
+
+    for (const tableName of existing) {
+      const safeName = tableName.replace(/`/g, '');
+      await db.query(`DROP TABLE IF EXISTS \`${safeName}\``);
+    }
+  } finally {
+    await db.close();
+  }
 }
 
 async function getDb(shouldMigrate: boolean = true): Promise<DatabaseCore> {
@@ -51,13 +67,45 @@ test('db init, migrate, close', async (t) => {
   t.equal(schemaMap, db.schemaMap);
 
   await assertDoesNotThrow(async () => await db.connect());
+  await assertDoesNotThrow(async () => await db.connect());
   t.notEqual(db.isConnected, false);
 
   await assertDoesNotThrow(async () => await db.migrate());
 
   await assertDoesNotThrow(async () => await db.close());
+  await assertDoesNotThrow(async () => await db.close());
 
   await ensureTestDb();
+});
+
+test('switching company database replaces the existing connection pool', async (t) => {
+  const db = new DatabaseCore(undefined, testDbConfig);
+  try {
+    db.connect();
+
+    const first = (await db.query('SELECT DATABASE() AS database')) as {
+      database: string;
+    }[];
+    t.equal(
+      first[0]?.database,
+      'test_books_core',
+      'initial pool uses first company DB'
+    );
+
+    await db.setDbConfig(getTestDbConfig('test_sotrama_app'));
+    db.connect();
+
+    const second = (await db.query('SELECT DATABASE() AS database')) as {
+      database: string;
+    }[];
+    t.equal(
+      second[0]?.database,
+      'test_sotrama_app',
+      'reconfigured pool uses second company DB'
+    );
+  } finally {
+    await db.close();
+  }
 });
 
 /**
@@ -328,9 +376,9 @@ test('SingleValue supports serialized values larger than 64 KiB', async (t) => {
   const db = await getDb();
   const largeValue = 'print-template-content-'.repeat(4000);
 
-  await db.insert('PrintSettings', { headerContent: largeValue });
+  await db.insert('SystemSettings', { locale: largeValue });
   const rows = (await db.query(
-    "SELECT value FROM singlevalue WHERE parent = 'printsettings' AND fieldname = 'headerContent'"
+    "SELECT value FROM singlevalue WHERE parent = 'systemsettings' AND fieldname = 'locale'"
   )) as { value: string }[];
 
   t.equal(
@@ -339,6 +387,69 @@ test('SingleValue supports serialized values larger than 64 KiB', async (t) => {
     'large single value is stored without truncation'
   );
   await db.close();
+});
+
+test('insert reports an unknown schema without dereferencing undefined', async (t) => {
+  const db = new DatabaseCore(undefined, testDbConfig);
+  db.setSchemaMap(schemaMap);
+
+  try {
+    await db.insert('PrintSettings', { headerContent: 'not part of this test schema' });
+    t.fail('insert should reject an unregistered schema');
+  } catch (error) {
+    t.equal(
+      (error as Error).message,
+      'Unknown schema: PrintSettings',
+      'a missing schema is reported clearly before starting a transaction'
+    );
+  }
+  t.end();
+});
+
+test('concurrent transactions use isolated connections and rollback independently', async (t) => {
+  const db = await getDb();
+  let notifyFirstTransaction!: () => void;
+  let releaseFirstTransaction!: () => void;
+  const firstTransactionStarted = new Promise<void>((resolve) => {
+    notifyFirstTransaction = resolve;
+  });
+  const holdFirstTransaction = new Promise<void>((resolve) => {
+    releaseFirstTransaction = resolve;
+  });
+
+  const firstTransaction = db.transaction(async () => {
+    await db.insert('Customer', { name: 'transaction-committed' });
+    notifyFirstTransaction();
+    await holdFirstTransaction;
+  });
+
+  await firstTransactionStarted;
+  let rollbackError: unknown;
+  await db
+    .transaction(async () => {
+      await db.insert('Customer', { name: 'transaction-rolled-back' });
+      throw new Error('expected isolated rollback');
+    })
+    .catch((error: unknown) => {
+      rollbackError = error;
+    });
+
+  releaseFirstTransaction();
+  await firstTransaction;
+
+  t.equal((rollbackError as Error | undefined)?.message, 'expected isolated rollback');
+  t.equal(
+    await db.exists('Customer', 'transaction-committed'),
+    true,
+    'the first transaction commits its own row'
+  );
+  t.equal(
+    await db.exists('Customer', 'transaction-rolled-back'),
+    false,
+    'the failed concurrent transaction rolls back only its own row'
+  );
+  await db.close();
+  t.end();
 });
 
 test('CRUD nondependent schema', async function (t) {

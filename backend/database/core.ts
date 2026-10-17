@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import {
   Pool,
   PoolConnection,
@@ -77,12 +78,13 @@ const ALLOWED_OPERATORS = new Set([
  */
 export default class DatabaseCore extends DatabaseBase {
   private pool: Pool | null = null;
+  private poolConfig: MariaDBConfig | null = null;
+  private readonly transactionContext = new AsyncLocalStorage<PoolConnection>();
   typeMap = mariadbTypeMap;
   dbPath: string;
   schemaMap: SchemaMap = {};
   connectionParams: MariaDBConfig;
   rawCustomFields: RawCustomField[] = [];
-  #txConn: PoolConnection | null = null;
 
   constructor(dbPath?: string, connectionParams?: MariaDBConfig) {
     super();
@@ -98,6 +100,18 @@ export default class DatabaseCore extends DatabaseBase {
 
   #normalizeTableName(schemaName: string): string {
     return schemaName.toLowerCase();
+  }
+
+  #sameConnectionConfig(
+    left: MariaDBConfig | null,
+    right: MariaDBConfig
+  ): boolean {
+    return !!left &&
+      left.host === right.host &&
+      left.port === right.port &&
+      left.user === right.user &&
+      left.password === right.password &&
+      left.database === right.database;
   }
 
   #qn(schemaName: string): string {
@@ -150,8 +164,13 @@ export default class DatabaseCore extends DatabaseBase {
    * Connection params for the next connect. Set by the IPC router from the
    * resolved Company Connection before create/connect.
    */
-  setDbConfig(config: MariaDBConfig) {
-    this.connectionParams = config;
+  async setDbConfig(config: MariaDBConfig): Promise<void> {
+    if (this.pool && !this.#sameConnectionConfig(this.poolConfig, config)) {
+      // Clear the old pool before changing company credentials. During close,
+      // queries fail closed rather than leaking into the previous company DB.
+      await this.close();
+    }
+    this.connectionParams = { ...config };
   }
 
   async createNewDatabase(_dbPath: string, countryCode: string) {
@@ -295,7 +314,10 @@ export default class DatabaseCore extends DatabaseBase {
               safeDb,
             ],
             {
-              env: { ...process.env, MYSQL_PWD: this.connectionParams.password },
+              env: {
+                ...process.env,
+                MYSQL_PWD: this.connectionParams.password,
+              },
               timeout: 60000,
             }
           );
@@ -307,7 +329,8 @@ export default class DatabaseCore extends DatabaseBase {
           child.on('close', (code) => {
             out.close();
             if (code === 0) resolve();
-            else reject(new Error(`mysqldump failed (code ${code}): ${stderr}`));
+            else
+              reject(new Error(`mysqldump failed (code ${code}): ${stderr}`));
           });
         });
       } catch (err) {
@@ -356,12 +379,22 @@ export default class DatabaseCore extends DatabaseBase {
   }
 
   connect() {
+    if (this.pool) {
+      if (this.#sameConnectionConfig(this.poolConfig, this.connectionParams)) {
+        return;
+      }
+      throw new Error(
+        'Database configuration changed while a pool is open; call setDbConfig() before reconnecting.'
+      );
+    }
+
+    const config = { ...this.connectionParams };
     this.pool = createPool({
-      host: this.connectionParams.host,
-      port: this.connectionParams.port,
-      user: this.connectionParams.user,
-      password: this.connectionParams.password,
-      database: this.connectionParams.database,
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
       connectionLimit: 10,
       timezone: 'Z',
       dateStrings: false,
@@ -369,22 +402,29 @@ export default class DatabaseCore extends DatabaseBase {
       bigIntAsNumber: true,
       decimalAsNumber: true,
     });
+    this.poolConfig = config;
   }
 
   async close() {
-    if (this.pool) {
-      await this.pool.end();
-      this.pool = null;
+    const pool = this.pool;
+    if (!pool) {
+      return;
     }
+
+    this.pool = null;
+    this.poolConfig = null;
+    await pool.end();
   }
 
   async query(sql: string, params?: unknown[]): Promise<QueryResult> {
-    if (!this.pool) {
+    const pool = this.pool;
+    const transactionConnection = this.transactionContext.getStore();
+    if (!pool && !transactionConnection) {
       throw new Error('Pool not initialized. Call connect() first.');
     }
     const conn: PoolConnection =
-      this.#txConn ?? (await this.pool.getConnection());
-    const owned = !this.#txConn;
+      transactionConnection ?? (await pool!.getConnection());
+    const owned = !transactionConnection;
     try {
       const result: QueryResult = await conn.query(sql, params);
       return result;
@@ -397,25 +437,28 @@ export default class DatabaseCore extends DatabaseBase {
 
   /** Run a transactional callback safely */
   async transaction<T>(callback: () => Promise<T>): Promise<T> {
-    if (!this.pool) {
+    const pool = this.pool;
+    if (!pool) {
       throw new Error('Pool not initialized. Call connect() first.');
     }
-    if (this.#txConn) {
+    if (this.transactionContext.getStore()) {
       return await callback(); // Nested in existing transaction/connection
     }
 
-    const conn = await this.pool.getConnection();
-    this.#txConn = conn;
+    const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
-      const result = await callback();
+      const result = await this.transactionContext.run(conn, callback);
       await conn.commit();
       return result;
     } catch (err) {
-      await conn.rollback();
+      try {
+        await conn.rollback();
+      } catch {
+        // Preserve the original transaction error if the connection has failed.
+      }
       throw err;
     } finally {
-      this.#txConn = null;
       void conn.release();
     }
   }
@@ -451,32 +494,47 @@ export default class DatabaseCore extends DatabaseBase {
 
     await config.pre?.();
 
-    const conn: PoolConnection =
-      this.#txConn ?? (await this.pool!.getConnection());
-    this.#txConn = conn;
+    const pool = this.pool;
+    if (!pool) {
+      throw new Error('Pool not initialized. Call connect() first.');
+    }
+    const activeConnection = this.transactionContext.getStore();
+    const conn = activeConnection ?? (await pool.getConnection());
+    const ownsConnection = !activeConnection;
+    const migrateTables = async () => {
+      try {
+        await this.query('SET FOREIGN_KEY_CHECKS=0');
+        for (const schemaName of create) {
+          await this.#createTable(schemaName);
+        }
+
+        for (const schemaName of create) {
+          await this.#addForeignKeysToTable(schemaName);
+        }
+
+        for (const alterConf of alter) {
+          await this.#alterTable(alterConf);
+        }
+      } finally {
+        // Restore the setting on this exact connection, even when DDL fails.
+        try {
+          await this.query('SET FOREIGN_KEY_CHECKS=1');
+        } catch {
+          // Preserve the original migration error if the connection has failed.
+        }
+      }
+    };
+
     try {
-      await this.query('SET FOREIGN_KEY_CHECKS=0');
-      for (const schemaName of create) {
-        await this.#createTable(schemaName);
-      }
-
-      for (const schemaName of create) {
-        await this.#addForeignKeysToTable(schemaName);
-      }
-
-      for (const alterConf of alter) {
-        await this.#alterTable(alterConf);
+      if (activeConnection) {
+        await migrateTables();
+      } else {
+        await this.transactionContext.run(conn, migrateTables);
       }
     } finally {
-      // Critical safety: FOREIGN_KEY_CHECKS must be restored even if migration fails,
-      // otherwise LAN peers inherit a connection with FK disabled (silent corruption).
-      try {
-        await this.query('SET FOREIGN_KEY_CHECKS=1');
-      } catch {
-        // SET itself can fail if connection is already broken; do not mask original error
+      if (ownsConnection) {
+        void conn.release();
       }
-      this.#txConn = null;
-      void conn.release();
     }
 
     await this.#ensureSingleValueCapacity();
@@ -548,8 +606,13 @@ export default class DatabaseCore extends DatabaseBase {
     schemaName: string,
     fieldValueMap: FieldValueMap
   ): Promise<FieldValueMap> {
+    const schema = this.schemaMap[schemaName];
+    if (!schema) {
+      throw new ValueError(`Unknown schema: ${schemaName}`);
+    }
+
     return await this.transaction(async () => {
-      if (this.schemaMap[schemaName]!.isSingle) {
+      if (schema.isSingle) {
         await this.#updateSingleValues(schemaName, fieldValueMap);
       } else {
         await this.#insertOne(schemaName, fieldValueMap);
@@ -645,7 +708,10 @@ export default class DatabaseCore extends DatabaseBase {
     return await this.getAll(schemaName, options);
   }
 
-  async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
+  async count(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<number> {
     const schema = this.schemaMap[schemaName] as Schema;
     if (schema === undefined) {
       throw new NotFoundError(`schema ${schemaName} not found`);
@@ -672,7 +738,9 @@ export default class DatabaseCore extends DatabaseBase {
       });
       sql += ' WHERE ' + whereParts.join(' AND ');
     }
-    const result = (await this.query(sql, params)) as { count: number | string | bigint }[];
+    const result = (await this.query(sql, params)) as {
+      count: number | string | bigint;
+    }[];
     const raw = result[0]?.count;
     if (typeof raw === 'bigint') return Number(raw);
     if (typeof raw === 'string') return Number(raw);
@@ -681,7 +749,9 @@ export default class DatabaseCore extends DatabaseBase {
 
   async getNextAutoincrementId(schemaName: string): Promise<number> {
     return await this.transaction(async () => {
-      await this.query(`SELECT 1 FROM \`${schemaName.toLowerCase()}\` LIMIT 1 FOR UPDATE`).catch(() => undefined);
+      await this.query(
+        `SELECT 1 FROM \`${schemaName.toLowerCase()}\` LIMIT 1 FOR UPDATE`
+      ).catch(() => undefined);
       const rows = (await this.query(
         `SELECT MAX(CAST(name AS UNSIGNED)) as maxVal FROM \`${schemaName.toLowerCase()}\` FOR UPDATE`
       )) as { maxVal: number | null | string }[];
@@ -691,23 +761,28 @@ export default class DatabaseCore extends DatabaseBase {
     });
   }
 
-  async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
+  async getNextSeriesValue(
+    prefix: string,
+    schemaName: string
+  ): Promise<number> {
     return await this.transaction(async () => {
-      const rows = (await this.query('SELECT current, start, padZeros FROM `numberseries` WHERE name = ? FOR UPDATE', [
-        prefix,
-      ])) as { current: number | null; start: number; padZeros: number }[];
+      const rows = (await this.query(
+        'SELECT current, start, padZeros FROM `numberseries` WHERE name = ? FOR UPDATE',
+        [prefix]
+      )) as { current: number | null; start: number; padZeros: number }[];
       let current: number | null | undefined = rows?.[0]?.current;
       const start = rows?.[0]?.start ?? 0;
       const padZeros = rows?.[0]?.padZeros ?? 4;
       if (!rows.length) {
-        await this.query('INSERT INTO `numberseries` (name, current, start, padZeros) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE current = current', [
-          prefix,
-          start,
-          start,
-          padZeros,
-        ]);
+        await this.query(
+          'INSERT INTO `numberseries` (name, current, start, padZeros) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE current = current',
+          [prefix, start, start, padZeros]
+        );
         current = start;
-        const r2 = (await this.query('SELECT current FROM `numberseries` WHERE name = ? FOR UPDATE', [prefix])) as {
+        const r2 = (await this.query(
+          'SELECT current FROM `numberseries` WHERE name = ? FOR UPDATE',
+          [prefix]
+        )) as {
           current: number | null;
         }[];
         current = r2?.[0]?.current ?? start;
@@ -721,7 +796,10 @@ export default class DatabaseCore extends DatabaseBase {
         next += 1;
         attempts += 1;
       }
-      await this.query('UPDATE `numberseries` SET current = ? WHERE name = ?', [next, prefix]);
+      await this.query('UPDATE `numberseries` SET current = ? WHERE name = ?', [
+        next,
+        prefix,
+      ]);
       return next;
     });
   }
@@ -1579,7 +1657,7 @@ export default class DatabaseCore extends DatabaseBase {
     const colNames = Object.keys(updateMap);
     const setClause = colNames.map((f) => `\`${f}\` = ?`).join(', ');
     const values = colNames.map((f) => updateMap[f]);
-    values.push(fieldValueMap.name as string);
+    values.push(fieldValueMap.name);
 
     await this.query(
       `UPDATE ${this.#qn(schemaName)} SET ${setClause} WHERE name = ?`,

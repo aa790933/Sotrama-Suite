@@ -161,7 +161,7 @@ export abstract class InvoiceItem extends Doc {
         }
         return (await this.fyo.getValue(
           'Item',
-          this.item as string,
+          this.item,
           'description'
         )) as string;
       },
@@ -174,7 +174,7 @@ export abstract class InvoiceItem extends Doc {
         }
         return (await this.fyo.getValue(
           'Item',
-          this.item as string,
+          this.item,
           'itemCode'
         )) as string;
       },
@@ -238,11 +238,7 @@ export abstract class InvoiceItem extends Doc {
         if (!this.item) {
           return '';
         }
-        return (await this.fyo.getValue(
-          'Item',
-          this.item as string,
-          'unit'
-        )) as string;
+        return (await this.fyo.getValue('Item', this.item, 'unit')) as string;
       },
       dependsOn: ['item'],
     },
@@ -377,7 +373,7 @@ export abstract class InvoiceItem extends Doc {
         return (
           ((await this.fyo.getValue(
             'Item',
-            this.item as string,
+            this.item,
             accountType
           )) as string) ?? ''
         );
@@ -391,7 +387,7 @@ export abstract class InvoiceItem extends Doc {
         }
         const itemTax = (await this.fyo.getValue(
           'Item',
-          this.item as string,
+          this.item,
           'tax'
         )) as string;
 
@@ -401,7 +397,7 @@ export abstract class InvoiceItem extends Doc {
 
         const itemGroup = (await this.fyo.getValue(
           'Item',
-          this.item as string,
+          this.item,
           'itemGroup'
         )) as string;
 

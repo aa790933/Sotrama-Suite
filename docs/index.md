@@ -4,9 +4,6 @@ hero:
   name: Sotrama Suite
   text: Connected tools for business operations
   tagline: Sales, billing, payments, and financial records in one desktop workspace
-  image:
-    src: /sotrama-suite-logo.svg
-    alt: Sotrama Suite Logo
   actions:
     - theme: brand
       text: Install the desktop app

@@ -40,16 +40,13 @@ export async function provision(
   }
 
   onProgress?.({ stage: 'Preparing installation…' });
-  const installed = await installer.install(
-    config.rootPassword,
-    port,
-    (p) =>
-      onProgress?.({
-        stage: 'Downloading MariaDB installer…',
-        percent: p.percent,
-        downloaded: p.downloaded,
-        total: p.total,
-      })
+  const installed = await installer.install(config.rootPassword, port, (p) =>
+    onProgress?.({
+      stage: 'Downloading MariaDB installer…',
+      percent: p.percent,
+      downloaded: p.downloaded,
+      total: p.total,
+    })
   );
   if (!installed.ok) {
     return installed;
@@ -323,7 +320,9 @@ async function createAppUser(
   installer: PlatformInstaller,
   onProgress?: (event: InstallProgress) => void
 ): Promise<OpResult> {
-  const safeDb = config.database.replace(/[^a-zA-Z0-9_\-]/g, '').replace(/`/g, '');
+  const safeDb = config.database
+    .replace(/[^a-zA-Z0-9_\-]/g, '')
+    .replace(/`/g, '');
   if (!safeDb) {
     return { ok: false, error: 'Invalid database name' };
   }

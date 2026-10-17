@@ -1,4 +1,208 @@
+@import 'tailwindcss' source('../');
+@import 'tw-animate-css';
 @import './brand-tokens.css';
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-black: #1e293b;
+  --color-gray-25: #fbfbfb;
+  --color-gray-50: #f8f8f8;
+  --color-gray-100: #f3f3f3;
+  --color-gray-200: #ededed;
+  --color-gray-300: #e2e2e2;
+  --color-gray-400: #767676;
+  --color-gray-500: #737373;
+  --color-gray-600: #5c5c5c;
+  --color-gray-700: #525252;
+  --color-gray-800: #383838;
+  --color-gray-850: #282828;
+  --color-gray-875: #212121;
+  --color-gray-890: #1c1c1c;
+  --color-gray-900: #171717;
+  --color-red-50: #FFF1F2;
+  --color-red-100: #FFE4E6;
+  --color-red-200: #FECDD3;
+  --color-red-300: #FDA4AF;
+  --color-red-400: #FB7185;
+  --color-red-500: #E11D48;
+  --color-red-600: #BE123C;
+  --color-red-700: #9F1239;
+  --color-red-800: #881337;
+  --color-red-900: #4C0519;
+  --color-orange-50: #fff9f5;
+  --color-orange-100: #fff1e7;
+  --color-orange-200: #fce6d5;
+  --color-orange-300: #f7d6bd;
+  --color-orange-400: #f0b58b;
+  --color-orange-500: #e86c13;
+  --color-orange-600: #d45a08;
+  --color-orange-700: #bd3e0c;
+  --color-orange-800: #9e3513;
+  --color-orange-900: #6b2711;
+  --color-yellow-50: #fffcef;
+  --color-yellow-100: #fff7d3;
+  --color-yellow-200: #f7e9a8;
+  --color-yellow-300: #f5e171;
+  --color-yellow-400: #f2d14b;
+  --color-yellow-500: #edba13;
+  --color-yellow-600: #d1930d;
+  --color-yellow-700: #ab6e05;
+  --color-yellow-800: #8c5600;
+  --color-yellow-900: #733f12;
+  --color-green-50: #f3fcf5;
+  --color-green-100: #e4f5e9;
+  --color-green-200: #daf0e1;
+  --color-green-300: #cae5d4;
+  --color-green-400: #b6dec5;
+  --color-green-500: #59ba8b;
+  --color-green-600: #30a66d;
+  --color-green-700: #278f5e;
+  --color-green-800: #16794c;
+  --color-green-900: #173b2c;
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #e6f7f4;
+  --color-teal-200: #bae8e1;
+  --color-teal-300: #97ded4;
+  --color-teal-400: #73d1c4;
+  --color-teal-500: #36baad;
+  --color-teal-600: #0b9e92;
+  --color-teal-700: #0f736b;
+  --color-teal-800: #115c57;
+  --color-teal-900: #114541;
+  --color-blue-50: #f7fbfd;
+  --color-blue-100: #edf6fd;
+  --color-blue-200: #e3f1fd;
+  --color-blue-300: #c9e7fc;
+  --color-blue-400: #70b6f0;
+  --color-blue-500: #33a1ff;
+  --color-blue-600: #007be0;
+  --color-blue-700: #0070cc;
+  --color-blue-800: #005ca3;
+  --color-blue-900: #004880;
+  --color-indigo-100: #ebf4ff;
+  --color-indigo-200: #c3dafe;
+  --color-indigo-300: #a3bffa;
+  --color-indigo-400: #7f9cf5;
+  --color-indigo-500: #667eea;
+  --color-indigo-600: #5a67d8;
+  --color-indigo-700: #4c51bf;
+  --color-indigo-800: #434190;
+  --color-indigo-900: #3c366b;
+  --color-purple-50: #fdfaff;
+  --color-purple-100: #f9f0ff;
+  --color-purple-200: #f1e5fa;
+  --color-purple-300: #e9d6f5;
+  --color-purple-400: #d6c1e6;
+  --color-purple-500: #9c45e3;
+  --color-purple-600: #8642c2;
+  --color-purple-700: #6e399d;
+  --color-purple-800: #5c2f83;
+  --color-purple-900: #401863;
+  --color-pink-50: #fff7fc;
+  --color-pink-100: #feeef8;
+  --color-pink-200: #f8e2f0;
+  --color-pink-300: #f2d4e6;
+  --color-pink-400: #e9c4da;
+  --color-pink-500: #df9eb8;
+  --color-pink-600: #cf3a96;
+  --color-pink-700: #9c2671;
+  --color-pink-800: #801458;
+  --color-pink-900: #570f3e;
+  --color-violet-50: #fbfaff;
+  --color-violet-100: #f5f2ff;
+  --color-violet-200: #e5e1fa;
+  --color-violet-300: #dad2f7;
+  --color-violet-400: #bdb1f0;
+  --color-violet-500: #6846e3;
+  --color-violet-600: #5f46c7;
+  --color-violet-700: #4f3da1;
+  --color-violet-800: #392980;
+  --color-violet-900: #251959;
+  --color-cyan-50: #f5fbfc;
+  --color-cyan-100: #e0f8ff;
+  --color-cyan-200: #b3ecfc;
+  --color-cyan-300: #94e6ff;
+  --color-cyan-400: #6bd3f2;
+  --color-cyan-500: #34bae3;
+  --color-cyan-600: #32a4c7;
+  --color-cyan-700: #267a94;
+  --color-cyan-800: #125c73;
+  --color-cyan-900: #164759;
+  --color-amber-50: #fdfaed;
+  --color-amber-100: #fcf3cf;
+  --color-amber-200: #f7e28d;
+  --color-amber-300: #f5d261;
+  --color-amber-400: #f2be3a;
+  --color-amber-500: #e79913;
+  --color-amber-600: #db7706;
+  --color-amber-700: #b35309;
+  --color-amber-800: #91400d;
+  --color-amber-900: #763813;
+  --font-sans: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --text-xs: 0.857rem;
+  --text-sm: 0.929rem;
+  --text-base: 1rem;
+  --text-lg: 1.071rem;
+  --text-xl: 1.286rem;
+  --text-2xl: 1.429rem;
+  --text-3xl: 1.714rem;
+  --text-4xl: 2rem;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --spacing-7: 1.75rem;
+  --spacing-14: 3.5rem;
+  --spacing-18: 4.5rem;
+  --spacing-28: 7rem;
+  --spacing-72: 18rem;
+  --spacing-80: 20rem;
+  --container-32: 8rem;
+  --container-56: 14rem;
+  --shadow-outline-px: 0 0 0 1px rgb(66 153 225 / 50%);
+  --shadow: 0 2px 4px 0 rgb(0 0 0 / 5%);
+  --shadow-md: 0 0 2px 0 rgb(0 0 0 / 10%), 0 2px 4px 0 rgb(0 0 0 / 8%);
+  --shadow-button: 0 0.5px 0 0 rgb(0 0 0 / 8%);
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 0.313rem;
+  --radius-xl: 0.75rem;
+}
+
+@theme inline {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+}
 
 
 @font-face {
@@ -10,18 +214,12 @@
 }
 
 * {
-  outline-color: theme('colors.red.700');
+  outline-color: var(--color-red-700);
   font-variation-settings: 'slnt' 0deg;
 }
 .italic {
   font-variation-settings: 'slnt' 10deg;
 }
-
-@tailwind base;
-
-@tailwind components;
-
-@tailwind utilities;
 
 html {
   color: hsl(var(--foreground));
@@ -153,19 +351,19 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 .custom-scroll::-webkit-scrollbar-track:vertical {
-  border-left: solid 1px theme('colors.gray.100');
+  border-left: solid 1px var(--color-gray-100);
 }
 
 .custom-scroll::-webkit-scrollbar-track:horizontal {
-  border-top: solid 1px theme('colors.gray.100');
+  border-top: solid 1px var(--color-gray-100);
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: theme('colors.gray.100');
+  background: var(--color-gray-100);
 }
 
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.gray.200');
+  background: var(--color-gray-200);
 }
 
 .custom-scroll::-webkit-scrollbar-corner {
@@ -174,32 +372,32 @@ input[type='number']::-webkit-inner-spin-button {
 
 .dark.custom-scroll::-webkit-scrollbar-track:vertical,
 .dark .custom-scroll::-webkit-scrollbar-track:vertical {
-  border-left-color: theme('colors.gray.800');
+  border-left-color: var(--color-gray-800);
 }
 
 .dark.custom-scroll::-webkit-scrollbar-track:horizontal,
 .dark .custom-scroll::-webkit-scrollbar-track:horizontal {
-  border-top-color: theme('colors.gray.800');
+  border-top-color: var(--color-gray-800);
 }
 
 .dark.custom-scroll-thumb1::-webkit-scrollbar-thumb,
 .dark .custom-scroll-thumb1::-webkit-scrollbar-thumb {
-  background: theme('colors.gray.850');
+  background: var(--color-gray-850);
 }
 
 .dark.custom-scroll-thumb1::-webkit-scrollbar-thumb:hover,
 .dark .custom-scroll-thumb1::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.gray.800');
+  background: var(--color-gray-800);
 }
 
 .dark.custom-scroll-thumb2::-webkit-scrollbar-thumb,
 .dark .custom-scroll-thumb2::-webkit-scrollbar-thumb {
-  background: theme('colors.gray.800');
+  background: var(--color-gray-800);
 }
 
 .dark.custom-scroll-thumb2::-webkit-scrollbar-thumb:hover,
 .dark .custom-scroll-thumb2::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.gray.875');
+  background: var(--color-gray-875);
 }
 
 /*
@@ -234,12 +432,12 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 [dir='rtl'] .custom-scroll::-webkit-scrollbar-track:vertical {
-  border-right: solid 1px theme('colors.gray.200');
+  border-right: solid 1px var(--color-gray-200);
 }
 
 [dir='rtl'].dark.custom-scroll::-webkit-scrollbar-track:vertical,
 [dir='rtl'].dark .custom-scroll::-webkit-scrollbar-track:vertical {
-  border-right: solid 1px theme('colors.gray.850');
+  border-right: solid 1px var(--color-gray-850);
 }
 
 .pill {
@@ -270,6 +468,9 @@ input[type='number']::-webkit-inner-spin-button {
   .theme {
     --font-heading: var(--font-sans);
   }
+  :where([dir='rtl']) {
+    font-family: var(--sotrama-font-arabic);
+  }
   :root {
     color-scheme: light;
     --background: 0 0% 100%;
@@ -278,33 +479,33 @@ input[type='number']::-webkit-inner-spin-button {
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 347 77% 50%;
+    --primary: 346.1 77.2% 50.4%;
     --primary-foreground: 0 0% 100%;
     --secondary: 30 12% 95%;
     --secondary-foreground: 240 6% 12%;
     --muted: 30 10% 95%;
     --muted-foreground: 240 5% 32%;
-    --accent: 4 70% 96%;
-    --accent-foreground: 4 58% 25%;
+    --accent: 346 100% 96%;
+    --accent-foreground: 343 83% 30%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 347 77% 44%;
-    --chart-1: 347 77% 50%;
+    --ring: 343.4 83.1% 41.2%;
+    --chart-1: 346.1 77.2% 50.4%;
     --chart-2: 164 34% 38%;
     --chart-3: 24 48% 42%;
     --chart-4: 44 70% 48%;
     --chart-5: 240 4% 42%;
-    --radius: 0.5rem;
+    --radius: 0.313rem;
     --sidebar-background: 30 10% 97%;
     --sidebar-foreground: 240 5% 25%;
-    --sidebar-primary: 347 77% 50%;
+    --sidebar-primary: 346.1 77.2% 50.4%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 4 70% 94%;
-    --sidebar-accent-foreground: 4 58% 25%;
+    --sidebar-accent: 346 100% 94%;
+    --sidebar-accent-foreground: 343 83% 30%;
     --sidebar-border: 30 8% 88%;
-    --sidebar-ring: 347 77% 44%;
+    --sidebar-ring: 6 66% 43%;
   }
   .dark {
     color-scheme: dark;
@@ -314,32 +515,32 @@ input[type='number']::-webkit-inner-spin-button {
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 347 77% 60%;
-    --primary-foreground: 240 6% 10%;
+    --primary: 346 77% 62%;
+    --primary-foreground: 0 0% 0%;
     --secondary: 240 4% 15%;
     --secondary-foreground: 0 0% 96%;
     --muted: 240 4% 15%;
     --muted-foreground: 240 5% 78%;
-    --accent: 4 28% 20%;
-    --accent-foreground: 8 80% 88%;
+    --accent: 343 45% 22%;
+    --accent-foreground: 346 100% 88%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 347 77% 60%;
-    --chart-1: 347 77% 60%;
+    --ring: 346 77% 62%;
+    --chart-1: 6 72% 62%;
     --chart-2: 160 38% 58%;
     --chart-3: 28 66% 65%;
     --chart-4: 45 75% 66%;
     --chart-5: 240 5% 72%;
     --sidebar-background: 240 5% 9%;
     --sidebar-foreground: 240 5% 88%;
-    --sidebar-primary: 347 77% 60%;
-    --sidebar-primary-foreground: 240 6% 10%;
-    --sidebar-accent: 4 28% 20%;
-    --sidebar-accent-foreground: 8 80% 88%;
+    --sidebar-primary: 6 72% 62%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 343 45% 22%;
+    --sidebar-accent-foreground: 346 100% 88%;
     --sidebar-border: 240 4% 20%;
-    --sidebar-ring: 347 77% 60%;
+    --sidebar-ring: 6 72% 62%;
   }
 }
 
@@ -387,6 +588,10 @@ input[type='number']::-webkit-inner-spin-button {
 :where(button, a, input, select, textarea, [role='button']):focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
+}
+
+[dir='rtl'] .rtl-rotate-180 {
+  transform: rotate(180deg);
 }
 
 ::selection {

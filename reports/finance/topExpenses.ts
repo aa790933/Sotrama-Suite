@@ -2,7 +2,11 @@ import { Fyo } from 'fyo';
 import { TopExpenses } from 'utils/db/types';
 import { getLedgerEntries } from './ledgerSummary';
 
-export async function getTopExpenses(fyo: Fyo, fromDate: string, toDate: string): Promise<TopExpenses> {
+export async function getTopExpenses(
+  fyo: Fyo,
+  fromDate: string,
+  toDate: string
+): Promise<TopExpenses> {
   const expenseAccounts = (await fyo.db.getAll('Account', {
     filters: { rootType: 'Expense' },
     fields: ['name'],

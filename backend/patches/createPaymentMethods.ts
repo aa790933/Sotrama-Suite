@@ -9,6 +9,7 @@ async function execute(db: DatabaseCore) {
   const accounts = (await db.getAll(ModelNameEnum.Account, {
     fields: ['name', 'accountType'],
     filters: {
+      isGroup: false,
       accountType: [
         'in',
         [

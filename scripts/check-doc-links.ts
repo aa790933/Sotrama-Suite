@@ -17,7 +17,8 @@ function walk(directory: string): void {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const fullPath = path.join(directory, entry.name);
     if (entry.isDirectory()) walk(fullPath);
-    else if (entry.isFile() && entry.name.endsWith('.md')) markdownFiles.push(fullPath);
+    else if (entry.isFile() && entry.name.endsWith('.md'))
+      markdownFiles.push(fullPath);
   }
 }
 
@@ -33,18 +34,22 @@ function targetExists(target: string, sourceFile: string): boolean {
     ];
     const publicCandidate = path.resolve(publicRoot, relative);
     const inside = (candidate: string, directory: string): boolean =>
-      candidate === directory || candidate.startsWith(`${directory}${path.sep}`);
+      candidate === directory ||
+      candidate.startsWith(`${directory}${path.sep}`);
     const candidates = [
-      ...docsCandidates.filter((candidate: string) => inside(candidate, docsRoot)),
+      ...docsCandidates.filter((candidate: string) =>
+        inside(candidate, docsRoot)
+      ),
       ...(inside(publicCandidate, publicRoot) ? [publicCandidate] : []),
     ];
-  return candidates.some((candidate: string) => fs.existsSync(candidate));
+    return candidates.some((candidate: string) => fs.existsSync(candidate));
   }
 
   const resolved = path.resolve(path.dirname(sourceFile), clean);
   if (!resolved.startsWith(`${docsRoot}${path.sep}`)) return false;
-  return [resolved, `${resolved}.md`, path.join(resolved, 'index.md')].some((candidate: string) =>
-    candidate.startsWith(`${docsRoot}${path.sep}`) && fs.existsSync(candidate)
+  return [resolved, `${resolved}.md`, path.join(resolved, 'index.md')].some(
+    (candidate: string) =>
+      candidate.startsWith(`${docsRoot}${path.sep}`) && fs.existsSync(candidate)
   );
 }
 
@@ -60,7 +65,9 @@ for (const sourceFile of markdownFiles) {
     const target = capture(match).trim().replace(/^<|>$/g, '');
     if (/^(?:https?:|mailto:|tel:|#|\/\/)/i.test(target)) continue;
     if (!targetExists(target, sourceFile)) {
-      const relative = path.relative(root, sourceFile).replaceAll(path.sep, '/');
+      const relative = path
+        .relative(root, sourceFile)
+        .replaceAll(path.sep, '/');
       errors.push(`${relative}: missing target ${target}`);
     }
   }
@@ -77,7 +84,9 @@ for (const match of configuredReferences) {
   const target = capture(match).trim();
   if (/^(?:https?:|mailto:|tel:|#|\/\/)/i.test(target)) continue;
   if (!targetExists(target, configFile)) {
-    errors.push(`docs/.vitepress/config.mts: missing configured target ${target}`);
+    errors.push(
+      `docs/.vitepress/config.mts: missing configured target ${target}`
+    );
   }
 }
 
@@ -86,26 +95,30 @@ if (builtOutput) {
   const baseMatch = configSource.match(/\bbase:\s*['"]([^'"]+)['"]/i);
   const base = baseMatch ? capture(baseMatch) : undefined;
   if (!fs.existsSync(distRoot) || !base) {
-    errors.push('built output check requires docs/.vitepress/dist and a configured VitePress base');
+    errors.push(
+      'built output check requires docs/.vitepress/dist and a configured VitePress base'
+    );
   } else {
-    const normalizedBase = base === '/'
-      ? '/'
-      : `/${base.split('/').filter(Boolean).join('/')}/`;
+    const normalizedBase =
+      base === '/' ? '/' : `/${base.split('/').filter(Boolean).join('/')}/`;
     const htmlFiles: string[] = [];
     const cssFiles: string[] = [];
     const walkBuilt = (directory: string): void => {
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
         const fullPath = path.join(directory, entry.name);
         if (entry.isDirectory()) walkBuilt(fullPath);
-        else if (entry.isFile() && entry.name.endsWith('.html')) htmlFiles.push(fullPath);
-        else if (entry.isFile() && entry.name.endsWith('.css')) cssFiles.push(fullPath);
+        else if (entry.isFile() && entry.name.endsWith('.html'))
+          htmlFiles.push(fullPath);
+        else if (entry.isFile() && entry.name.endsWith('.css'))
+          cssFiles.push(fullPath);
       }
     };
     const insideDist = (candidate: string): boolean =>
       candidate === distRoot || candidate.startsWith(`${distRoot}${path.sep}`);
     const builtTargetExists = (target: string, sourceFile: string): boolean => {
       const clean = decodeURIComponent(target.split(/[?#]/, 1)[0] ?? '');
-      if (!clean || /^(?:data:|javascript:|mailto:|tel:|#|\/\/)/i.test(clean)) return true;
+      if (!clean || /^(?:data:|javascript:|mailto:|tel:|#|\/\/)/i.test(clean))
+        return true;
       if (/^[a-z][a-z\d+.-]*:/i.test(clean)) return true;
 
       let candidate;
@@ -119,25 +132,40 @@ if (builtOutput) {
 
       const candidates = [candidate];
       if (!path.extname(candidate)) {
-        candidates.push(`${candidate}.html`, path.join(candidate, 'index.html'));
+        candidates.push(
+          `${candidate}.html`,
+          path.join(candidate, 'index.html')
+        );
       }
-      if (clean.endsWith('/')) candidates.push(path.join(candidate, 'index.html'));
-      return candidates.some((item: string) => insideDist(item) && fs.existsSync(item) && fs.statSync(item).isFile());
+      if (clean.endsWith('/'))
+        candidates.push(path.join(candidate, 'index.html'));
+      return candidates.some(
+        (item: string) =>
+          insideDist(item) && fs.existsSync(item) && fs.statSync(item).isFile()
+      );
     };
 
     walkBuilt(distRoot);
     for (const sourceFile of htmlFiles) {
       const source = fs.readFileSync(sourceFile, 'utf8');
-      for (const match of source.matchAll(/\b(?:href|src|poster)=["']([^"']+)["']/gi)) {
+      for (const match of source.matchAll(
+        /\b(?:href|src|poster)=["']([^"']+)["']/gi
+      )) {
         const target = capture(match).trim();
         if (!builtTargetExists(target, sourceFile)) {
-          errors.push(`${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken built reference ${target}`);
+          errors.push(
+            `${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken built reference ${target}`
+          );
         }
       }
       for (const match of source.matchAll(/\bsrcset=["']([^"']+)["']/gi)) {
-        for (const candidate of capture(match).split(',').map((part) => part.trim().split(/\s+/)[0] ?? '')) {
+        for (const candidate of capture(match)
+          .split(',')
+          .map((part) => part.trim().split(/\s+/)[0] ?? '')) {
           if (candidate && !builtTargetExists(candidate, sourceFile)) {
-            errors.push(`${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken srcset reference ${candidate}`);
+            errors.push(
+              `${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken srcset reference ${candidate}`
+            );
           }
         }
       }
@@ -147,12 +175,17 @@ if (builtOutput) {
       for (const match of source.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi)) {
         const target = capture(match, 2).trim();
         if (target && !builtTargetExists(target, sourceFile)) {
-          errors.push(`${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken CSS asset ${target}`);
+          errors.push(
+            `${path.relative(distRoot, sourceFile).replaceAll(path.sep, '/')}: broken CSS asset ${target}`
+          );
         }
       }
     }
     if (!htmlFiles.length) errors.push('built output contains no HTML pages');
-    else console.log(`Built output: inspected ${htmlFiles.length} HTML pages and ${cssFiles.length} CSS files using base ${normalizedBase}`);
+    else
+      console.log(
+        `Built output: inspected ${htmlFiles.length} HTML pages and ${cssFiles.length} CSS files using base ${normalizedBase}`
+      );
   }
 }
 

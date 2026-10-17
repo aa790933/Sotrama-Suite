@@ -70,7 +70,9 @@ export interface IpcRouterDeps {
 // ---- Typed sub-interfaces (the seam) ----
 
 export interface DbOps {
-  checkDbAccess(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }>;
+  checkDbAccess(
+    config: MariaDBConfig
+  ): Promise<{ ok: boolean; error?: string }>;
   createNewDatabase(
     dbPath: string,
     countryCode: string
@@ -97,7 +99,9 @@ export interface InstallerOps {
     opts: HostProvisionConfig,
     sender: Electron.WebContents | null
   ): Promise<InstallResult>;
-  checkDbExists(config: MariaDBConfig): Promise<{ exists: boolean; error?: string }>;
+  checkDbExists(
+    config: MariaDBConfig
+  ): Promise<{ exists: boolean; error?: string }>;
   createDatabase(
     config: MariaDBConfig
   ): Promise<{ ok: boolean; error?: string }>;
@@ -234,6 +238,7 @@ export class IpcRouter {
   private readonly senderPolicy: SenderPolicy;
   private readonly pathPolicy: PathPolicy;
   private readonly connectionStore: ConnectionStore;
+  private databaseSwitch: Promise<void> = Promise.resolve();
 
   constructor(private readonly deps: IpcRouterDeps) {
     this.senderPolicy =
@@ -295,7 +300,23 @@ export class IpcRouter {
       throw new Error('Invalid IPC sender');
   }
 
-  async checkDbAccess(config: MariaDBConfig): Promise<{ ok: boolean; error?: string }> {
+  private async withDatabaseSwitch<T>(operation: () => Promise<T>): Promise<T> {
+    const previous = this.databaseSwitch;
+    let release!: () => void;
+    this.databaseSwitch = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
+  }
+
+  async checkDbAccess(
+    config: MariaDBConfig
+  ): Promise<{ ok: boolean; error?: string }> {
     try {
       sanitizeDatabaseName(config.database);
       const { createPool } = await import('mariadb');
@@ -385,7 +406,9 @@ export class IpcRouter {
     }
   }
 
-  async checkDbExists(config: MariaDBConfig): Promise<{ exists: boolean; error?: string }> {
+  async checkDbExists(
+    config: MariaDBConfig
+  ): Promise<{ exists: boolean; error?: string }> {
     try {
       sanitizeDatabaseName(config.database);
       const { createConnection } = await import('mariadb');
@@ -462,20 +485,28 @@ export class IpcRouter {
     dbPath: string,
     countryCode: string
   ): Promise<BackendResponse> {
-    return getErrorHandledResponse(async () => {
-      this.deps.database.setDbConfig(this.connectionStore.resolve(dbPath));
-      return this.deps.database.createNewDatabase(dbPath, countryCode);
-    });
+    return getErrorHandledResponse(() =>
+      this.withDatabaseSwitch(async () => {
+        await this.deps.database.setDbConfig(
+          this.connectionStore.resolve(dbPath)
+        );
+        return this.deps.database.createNewDatabase(dbPath, countryCode);
+      })
+    );
   }
 
   async connectToDatabase(
     dbPath: string,
     countryCode?: string
   ): Promise<BackendResponse> {
-    return getErrorHandledResponse(async () => {
-      this.deps.database.setDbConfig(this.connectionStore.resolve(dbPath));
-      return this.deps.database.connectToDatabase(dbPath, countryCode);
-    });
+    return getErrorHandledResponse(() =>
+      this.withDatabaseSwitch(async () => {
+        await this.deps.database.setDbConfig(
+          this.connectionStore.resolve(dbPath)
+        );
+        return this.deps.database.connectToDatabase(dbPath, countryCode);
+      })
+    );
   }
 
   async dbCall(
@@ -651,7 +682,7 @@ export class IpcRouter {
     app: Electron.App
   ) {
     const { saveHtmlAsPdf: fn } = await import('../saveHtmlAsPdf');
-    return fn(html, savePath, app as never, width, height);
+    return fn(html, savePath, app, width, height);
   }
 
   async printHtmlDocument(
@@ -661,7 +692,7 @@ export class IpcRouter {
     app: Electron.App
   ) {
     const { printHtmlDocument: fn } = await import('../printHtmlDocument');
-    return fn(html, app as never, width, height);
+    return fn(html, app, width, height);
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -696,6 +727,7 @@ export class IpcRouter {
   getCreds() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getUrlAndTokenString: getCredsFn } =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('../contactMothership') as typeof import('../contactMothership');
     return getCredsFn();
   }
@@ -714,6 +746,7 @@ export class IpcRouter {
       // Lazy to avoid pulling electron-store at module load
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { isExpectedUpdateError: isExpected } =
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('../helpers') as typeof import('../helpers');
       if (isExpected(error as Error)) return;
       emitMainProcessError(error);
@@ -724,6 +757,7 @@ export class IpcRouter {
   async sendError(bodyJson: string, main: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sendError: sendErr } =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('../contactMothership') as typeof import('../contactMothership');
     await sendErr(bodyJson, main as never);
   }
@@ -748,7 +782,7 @@ export class IpcRouter {
     const ipc =
       this.deps.ipcMain ??
       ((): typeof import('electron').ipcMain => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-require-imports
         return require('electron').ipcMain as typeof import('electron').ipcMain;
       })();
 
@@ -1008,14 +1042,18 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
       return main.icon;
     },
   };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { app: electronApp, dialog: electronDialog } =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('electron') as typeof import('electron');
   // Lazy to avoid pulling the mariadb driver into unit tests at module load
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { default: MainDatabase } =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('../../backend/database/core') as typeof import('../../backend/database/core');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ElectronStoreConnectionStore } =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('./connectionStore') as typeof import('./connectionStore');
   return new IpcRouter({
     database: new MainDatabase(),

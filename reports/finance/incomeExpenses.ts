@@ -2,7 +2,11 @@ import { Fyo } from 'fyo';
 import { IncomeExpense } from 'utils/db/types';
 import { getLedgerEntries, monthKey } from './ledgerSummary';
 
-export async function getIncomeAndExpenses(fyo: Fyo, fromDate: string, toDate: string): Promise<IncomeExpense> {
+export async function getIncomeAndExpenses(
+  fyo: Fyo,
+  fromDate: string,
+  toDate: string
+): Promise<IncomeExpense> {
   const incomeAccounts = (await fyo.db.getAll('Account', {
     filters: { rootType: 'Income' },
     fields: ['name'],
@@ -31,7 +35,11 @@ export async function getIncomeAndExpenses(fyo: Fyo, fromDate: string, toDate: s
       expenseByMonth.set(ym, (expenseByMonth.get(ym) ?? 0) + bal);
     }
   }
-  const income = Array.from(incomeByMonth.entries()).map(([yearmonth, balance]) => ({ yearmonth, balance }));
-  const expense = Array.from(expenseByMonth.entries()).map(([yearmonth, balance]) => ({ yearmonth, balance }));
+  const income = Array.from(incomeByMonth.entries()).map(
+    ([yearmonth, balance]) => ({ yearmonth, balance })
+  );
+  const expense = Array.from(expenseByMonth.entries()).map(
+    ([yearmonth, balance]) => ({ yearmonth, balance })
+  );
   return { income, expense };
 }

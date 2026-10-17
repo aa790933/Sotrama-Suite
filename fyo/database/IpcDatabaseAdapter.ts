@@ -17,8 +17,9 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
   private pesaProvider: () => MoneyMaker;
 
   constructor(
-    fieldMapProvider: () => FieldMap = () => ({} as FieldMap),
-    pesaProvider: () => MoneyMaker = () => ((v: unknown) => v) as unknown as MoneyMaker
+    fieldMapProvider: () => FieldMap = () => ({}) as FieldMap,
+    pesaProvider: () => MoneyMaker = () =>
+      ((v: unknown) => v) as unknown as MoneyMaker
   ) {
     super();
     this.fieldMapProvider = fieldMapProvider;
@@ -27,7 +28,10 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // For Fyo wiring after handler's fieldMap is populated, allow updating providers
-  setProviders(fieldMapProvider: () => FieldMap, pesaProvider: () => MoneyMaker) {
+  setProviders(
+    fieldMapProvider: () => FieldMap,
+    pesaProvider: () => MoneyMaker
+  ) {
     this.fieldMapProvider = fieldMapProvider;
     this.pesaProvider = pesaProvider;
     this.converter = new Converter(fieldMapProvider, pesaProvider);
@@ -50,41 +54,67 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
     })) as SchemaMap;
   }
 
-  async createNewDatabase(dbPath: string, countryCode: string): Promise<string> {
+  async createNewDatabase(
+    dbPath: string,
+    countryCode: string
+  ): Promise<string> {
     return (await this.#handleDBCall(async () => {
       return await ipc.db.create(dbPath, countryCode);
     })) as string;
   }
 
-  async connectToDatabase(dbPath: string, countryCode?: string): Promise<string> {
+  async connectToDatabase(
+    dbPath: string,
+    countryCode?: string
+  ): Promise<string> {
     return (await this.#handleDBCall(async () => {
       return await ipc.db.connect(dbPath, countryCode);
     })) as string;
   }
 
-  async insert(schemaName: string, docValueMap: DocValueMap): Promise<DocValueMap> {
-    const raw = this.converter.toRawValueMap(schemaName, docValueMap) as RawValueMap;
+  async insert(
+    schemaName: string,
+    docValueMap: DocValueMap
+  ): Promise<DocValueMap> {
+    const raw = this.converter.toRawValueMap(
+      schemaName,
+      docValueMap
+    ) as RawValueMap;
     const resultRaw = (await this.#handleDBCall(async () => {
-      return await ipc.db.call('insert', schemaName, raw as unknown as FieldValueMap);
+      return await ipc.db.call(
+        'insert',
+        schemaName,
+        raw as unknown as FieldValueMap
+      );
     })) as RawValueMap;
     return this.converter.toDocValueMap(schemaName, resultRaw) as DocValueMap;
   }
 
-  async get(schemaName: string, name: string, fields?: string | string[]): Promise<DocValueMap> {
+  async get(
+    schemaName: string,
+    name: string,
+    fields?: string | string[]
+  ): Promise<DocValueMap> {
     const raw = (await this.#handleDBCall(async () => {
       return await ipc.db.call('get', schemaName, name, fields);
     })) as RawValueMap;
     return this.converter.toDocValueMap(schemaName, raw) as DocValueMap;
   }
 
-  async getAll(schemaName: string, options: GetAllOptions = {}): Promise<DocValueMap[]> {
+  async getAll(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<DocValueMap[]> {
     const raws = (await this.#handleDBCall(async () => {
       return await ipc.db.call('getAll', schemaName, options);
     })) as RawValueMap[];
     return this.converter.toDocValueMap(schemaName, raws) as DocValueMap[];
   }
 
-  async getAllRaw(schemaName: string, options: GetAllOptions = {}): Promise<FieldValueMap[]> {
+  async getAllRaw(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<FieldValueMap[]> {
     return (await this.#handleDBCall(async () => {
       return await ipc.db.call('getAll', schemaName, options);
     })) as FieldValueMap[];
@@ -103,22 +133,37 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
         out.push(sv as { fieldname: string; parent: string; value: DocValue });
         continue;
       }
-      const docVal = Converter.toDocValue(sv.value as never, field, this.pesaProvider());
+      const docVal = Converter.toDocValue(
+        sv.value as never,
+        field,
+        this.pesaProvider()
+      );
       out.push({ fieldname: sv.fieldname, parent: sv.parent, value: docVal });
     }
     return out;
   }
 
-  async rename(schemaName: string, oldName: string, newName: string): Promise<void> {
+  async rename(
+    schemaName: string,
+    oldName: string,
+    newName: string
+  ): Promise<void> {
     await this.#handleDBCall(async () => {
       return await ipc.db.call('rename', schemaName, oldName, newName);
     });
   }
 
   async update(schemaName: string, docValueMap: DocValueMap): Promise<void> {
-    const raw = this.converter.toRawValueMap(schemaName, docValueMap) as RawValueMap;
+    const raw = this.converter.toRawValueMap(
+      schemaName,
+      docValueMap
+    ) as RawValueMap;
     await this.#handleDBCall(async () => {
-      return await ipc.db.call('update', schemaName, raw as unknown as FieldValueMap);
+      return await ipc.db.call(
+        'update',
+        schemaName,
+        raw as unknown as FieldValueMap
+      );
     });
   }
 
@@ -146,7 +191,10 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
     });
   }
 
-  async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
+  async count(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<number> {
     return (await this.#handleDBCall(async () => {
       return await ipc.db.call('count', schemaName, options);
     })) as number;
@@ -158,7 +206,10 @@ export class IpcDatabaseAdapter extends DatabaseBase implements Database {
     })) as number;
   }
 
-  async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
+  async getNextSeriesValue(
+    prefix: string,
+    schemaName: string
+  ): Promise<number> {
     return (await this.#handleDBCall(async () => {
       return await ipc.db.call('getNextSeriesValue', prefix, schemaName);
     })) as number;

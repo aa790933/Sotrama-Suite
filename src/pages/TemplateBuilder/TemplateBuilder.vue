@@ -14,10 +14,18 @@
           @change="async (value) => await doc?.set('name', value)"
         />
       </template>
-      <Button v-if="displayDoc && doc?.template" variant="secondary" @click="savePDF()">
+      <Button
+        v-if="displayDoc && doc?.template"
+        variant="secondary"
+        @click="savePDF()"
+      >
         {{ t`Save as PDF` }}
       </Button>
-      <Button v-if="displayDoc && doc?.template" variant="secondary" @click="savePDF(true)">
+      <Button
+        v-if="displayDoc && doc?.template"
+        variant="secondary"
+        @click="savePDF(true)"
+      >
         {{ t`Print` }}
       </Button>
       <Button

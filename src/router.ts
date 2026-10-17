@@ -1,51 +1,38 @@
-import ChartOfAccounts from 'src/pages/ChartOfAccounts.vue';
-import CommonForm from 'src/pages/CommonForm/CommonForm.vue';
-import Dashboard from 'src/pages/Dashboard/Dashboard.vue';
-import GetStarted from 'src/pages/GetStarted.vue';
-import ImportWizard from 'src/pages/ImportWizard.vue';
-import ListView from 'src/pages/ListView/ListView.vue';
-import PrintView from 'src/pages/PrintView/PrintView.vue';
-import ReportPrintView from 'src/pages/PrintView/ReportPrintView.vue';
-import QuickEditForm from 'src/pages/QuickEditForm.vue';
-import Report from 'src/pages/Report.vue';
-import Settings from 'src/pages/Settings/Settings.vue';
-import TemplateBuilder from 'src/pages/TemplateBuilder/TemplateBuilder.vue';
-import CustomizeForm from 'src/pages/CustomizeForm/CustomizeForm.vue';
-import POS from 'src/pages/POS/POS.vue';
 import type { HistoryState } from 'vue-router';
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { getQuickEditProps } from 'src/utils/quickEditRoute';
 import { historyState } from './utils/refs';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: Dashboard,
+    component: () => import('src/pages/Dashboard/Dashboard.vue'),
   },
   {
     path: '/get-started',
-    component: GetStarted,
+    component: () => import('src/pages/GetStarted.vue'),
   },
   {
     path: `/edit/:schemaName/:name`,
     name: `CommonForm`,
     components: {
-      default: CommonForm,
-      edit: QuickEditForm,
+      default: () => import('src/pages/CommonForm/CommonForm.vue'),
+      edit: () => import('src/pages/QuickEditForm.vue'),
     },
     props: {
       default: (route) => ({
         schemaName: route.params.schemaName,
         name: route.params.name,
       }),
-      edit: (route) => route.query,
+      edit: getQuickEditProps,
     },
   },
   {
     path: '/list/:schemaName/:pageTitle?',
     name: 'ListView',
     components: {
-      default: ListView,
-      edit: QuickEditForm,
+      default: () => import('src/pages/ListView/ListView.vue'),
+      edit: () => import('src/pages/QuickEditForm.vue'),
     },
     props: {
       default: (route) => {
@@ -64,77 +51,77 @@ const routes: RouteRecordRaw[] = [
           pageTitle,
         };
       },
-      edit: (route) => route.query,
+      edit: getQuickEditProps,
     },
   },
   {
     path: '/print/:schemaName/:name',
     name: 'PrintView',
-    component: PrintView,
+    component: () => import('src/pages/PrintView/PrintView.vue'),
     props: true,
   },
   {
     path: '/report-print/:reportName',
     name: 'ReportPrintView',
-    component: ReportPrintView,
+    component: () => import('src/pages/PrintView/ReportPrintView.vue'),
     props: true,
   },
   {
     path: '/report/:reportClassName',
     name: 'Report',
-    component: Report,
+    component: () => import('src/pages/Report.vue'),
     props: true,
   },
   {
     path: '/chart-of-accounts',
     name: 'Chart Of Accounts',
     components: {
-      default: ChartOfAccounts,
-      edit: QuickEditForm,
+      default: () => import('src/pages/ChartOfAccounts.vue'),
+      edit: () => import('src/pages/QuickEditForm.vue'),
     },
     props: {
       default: true,
-      edit: (route) => route.query,
+      edit: getQuickEditProps,
     },
   },
   {
     path: '/import-wizard',
     name: 'Import Wizard',
-    component: ImportWizard,
+    component: () => import('src/pages/ImportWizard.vue'),
   },
   {
     path: '/template-builder/:name',
     name: 'Template Builder',
-    component: TemplateBuilder,
+    component: () => import('src/pages/TemplateBuilder/TemplateBuilder.vue'),
     props: true,
   },
   {
     path: '/customize-form',
     name: 'Customize Form',
-    component: CustomizeForm,
+    component: () => import('src/pages/CustomizeForm/CustomizeForm.vue'),
   },
   {
     path: '/settings',
     name: 'Settings',
     components: {
-      default: Settings,
-      edit: QuickEditForm,
+      default: () => import('src/pages/Settings/Settings.vue'),
+      edit: () => import('src/pages/QuickEditForm.vue'),
     },
     props: {
       default: true,
-      edit: (route) => route.query,
+      edit: getQuickEditProps,
     },
   },
   {
     path: '/pos',
     name: 'Point of Sale',
     components: {
-      default: POS,
-      edit: QuickEditForm,
+      default: () => import('src/pages/POS/POS.vue'),
+      edit: () => import('src/pages/QuickEditForm.vue'),
     },
     props: {
       default: true,
-      edit: (route) => route.query,
+      edit: getQuickEditProps,
     },
   },
   // Canonical catch-all: unknown paths (e.g. a stale translated pageTitle

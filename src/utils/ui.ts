@@ -636,7 +636,11 @@ async function showInsufficientInventoryDialog(doc: SalesInvoice) {
     }
 
     const stockQuantity =
-      (await getQuantity(fyo, {item: item, toDate: doc.date!.toISOString(), batch: batch})) ?? 0;
+      (await getQuantity(fyo, {
+        item: item,
+        toDate: doc.date!.toISOString(),
+        batch: batch,
+      })) ?? 0;
 
     if (stockQuantity > quantity) {
       continue;

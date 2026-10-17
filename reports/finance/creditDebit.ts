@@ -2,9 +2,14 @@ import { Fyo } from 'fyo';
 import { TotalCreditAndDebit } from 'utils/db/types';
 import { getLedgerEntries } from './ledgerSummary';
 
-export async function getTotalCreditAndDebit(fyo: Fyo): Promise<TotalCreditAndDebit[]> {
+export async function getTotalCreditAndDebit(
+  fyo: Fyo
+): Promise<TotalCreditAndDebit[]> {
   const entries = await getLedgerEntries(fyo);
-  const byAccount = new Map<string, { totalCredit: number; totalDebit: number }>();
+  const byAccount = new Map<
+    string,
+    { totalCredit: number; totalDebit: number }
+  >();
   for (const e of entries) {
     const cur = byAccount.get(e.account) ?? { totalCredit: 0, totalDebit: 0 };
     cur.totalCredit += e.credit;

@@ -21,14 +21,21 @@ export interface Database extends DatabaseBase {
 
   // Typed CRUD — external seam works with DocValueMap (Raw hidden inside adapters)
   insert(schemaName: string, docValueMap: DocValueMap): Promise<DocValueMap>;
-  get(schemaName: string, name: string, fields?: string | string[]): Promise<DocValueMap>;
+  get(
+    schemaName: string,
+    name: string,
+    fields?: string | string[]
+  ): Promise<DocValueMap>;
   getAll(schemaName: string, options?: GetAllOptions): Promise<DocValueMap[]>;
   getSingleValues(
     ...fieldnames: ({ fieldname: string; parent?: string } | string)[]
   ): Promise<{ fieldname: string; parent: string; value: DocValue }[]>;
   update(schemaName: string, docValueMap: DocValueMap): Promise<void>;
   // getAllRaw intentionally leaks RawValueMap for callers that genuinely need it (search, export)
-  getAllRaw(schemaName: string, options?: GetAllOptions): Promise<FieldValueMap[]>;
+  getAllRaw(
+    schemaName: string,
+    options?: GetAllOptions
+  ): Promise<FieldValueMap[]>;
   count(schemaName: string, options?: GetAllOptions): Promise<number>;
 
   // Typed persistence — genuine DB ownership (FOR UPDATE / transaction)

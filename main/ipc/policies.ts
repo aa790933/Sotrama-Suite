@@ -7,8 +7,10 @@ import path from 'path';
  */
 
 export function sanitizeDatabaseName(name: string): string {
-  if (typeof name !== 'string' || !name) throw new Error('Invalid database name');
-  if (name.includes('`')) throw new Error('Invalid database name: must not contain backticks');
+  if (typeof name !== 'string' || !name)
+    throw new Error('Invalid database name');
+  if (name.includes('`'))
+    throw new Error('Invalid database name: must not contain backticks');
   if (!/^[a-zA-Z0-9_\-]+$/.test(name)) {
     throw new Error('Invalid database name: must match [a-zA-Z0-9_-]');
   }
@@ -27,7 +29,11 @@ export class PathPolicy {
 
   isAllowed(targetPath: string): boolean {
     const resolved = path.resolve(targetPath);
-    const roots = [this.appPaths.userData, this.appPaths.temp, this.appPaths.documents].filter(Boolean);
+    const roots = [
+      this.appPaths.userData,
+      this.appPaths.temp,
+      this.appPaths.documents,
+    ].filter(Boolean);
     return roots.some((root) => {
       const r = path.resolve(root);
       return resolved === r || resolved.startsWith(r + path.sep);
@@ -48,7 +54,9 @@ export interface SenderPolicy {
 }
 
 export class ElectronSenderPolicy implements SenderPolicy {
-  constructor(private readonly getWindow: () => Electron.BrowserWindow | null) {}
+  constructor(
+    private readonly getWindow: () => Electron.BrowserWindow | null
+  ) {}
   isValidSender(event: Electron.IpcMainInvokeEvent): boolean {
     const win = this.getWindow();
     if (!win) return false;

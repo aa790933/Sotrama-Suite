@@ -189,7 +189,9 @@ export default defineComponent({
     async setData(): Promise<void> {
       // Never let a metrics failure take down the dashboard shell.
       try {
-        const { fromDate, toDate } = getDatesAndPeriodList(this.period as PeriodKey);
+        const { fromDate, toDate } = getDatesAndPeriodList(
+          this.period as PeriodKey
+        );
         const [sales, purchase] = await Promise.all([
           getTotalOutstanding(
             fyo,

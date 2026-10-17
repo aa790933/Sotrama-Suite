@@ -2,7 +2,13 @@ import { Doc } from 'fyo/model/doc';
 import { isPesa } from 'fyo/utils';
 import { ValueError } from 'fyo/utils/errors';
 import { DateTime } from 'luxon';
-import { Field, FieldType, FieldTypeEnum, RawValue, TargetField } from 'schemas/types';
+import {
+  Field,
+  FieldType,
+  FieldTypeEnum,
+  RawValue,
+  TargetField,
+} from 'schemas/types';
 import { getIsNullOrUndef, safeParseFloat, safeParseInt } from 'utils';
 import { Attachment, DocValue, DocValueMap, RawValueMap } from './types';
 import type { MoneyMaker } from 'pesa';
@@ -60,8 +66,13 @@ export class Converter {
     }
   }
 
-  static toDocValue(value: RawValue, field: Field, fyoOrPesa: unknown): DocValue {
-    const pesa = (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
+  static toDocValue(
+    value: RawValue,
+    field: Field,
+    fyoOrPesa: unknown
+  ): DocValue {
+    const pesa =
+      (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
     const descriptor = fieldTypeRegistry[field.fieldtype];
     if (descriptor) {
       return descriptor.toDoc(value, field, pesa);
@@ -69,8 +80,13 @@ export class Converter {
     return toDocString(value, field);
   }
 
-  static toRawValue(value: DocValue, field: Field, fyoOrPesa: unknown): RawValue {
-    const pesa = (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
+  static toRawValue(
+    value: DocValue,
+    field: Field,
+    fyoOrPesa: unknown
+  ): RawValue {
+    const pesa =
+      (fyoOrPesa as { pesa?: MoneyMaker })?.pesa ?? (fyoOrPesa as MoneyMaker);
     const descriptor = fieldTypeRegistry[field.fieldtype];
     if (descriptor) {
       return descriptor.toRaw(value, field, pesa);
@@ -216,7 +232,9 @@ function toDocDate(value: RawValue, field: Field) {
     throwError(value, field, 'doc');
   }
 
-  const date = DateTime.fromISO(value.replace(' ', 'T'), { zone: 'utc' }).toJSDate();
+  const date = DateTime.fromISO(value.replace(' ', 'T'), {
+    zone: 'utc',
+  }).toJSDate();
   if (date.toString() === 'Invalid Date') {
     throwError(value, field, 'doc');
   }
@@ -320,7 +338,11 @@ function toDocAttachment(value: RawValue, field: Field): null | Attachment {
   }
 }
 
-function toRawCurrency(value: DocValue, pesa: MoneyMaker, field: Field): string {
+function toRawCurrency(
+  value: DocValue,
+  pesa: MoneyMaker,
+  field: Field
+): string {
   if (isPesa(value)) {
     return value.store;
   }

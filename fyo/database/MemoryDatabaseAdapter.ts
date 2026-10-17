@@ -38,8 +38,9 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   private pesaProvider: () => MoneyMaker;
 
   constructor(
-    fieldMapProvider: () => FieldMap = () => ({} as FieldMap),
-    pesaProvider: () => MoneyMaker = () => ((v: unknown) => v) as unknown as MoneyMaker
+    fieldMapProvider: () => FieldMap = () => ({}) as FieldMap,
+    pesaProvider: () => MoneyMaker = () =>
+      ((v: unknown) => v) as unknown as MoneyMaker
   ) {
     super();
     this.fieldMapProvider = fieldMapProvider;
@@ -47,7 +48,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     this.converter = new Converter(fieldMapProvider, pesaProvider);
   }
 
-  setProviders(fieldMapProvider: () => FieldMap, pesaProvider: () => MoneyMaker) {
+  setProviders(
+    fieldMapProvider: () => FieldMap,
+    pesaProvider: () => MoneyMaker
+  ) {
     this.fieldMapProvider = fieldMapProvider;
     this.pesaProvider = pesaProvider;
     this.converter = new Converter(fieldMapProvider, pesaProvider);
@@ -63,7 +67,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async createNewDatabase(_dbPath: string, countryCode: string): Promise<string> {
+  async createNewDatabase(
+    _dbPath: string,
+    countryCode: string
+  ): Promise<string> {
     this.schemaMap = getSchemas(countryCode, []);
     this.#tables.clear();
     this.#singles.clear();
@@ -72,7 +79,8 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
       if (schema?.isSingle) {
         const map = new Map<string, DocValue>();
         for (const f of schema.fields) {
-          if (f.default !== undefined) map.set(f.fieldname, f.default as DocValue);
+          if (f.default !== undefined)
+            map.set(f.fieldname, f.default as DocValue);
         }
         if (map.size) this.#singles.set(name, map);
       }
@@ -81,7 +89,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return countryCode;
   }
 
-  async connectToDatabase(_dbPath: string, countryCode?: string): Promise<string> {
+  async connectToDatabase(
+    _dbPath: string,
+    countryCode?: string
+  ): Promise<string> {
     const cc = countryCode ?? 'in';
     if (Object.keys(this.schemaMap).length === 0) {
       return await this.createNewDatabase(_dbPath, cc);
@@ -96,7 +107,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
 
   // CRUD — minimal typed subset (external seam is DocValueMap, Raw hidden)
   // eslint-disable-next-line @typescript-eslint/require-await
-  async insert(schemaName: string, fieldValueMap: DocValueMap): Promise<DocValueMap> {
+  async insert(
+    schemaName: string,
+    fieldValueMap: DocValueMap
+  ): Promise<DocValueMap> {
     const schema = this.schemaMap[schemaName];
     if (schema?.isSingle) {
       const parent = schemaName;
@@ -115,21 +129,29 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
       table = new Map();
       this.#tables.set(schemaName, table);
     }
-    const name = (fieldValueMap.name as string) ?? `mem-${Math.random().toString(36).slice(2)}`;
+    const name =
+      (fieldValueMap.name as string) ??
+      `mem-${Math.random().toString(36).slice(2)}`;
     const row = { ...fieldValueMap, name };
     table.set(name, row);
     return row;
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async get(schemaName: string, name: string, fields?: string | string[]): Promise<DocValueMap> {
+  async get(
+    schemaName: string,
+    name: string,
+    fields?: string | string[]
+  ): Promise<DocValueMap> {
     const schema = this.schemaMap[schemaName];
     if (schema?.isSingle) {
       const map = this.#singles.get(schemaName);
       const out: DocValueMap = {};
       if (!map) return out;
       const fieldList = fields
-        ? (Array.isArray(fields) ? fields : [fields])
+        ? Array.isArray(fields)
+          ? fields
+          : [fields]
         : Array.from(map.keys());
       for (const f of fieldList) {
         if (map.has(f)) out[f] = map.get(f)!;
@@ -148,7 +170,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async getAll(schemaName: string, options: GetAllOptions = {}): Promise<DocValueMap[]> {
+  async getAll(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<DocValueMap[]> {
     if (schemaName === 'SingleValue') {
       const rows: DocValueMap[] = [];
       for (const [parent, map] of this.#singles.entries()) {
@@ -163,10 +188,16 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     return this.#applyGetAllFilters(rows, options);
   }
 
-  async getAllRaw(schemaName: string, options: GetAllOptions = {}): Promise<FieldValueMap[]> {
+  async getAllRaw(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<FieldValueMap[]> {
     // Intentionally leaks Raw — for callers that genuinely need it (search/export)
     // For memory, Raw and Doc are same (no MariaDB type conversion simulated)
-    return (await this.getAll(schemaName, options)) as unknown as FieldValueMap[];
+    return (await this.getAll(
+      schemaName,
+      options
+    )) as unknown as FieldValueMap[];
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -182,7 +213,8 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
         if (v !== undefined) out.push({ fieldname, parent, value: v });
       } else {
         for (const [p, map] of this.#singles.entries()) {
-          if (map.has(fieldname)) out.push({ fieldname, parent: p, value: map.get(fieldname)! });
+          if (map.has(fieldname))
+            out.push({ fieldname, parent: p, value: map.get(fieldname)! });
         }
       }
     }
@@ -190,7 +222,11 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async rename(schemaName: string, oldName: string, newName: string): Promise<void> {
+  async rename(
+    schemaName: string,
+    oldName: string,
+    newName: string
+  ): Promise<void> {
     const table = this.#tables.get(schemaName);
     const row = table?.get(oldName);
     if (row && table) {
@@ -263,7 +299,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async getNextSeriesValue(prefix: string, schemaName: string): Promise<number> {
+  async getNextSeriesValue(
+    prefix: string,
+    schemaName: string
+  ): Promise<number> {
     const key = `${prefix}:${schemaName}`;
     const current = this.#series.get(key) ?? 0;
     let candidate = current + 1;
@@ -280,7 +319,10 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async count(schemaName: string, options: GetAllOptions = {}): Promise<number> {
+  async count(
+    schemaName: string,
+    options: GetAllOptions = {}
+  ): Promise<number> {
     // Count must be total matching rows, not limited page — ignore LIMIT/OFFSET
     const filters = options.filters;
     if (schemaName === 'SingleValue') {
@@ -290,17 +332,26 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
           rows.push({ parent, fieldname, value } as unknown as FieldValueMap);
         }
       }
-      const filtered = filters ? rows.filter((r) => this.#matchesFilters(r as unknown as DocValueMap, filters)) : rows;
+      const filtered = filters
+        ? rows.filter((r) =>
+            this.#matchesFilters(r as unknown as DocValueMap, filters)
+          )
+        : rows;
       return filtered.length;
     }
     const table = this.#tables.get(schemaName);
     const rows = table ? Array.from(table.values()) : [];
-    const filtered = filters ? rows.filter((r) => this.#matchesFilters(r, filters)) : rows;
+    const filtered = filters
+      ? rows.filter((r) => this.#matchesFilters(r, filters))
+      : rows;
     return filtered.length;
   }
 
   // Helpers
-  #applyGetAllFilters(rows: DocValueMap[], options: GetAllOptions): DocValueMap[] {
+  #applyGetAllFilters(
+    rows: DocValueMap[],
+    options: GetAllOptions
+  ): DocValueMap[] {
     let out: DocValueMap[] = rows;
     if (options.filters) {
       out = out.filter((r) => this.#matchesFilters(r, options.filters!));
@@ -316,7 +367,9 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     }
     // orderBy/order/groupBy/offset/limit — minimal: only sort by string compare if requested
     if (options.orderBy) {
-      const orderBy = Array.isArray(options.orderBy) ? options.orderBy[0] : options.orderBy;
+      const orderBy = Array.isArray(options.orderBy)
+        ? options.orderBy[0]
+        : options.orderBy;
       const dir = options.order === 'desc' ? -1 : 1;
       if (orderBy) {
         out = [...out].sort((a, b) => {
@@ -331,7 +384,8 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
     }
     if (options.offset || options.limit !== undefined) {
       const start = options.offset ?? 0;
-      const end = options.limit !== undefined ? start + options.limit : undefined;
+      const end =
+        options.limit !== undefined ? start + options.limit : undefined;
       out = out.slice(start, end);
     }
     return out;
@@ -348,14 +402,19 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
       }
       const actual = row[field];
       if (operator === '=' && actual !== value) return false;
-      if ((operator === '!=' || operator === '<>') && actual === value) return false;
+      if ((operator === '!=' || operator === '<>') && actual === value)
+        return false;
       if (operator === 'in' && Array.isArray(value)) {
         if (!value.includes(actual as never)) return false;
       }
       if (operator === 'not in' && Array.isArray(value)) {
         if (value.includes(actual as never)) return false;
       }
-      if (operator === 'like' && typeof value === 'string' && typeof actual === 'string') {
+      if (
+        operator === 'like' &&
+        typeof value === 'string' &&
+        typeof actual === 'string'
+      ) {
         const pattern = value.replace(/%/g, '');
         if (!actual.includes(pattern)) return false;
       }

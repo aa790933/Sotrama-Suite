@@ -244,8 +244,8 @@
               <Button
                 :disabled="testing || !host || !port || !database || !user"
                 class="w-full mt-2"
-                @click="advancedTest"
                 data-testid="test-connection-button"
+                @click="advancedTest"
               >
                 {{ testing ? t`Testing…` : t`Test connection` }}
               </Button>
@@ -356,8 +356,8 @@
           <Button
             v-if="canContinue"
             class="w-full mt-6"
-            @click="finish"
             data-testid="continue-button"
+            @click="finish"
           >
             {{ t`Continue to company setup` }}
           </Button>

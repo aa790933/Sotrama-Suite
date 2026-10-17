@@ -2,7 +2,11 @@ import { Fyo } from 'fyo';
 import { Cashflow } from 'utils/db/types';
 import { getLedgerEntries, monthKey } from './ledgerSummary';
 
-export async function getCashflow(fyo: Fyo, fromDate: string, toDate: string): Promise<Cashflow> {
+export async function getCashflow(
+  fyo: Fyo,
+  fromDate: string,
+  toDate: string
+): Promise<Cashflow> {
   const cashBankAccounts = (await fyo.db.getAll('Account', {
     filters: { accountType: ['in', ['Cash', 'Bank']], isGroup: false },
     fields: ['name'],

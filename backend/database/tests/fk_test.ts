@@ -143,17 +143,14 @@ const schemaMap = {
 
 async function main() {
   // Clean database
-  const adminDb = new DatabaseCore(undefined, {
-    ...testDbConfig,
-    database: 'test',
-  });
-  adminDb.connect();
-  await adminDb.query(`DROP TABLE IF EXISTS test_books_core.singlevalue`);
-  await adminDb.query(`DROP TABLE IF EXISTS test_books_core.customer`);
-  await adminDb.query(`DROP TABLE IF EXISTS test_books_core.salesinvoice`);
-  await adminDb.query(`DROP TABLE IF EXISTS test_books_core.salesinvoiceitem`);
-  await adminDb.query(`DROP TABLE IF EXISTS test_books_core.systemsettings`);
-  await adminDb.close();
+  const resetDb = new DatabaseCore(undefined, testDbConfig);
+  resetDb.connect();
+  await resetDb.query('DROP TABLE IF EXISTS `salesinvoiceitem`');
+  await resetDb.query('DROP TABLE IF EXISTS `salesinvoice`');
+  await resetDb.query('DROP TABLE IF EXISTS `customer`');
+  await resetDb.query('DROP TABLE IF EXISTS `systemsettings`');
+  await resetDb.query('DROP TABLE IF EXISTS `singlevalue`');
+  await resetDb.close();
 
   const db = new DatabaseCore(undefined, testDbConfig);
   db.connect();

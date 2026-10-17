@@ -1,4 +1,5 @@
 import vue from '@vitejs/plugin-vue';
+import tailwindcss from '@tailwindcss/vite';
 import builder from 'electron-builder';
 import esbuild from 'esbuild';
 import fs from 'fs-extra';
@@ -68,8 +69,44 @@ async function buildRendererProcessSource() {
   await vite.build({
     base: `/${base}`,
     root: path.join(root, 'src'),
-    build: { outDir, sourcemap: true },
-    plugins: [vue()],
+    build: {
+      outDir,
+      sourcemap: true,
+      emptyOutDir: true,
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                name: 'editor-vendor',
+                test: /node_modules[\\/](?:codemirror|@codemirror|@lezer)[\\/]/,
+                priority: 20,
+                minSize: 20_000,
+                maxSize: 300_000,
+                entriesAware: true,
+              },
+              {
+                name: 'vendor',
+                test: /node_modules[\\/]/,
+                priority: 10,
+                minSize: 50_000,
+                maxSize: 300_000,
+                entriesAware: true,
+              },
+              {
+                name: 'initial-deps',
+                tags: ['$initial'],
+                priority: 0,
+                minSize: 100_000,
+                maxSize: 450_000,
+                entriesAware: true,
+              },
+            ],
+          },
+        },
+      },
+    },
+    plugins: [vue(), tailwindcss()],
     resolve: {
       alias: {
         vue: 'vue/dist/vue.esm-bundler.js',
@@ -107,11 +144,6 @@ async function buildJobWorkers() {
       format: 'cjs',
       sourcemap: false,
     });
-    // Also copy compiled JS to source jobs folder so extraResources (which copies from `jobs/`) includes .js for packaged builds
-    // This ensures `process.resourcesPath/jobs/*.js` exists even though `jobs/*.ts` is the source
-    try {
-      fs.copySync(outPath, path.join(jobsSrc, file.replace(/\.ts$/, '.js')));
-    } catch {}
   }
 }
 

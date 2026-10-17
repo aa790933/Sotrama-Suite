@@ -44,6 +44,7 @@ export default async function setupInstance(
 
   await createCurrencyRecords(fyo);
   await createAccountRecords(bankName, country, chartOfAccounts, fyo);
+  await ensureDefaultPaymentMethods(fyo);
   await createRegionalRecords(country, fyo);
   await createDefaultEntries(fyo);
   await createDefaultNumberSeries(fyo);
@@ -60,6 +61,66 @@ export default async function setupInstance(
   }
 
   fyo.store.skipTelemetryLogging = false;
+}
+
+async function ensureDefaultPaymentMethods(fyo: Fyo) {
+  const accounts = (await fyo.db.getAllRaw(ModelNameEnum.Account, {
+    fields: ['name', 'accountType', 'isGroup'],
+    filters: {
+      accountType: ['in', [AccountTypeEnum.Cash, AccountTypeEnum.Bank]],
+      isGroup: false,
+    },
+  })) as { name: string; accountType: AccountTypeEnum }[];
+
+  const cashAccount = accounts.find(
+    ({ accountType }) => accountType === AccountTypeEnum.Cash
+  )?.name;
+  const bankAccount = accounts.find(
+    ({ accountType }) => accountType === AccountTypeEnum.Bank
+  )?.name;
+
+  const methods = [
+    { name: 'Cash', type: 'Cash', account: cashAccount },
+    { name: 'Bank', type: 'Bank', account: bankAccount },
+    { name: 'Transfer', type: 'Bank', account: bankAccount },
+  ];
+
+  for (const method of methods) {
+    if (!(await fyo.db.exists(ModelNameEnum.PaymentMethod, method.name))) {
+      await fyo.doc.getNewDoc(ModelNameEnum.PaymentMethod, method).sync();
+      continue;
+    }
+
+    const doc = await fyo.doc.getDoc(ModelNameEnum.PaymentMethod, method.name);
+    const currentAccount = doc.get('account') as string | undefined;
+    let currentAccountIsUsable = false;
+    if (
+      currentAccount &&
+      (await fyo.db.exists(ModelNameEnum.Account, currentAccount))
+    ) {
+      const linkedAccount = await fyo.db.get(
+        ModelNameEnum.Account,
+        currentAccount
+      );
+      const expectedAccountType =
+        method.type === 'Cash' ? AccountTypeEnum.Cash : AccountTypeEnum.Bank;
+      currentAccountIsUsable =
+        !Boolean(linkedAccount.isGroup) &&
+        (linkedAccount.accountType as AccountTypeEnum) === expectedAccountType;
+    }
+    const updates: Record<string, string> = {};
+
+    if (!doc.type) {
+      updates.type = method.type;
+    }
+    if (!currentAccountIsUsable && method.account) {
+      updates.account = method.account;
+    }
+
+    if (Object.keys(updates).length) {
+      await doc.setAndSync(updates);
+    }
+  }
 }
 
 async function createDefaultEntries(fyo: Fyo) {
