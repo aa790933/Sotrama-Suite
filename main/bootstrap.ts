@@ -1,4 +1,6 @@
 import { emitMainProcessError } from 'backend/helpers';
+import MainDatabase from 'backend/database/core';
+import config from 'utils/config';
 import {
   app,
   BrowserWindow,
@@ -16,6 +18,9 @@ import registerAutoUpdaterListeners from './registerAutoUpdaterListeners';
 import registerIpcMainMessageListeners from './registerIpcMainMessageListeners';
 import registerProcessListeners from './registerProcessListeners';
 import { createProdRouter } from './ipc/router';
+import * as mainHelpers from './helpers';
+import { ElectronStoreConnectionStore } from './ipc/connectionStore';
+import { getUrlAndTokenString, sendError } from './contactMothership';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const sourceMapSupport = require('source-map-support') as {
@@ -223,7 +228,15 @@ export class Main {
 
   registerListeners() {
     registerIpcMainMessageListeners(this);
-    createProdRouter(this).register();
+    createProdRouter(this, {
+      database: new MainDatabase(),
+      app,
+      dialog,
+      connectionStore: new ElectronStoreConnectionStore(mainHelpers, config),
+      getCreds: getUrlAndTokenString,
+      isExpectedUpdateError: mainHelpers.isExpectedUpdateError,
+      sendError: (bodyJson) => sendError(bodyJson, this),
+    }).register();
     registerAutoUpdaterListeners(this);
     registerAppLifecycleListeners(this);
     registerProcessListeners(this);

@@ -27,11 +27,9 @@ import {
   provision as provisionHost,
 } from '../provision/hostProvision';
 import { parseMariaDBConfigString } from '../../utils/mariadb-types';
-// getUrlAndTokenString / sendError are lazy-imported inside getCreds/sendError to avoid pulling electron at module load
 import type { RequestInit as NodeFetchRequestInit } from 'node-fetch';
 import { getLanguageMap } from '../getLanguageMap';
 import { getTemplates } from '../getPrintTemplates';
-// isExpectedUpdateError is lazy-imported inside checkForUpdates to avoid pulling electron-store at module load
 import { sendAPIRequest } from '../api';
 import type { BackendResponse } from '../../utils/ipc/types';
 import {
@@ -43,7 +41,6 @@ import {
   sanitizeDatabaseName,
 } from './policies';
 import type { ConnectionStore } from './connectionStore';
-import { ElectronStoreConnectionStore } from './connectionStore';
 
 // ---- Dependency contracts ----
 
@@ -64,7 +61,10 @@ export interface IpcRouterDeps {
   autoUpdater?: typeof import('electron-updater').autoUpdater;
   senderPolicy?: SenderPolicy;
   pathPolicy?: PathPolicy;
-  connectionStore?: ConnectionStore;
+  connectionStore: ConnectionStore;
+  getCreds?: () => unknown;
+  isExpectedUpdateError?: (error: Error) => boolean;
+  sendError?: (bodyJson: string, main: unknown) => Promise<void>;
 }
 
 // ---- Typed sub-interfaces (the seam) ----
@@ -250,8 +250,7 @@ export class IpcRouter {
       documents: deps.app.getPath('documents') ?? '',
     };
     this.pathPolicy = deps.pathPolicy ?? new PathPolicy(appPaths);
-    this.connectionStore =
-      deps.connectionStore ?? new ElectronStoreConnectionStore();
+    this.connectionStore = deps.connectionStore;
 
     this.dbOps = {
       checkDbAccess: this.checkDbAccess.bind(this),
@@ -725,11 +724,10 @@ export class IpcRouter {
   }
 
   getCreds() {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getUrlAndTokenString: getCredsFn } =
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('../contactMothership') as typeof import('../contactMothership');
-    return getCredsFn();
+    if (!this.deps.getCreds) {
+      throw new Error('Credential provider is not configured.');
+    }
+    return this.deps.getCreds();
   }
 
   async checkForUpdates(
@@ -743,23 +741,14 @@ export class IpcRouter {
         this.deps.autoUpdater ?? (await import('electron-updater')).autoUpdater;
       await updater.checkForUpdates();
     } catch (error) {
-      // Lazy to avoid pulling electron-store at module load
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { isExpectedUpdateError: isExpected } =
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('../helpers') as typeof import('../helpers');
-      if (isExpected(error as Error)) return;
+      if (this.deps.isExpectedUpdateError?.(error as Error)) return;
       emitMainProcessError(error);
     }
     onChecked();
   }
 
   async sendError(bodyJson: string, main: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { sendError: sendErr } =
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('../contactMothership') as typeof import('../contactMothership');
-    await sendErr(bodyJson, main as never);
+    await this.deps.sendError?.(bodyJson, main);
   }
 
   async sendAPIRequest(
@@ -1023,7 +1012,10 @@ export class IpcRouter {
   }
 }
 
-export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
+export function createProdRouter(
+  main: import('../bootstrap').Main,
+  deps: Omit<IpcRouterDeps, 'windowProvider'>
+): IpcRouter {
   const winProvider: WindowProvider = {
     getWindow: () => main.mainWindow,
     get isDevelopment() {
@@ -1042,24 +1034,8 @@ export function createProdRouter(main: import('../bootstrap').Main): IpcRouter {
       return main.icon;
     },
   };
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { app: electronApp, dialog: electronDialog } =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('electron') as typeof import('electron');
-  // Lazy to avoid pulling the mariadb driver into unit tests at module load
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { default: MainDatabase } =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('../../backend/database/core') as typeof import('../../backend/database/core');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { ElectronStoreConnectionStore } =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('./connectionStore') as typeof import('./connectionStore');
   return new IpcRouter({
-    database: new MainDatabase(),
+    ...deps,
     windowProvider: winProvider,
-    app: electronApp,
-    dialog: electronDialog,
-    connectionStore: new ElectronStoreConnectionStore(),
   });
 }

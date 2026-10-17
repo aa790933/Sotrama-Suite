@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module';
 import {
   equalsConnection,
   fromMariaDBConfigToPersisted,
@@ -10,7 +9,14 @@ import {
 } from '../../utils/mariadb-types';
 import { sanitizeDatabaseName } from './policies';
 
-const loadModule = createRequire(__filename);
+type ConnectionStoreHelpers = Pick<
+  typeof import('../helpers'),
+  | 'findConnectionById'
+  | 'getPersistedConnections'
+  | 'getConnectionsMetadata'
+  | 'upsertConnectionFromConfig'
+>;
+type ConnectionStoreConfig = Pick<typeof import('utils/config').default, 'set'>;
 
 /**
  * Small ConnectionStore seam — abstracts PersistedConnection persistence.
@@ -37,50 +43,38 @@ export interface ConnectionStore {
 
 // Production adapter — wraps the existing helpers + config store
 export class ElectronStoreConnectionStore implements ConnectionStore {
+  constructor(
+    private readonly helpers: ConnectionStoreHelpers,
+    private readonly config: ConnectionStoreConfig
+  ) {}
+
   findById(id: string): PersistedConnection | undefined {
-    // Lazy import to avoid pulling electron-store at module load time in tests
-    const { findConnectionById } =
-      loadModule('../helpers') as typeof import('../helpers');
-    return findConnectionById(id);
+    return this.helpers.findConnectionById(id);
   }
 
   getAll(): PersistedConnection[] {
-    const { getPersistedConnections } =
-      loadModule('../helpers') as typeof import('../helpers');
-    return getPersistedConnections();
+    return this.helpers.getPersistedConnections();
   }
 
   getMetadata(): ConnectionMetadata[] {
-    const { getConnectionsMetadata } =
-      loadModule('../helpers') as typeof import('../helpers');
-    return getConnectionsMetadata();
+    return this.helpers.getConnectionsMetadata();
   }
 
   upsert(companyName: string, config: MariaDBConfig): PersistedConnection {
-    const { upsertConnectionFromConfig } =
-      loadModule('../helpers') as typeof import('../helpers');
-    return upsertConnectionFromConfig(companyName, config);
+    return this.helpers.upsertConnectionFromConfig(companyName, config);
   }
 
   deleteById(id: string): void {
-    const { getPersistedConnections } =
-      loadModule('../helpers') as typeof import('../helpers');
-    const { default: config } =
-      loadModule('utils/config') as typeof import('utils/config');
-    const conns = getPersistedConnections();
+    const conns = this.helpers.getPersistedConnections();
     const filtered = conns.filter((c) => c.id !== id);
-    config.set('connections' as never, filtered as never);
+    this.config.set('connections' as never, filtered as never);
   }
 
   setMeta(
     id: string,
     patch: { companyName?: string; openCount?: number }
   ): boolean {
-    const { getPersistedConnections } =
-      loadModule('../helpers') as typeof import('../helpers');
-    const { default: config } =
-      loadModule('utils/config') as typeof import('utils/config');
-    const conns = getPersistedConnections();
+    const conns = this.helpers.getPersistedConnections();
     const conn = conns.find((c) => c.id === id);
     if (!conn) {
       return false;
@@ -91,7 +85,7 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     if (typeof patch.openCount === 'number') {
       conn.openCount = patch.openCount;
     }
-    config.set('connections' as never, conns as never);
+    this.config.set('connections' as never, conns as never);
     return true;
   }
 
@@ -113,9 +107,7 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
   }
 
   setLastSelected(id: string): void {
-    const { default: config } =
-      loadModule('utils/config') as typeof import('utils/config');
-    config.set('lastSelectedConnectionId' as never, id as never);
+    this.config.set('lastSelectedConnectionId' as never, id as never);
   }
 
   resolve(input: string): MariaDBConfig {
@@ -132,9 +124,7 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     }
     const cfg = parseMariaDBConfigString(input);
     sanitizeDatabaseName(cfg.database);
-    const { upsertConnectionFromConfig } =
-      loadModule('../helpers') as typeof import('../helpers');
-    const conn = upsertConnectionFromConfig(cfg.database, cfg);
+    const conn = this.helpers.upsertConnectionFromConfig(cfg.database, cfg);
     this.setLastSelected(conn.id);
     return cfg;
   }

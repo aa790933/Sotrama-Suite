@@ -1,4 +1,4 @@
-import { Main } from 'main';
+import type { Main } from 'main';
 import config from 'utils/config';
 import { BackendResponse } from 'utils/ipc/types';
 import { IPC_CHANNELS } from 'utils/messages';
