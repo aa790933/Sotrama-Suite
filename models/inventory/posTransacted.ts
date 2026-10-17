@@ -80,7 +80,11 @@ export async function getPOSTransactedAmount(
       continue;
     }
 
-    const amt = fyo.pesa(paymentAmount) as unknown as Money;
+    const amt = (
+      typeof paymentAmount === 'object'
+        ? paymentAmount
+        : fyo.pesa(paymentAmount)
+    ) as Money;
     const signed =
       sign === -1
         ? ((amt as unknown as { neg: () => Money }).neg?.() ?? amt)

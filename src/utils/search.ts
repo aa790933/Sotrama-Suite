@@ -86,7 +86,7 @@ function getCreateAction(fyo: Fyo, schemaName: string, initData?: RawValueMap) {
 
 function getCreateList(fyo: Fyo): SearchItem[] {
   const hasInventory = fyo.doc.singles.AccountingSettings?.enableInventory;
-  const formEditCreateList = [
+  const formEditCreateList: SearchItem[] = [
     ModelNameEnum.SalesInvoice,
     ModelNameEnum.PurchaseInvoice,
     ModelNameEnum.JournalEntry,
@@ -98,16 +98,15 @@ function getCreateList(fyo: Fyo): SearchItem[] {
         ]
       : []),
   ].map(
-    (schemaName) =>
-      ({
+    (schemaName): SearchItem => ({
         label: fyo.schemaMap[schemaName]?.label,
         group: 'Create',
         action: getCreateAction(fyo, schemaName),
         schemaName,
-      }) as SearchItem
+      })
   );
 
-  const filteredCreateList = [
+  const filteredCreateList: SearchItem[] = [
     {
       label: t`Sales Payment`,
       schemaName: ModelNameEnum.Payment,
@@ -148,17 +147,17 @@ function getCreateList(fyo: Fyo): SearchItem[] {
       schemaName: ModelNameEnum.Item,
       create: createFilters.Items,
     },
-  ].map(({ label, create, schemaName }) => {
+  ].map(({ label, create, schemaName }): SearchItem => {
     return {
       label,
       group: 'Create',
       action: getCreateAction(fyo, schemaName, create),
       schemaName,
       initData: create,
-    } as SearchItem;
+    };
   });
 
-  return [formEditCreateList, filteredCreateList].flat();
+  return [...formEditCreateList, ...filteredCreateList];
 }
 
 function getReportList(fyo: Fyo): SearchItem[] {
@@ -177,7 +176,7 @@ function getReportList(fyo: Fyo): SearchItem[] {
       }
       return true;
     })
-    .map((r) => {
+    .map((r): SearchItem => {
       const report = reports[r];
       return {
         label: report.title,
@@ -230,19 +229,18 @@ function getListViewList(fyo: Fyo): SearchItem[] {
 
   schemaNames = Object.keys(fyo.schemaMap) as ModelNameEnum[];
 
-  const standardLists = schemaNames
+  const standardLists: SearchItem[] = schemaNames
     .map((s) => fyo.schemaMap[s])
     .filter((s) => s && !s.isChild && !s.isSingle)
     .map(
-      (s) =>
-        ({
+      (s): SearchItem => ({
           label: s!.label,
           route: `/list/${s!.name}`,
           group: 'List',
-        }) as SearchItem
+        })
     );
 
-  const filteredLists = [
+  const filteredLists: SearchItem[] = [
     {
       label: t`Customers`,
       route: `/list/Party/${t`Customers`}`,
@@ -283,14 +281,14 @@ function getListViewList(fyo: Fyo): SearchItem[] {
       route: `/list/Payment/${t`Purchase Payments`}`,
       filters: routeFilters.PurchasePayments,
     },
-  ].map((i) => {
+  ].map((i): SearchItem => {
     const label = i.label;
     const route = encodeURI(`${i.route}?filters=${JSON.stringify(i.filters)}`);
 
-    return { label, route, group: 'List' } as SearchItem;
+    return { label, route, group: 'List' };
   });
 
-  return [standardLists, filteredLists].flat();
+  return [...standardLists, ...filteredLists];
 }
 
 function getSetupList(): SearchItem[] {

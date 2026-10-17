@@ -423,22 +423,22 @@ export abstract class AccountReport extends LedgerReport {
       },
     ] as ColumnField[];
 
-    const dateColumns = this._dateRanges!.sort(
-      (a, b) => b.toDate.toMillis() - a.toDate.toMillis()
-    ).map((d) => {
-      const toDate = d.toDate.minus({ days: 1 });
-      const label = this.fyo.format(toDate.toJSDate(), 'Date');
+    const dateColumns: ColumnField[] = this._dateRanges!
+      .sort((a, b) => b.toDate.toMillis() - a.toDate.toMillis())
+      .map((d): ColumnField => {
+        const toDate = d.toDate.minus({ days: 1 });
+        const label = this.fyo.format(toDate.toJSDate(), 'Date');
 
-      return {
-        label,
-        fieldtype: 'Data',
-        fieldname: 'toDate',
-        align: 'right',
-        width: ACC_BAL_WIDTH,
-      } as ColumnField;
-    });
+        return {
+          label,
+          fieldtype: 'Data',
+          fieldname: 'toDate',
+          align: 'right',
+          width: ACC_BAL_WIDTH,
+        };
+      });
 
-    return [columns, dateColumns].flat();
+    return [...columns, ...dateColumns];
   }
 
   metaFilters: string[] = ['basedOn'];
