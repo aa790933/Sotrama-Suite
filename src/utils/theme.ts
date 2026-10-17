@@ -1,13 +1,16 @@
 export function setDarkMode(darkMode: boolean): void {
+  const root = document.documentElement;
+
   if (darkMode) {
-    document.documentElement.classList.add(
-      'dark',
-      'custom-scroll',
-      'custom-scroll-thumb1'
-    );
+    root.classList.add('dark', 'custom-scroll', 'custom-scroll-thumb1');
+    root.style.colorScheme = 'dark';
     return;
   }
-  document.documentElement.classList.remove('dark');
+
+  // Remove every dark-only class together so light mode restores its own
+  // scrollbar palette instead of retaining dark scrollbar styles.
+  root.classList.remove('dark', 'custom-scroll', 'custom-scroll-thumb1');
+  root.style.colorScheme = 'light';
 }
 
 const FONT_SIZE_OPTIONS = [14, 15, 16, 18, 20] as const;
