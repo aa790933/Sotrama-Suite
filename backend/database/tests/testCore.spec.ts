@@ -418,7 +418,10 @@ test('concurrent transactions use isolated connections and rollback independentl
   });
 
   const firstTransaction = db.transaction(async () => {
-    await db.insert('Customer', { name: 'transaction-committed' });
+      await db.insert('Customer', {
+        ...getDefaultMetaFieldValueMap(),
+        name: 'transaction-committed',
+      });
     notifyFirstTransaction();
     await holdFirstTransaction;
   });
@@ -427,7 +430,10 @@ test('concurrent transactions use isolated connections and rollback independentl
   let rollbackError: unknown;
   await db
     .transaction(async () => {
-      await db.insert('Customer', { name: 'transaction-rolled-back' });
+      await db.insert('Customer', {
+        ...getDefaultMetaFieldValueMap(),
+        name: 'transaction-rolled-back',
+      });
       throw new Error('expected isolated rollback');
     })
     .catch((error: unknown) => {
