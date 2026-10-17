@@ -1678,15 +1678,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucide/vue@npm:^1.41.0":
-  version: 1.41.0
-  resolution: "@lucide/vue@npm:1.41.0"
-  peerDependencies:
-    vue: ">=3.0.1"
-  checksum: 10c0/f194f9d8e5c31a793521adc20bf42c4d742610207d608be18305d161df66c14e27eb9dde57ef02c308a2d5b8fa8c347db7e04f4dc744b162e9460a6b6a6daaaf
-  languageName: node
-  linkType: hard
-
 "@malept/cross-spawn-promise@npm:^2.0.0":
   version: 2.0.0
   resolution: "@malept/cross-spawn-promise@npm:2.0.0"
@@ -10228,7 +10219,6 @@ __metadata:
     "@fontsource/ibm-plex-sans-arabic": "npm:5.3.0"
     "@fontsource/inter": "npm:^5.3.0"
     "@lezer/common": "npm:^1.0.0"
-    "@lucide/vue": "npm:^1.41.0"
     "@popperjs/core": "npm:^2.10.2"
     "@rollup/rollup-linux-x64-gnu": "npm:^4.62.4"
     "@tailwindcss/vite": "npm:4.3.3"

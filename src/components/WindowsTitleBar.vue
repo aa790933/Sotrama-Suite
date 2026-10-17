@@ -3,11 +3,11 @@
     class="relative window-drag flex items-center border-b border-border bg-card text-card-foreground h-10 select-none"
   >
     <div class="ms-3 flex items-center gap-2">
-      <div
-        class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-primary text-primary-foreground"
-      >
-        <Layers class="h-3 w-3" />
-      </div>
+      <img
+        src="../assets/img/sotrama-mark.svg"
+        alt=""
+        class="h-5 w-5 flex-shrink-0 rounded"
+      />
       <p
         v-if="companyName"
         class="text-sm font-semibold tracking-tight text-foreground truncate max-w-48"
@@ -31,39 +31,45 @@
       v-if="!isFullscreen"
       class="absolute window-no-drag flex h-full items-center right-0"
     >
-      <div
+      <button
+        type="button"
+        :aria-label="t`Minimize window`"
+        :title="t`Minimize window`"
         class="window-no-drag flex items-center justify-center h-full w-11 hover:bg-accent hover:text-accent-foreground"
         @click="minimizeWindow"
       >
-        <feather-icon name="minus" class="h-4 w-4 flex-shrink-0" />
-      </div>
-      <div
+        <Minus class="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        :aria-label="isMax ? t`Restore window` : t`Maximize window`"
+        :title="isMax ? t`Restore window` : t`Maximize window`"
         class="window-no-drag flex items-center justify-center h-full w-11 hover:bg-accent hover:text-accent-foreground"
         @click="toggleMaximize"
       >
-        <feather-icon
-          v-if="isMax"
-          name="minimize"
-          class="h-3 w-3 flex-shrink-0"
-        />
-        <feather-icon v-else name="square" class="h-3 w-3 flex-shrink-0" />
-      </div>
-      <div
-        class="window-no-drag flex items-center justify-center h-full w-11 hover:bg-destructive hover:text-destructive-foreground"
+        <Minimize2 v-if="isMax" class="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+        <Square v-else class="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        :aria-label="t`Close window`"
+        :title="t`Close window`"
+        class="window-no-drag flex items-center justify-center h-full w-11 hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-destructive"
         @click="closeWindow"
       >
-        <feather-icon name="x" class="h-4 w-4 flex-shrink-0" />
-      </div>
+        <X class="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+      </button>
     </div>
   </div>
 </template>
 
 <script>
-import { Layers } from '@lucide/vue';
+import { t } from 'fyo';
+import { Minus, Minimize2, Square, X } from 'lucide-vue-next';
 
 export default {
   name: 'WindowsTitleBar',
-  components: { Layers },
+  components: { Minus, Minimize2, Square, X },
   props: {
     dbPath: String,
     companyName: String,

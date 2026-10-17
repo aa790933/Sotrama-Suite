@@ -184,7 +184,7 @@ import {
   Minimize2,
   MoreHorizontal,
   Printer,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import Breadcrumb from 'src/components/ui/breadcrumb/Breadcrumb.vue';
 import BreadcrumbItem from 'src/components/ui/breadcrumb/BreadcrumbItem.vue';
 import BreadcrumbLink from 'src/components/ui/breadcrumb/BreadcrumbLink.vue';

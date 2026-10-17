@@ -194,7 +194,7 @@
 </template>
 
 <script lang="ts">
-import { Laptop, Plus, X } from '@lucide/vue';
+import { Laptop, Plus, X } from 'lucide-vue-next';
 import { defineComponent } from 'vue';
 import { DateTime } from 'luxon';
 import { setupDummyInstance } from 'dummy';

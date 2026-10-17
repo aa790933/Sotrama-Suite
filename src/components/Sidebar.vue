@@ -162,10 +162,10 @@
       type="button"
       :aria-label="t`Hide sidebar`"
       :title="t`Hide sidebar`"
-      class="absolute bottom-0 end-0 text-muted-foreground hover:bg-accent rounded p-1 m-4 rtl-rotate-180"
+      class="absolute bottom-0 end-0 m-4 rounded p-1 text-muted-foreground hover:bg-accent"
       @click="() => toggleSidebar()"
     >
-      <feather-icon name="chevrons-left" class="w-4 h-4" />
+      <ChevronsLeft class="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
     </button>
 
     <Modal :open-modal="viewShortcuts" @closemodal="viewShortcuts = false">
@@ -177,13 +177,14 @@
 import {
   BarChart3,
   Building2,
+  ChevronsLeft,
   Database,
   FileText,
   LayoutDashboard,
   Package,
   Settings,
   ShoppingCart,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { reportIssue } from 'src/errorHandling';
 import { fyo } from 'src/initFyo';
 import { languageDirectionKey, shortcutsKey } from 'src/utils/injectionKeys';
