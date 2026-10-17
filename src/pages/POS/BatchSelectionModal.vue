@@ -85,13 +85,13 @@ export default defineComponent({
       }
 
       try {
-        const batches = (await fyo.db.getAll(ModelNameEnum.Batch, {
+        const batches = await fyo.db.getAll(ModelNameEnum.Batch, {
           filters: { item: this.itemCode },
           fields: ['name'],
-        })) as { name: string; itemCode: string }[];
+        });
 
         return batches.map((b) => ({ label: b.name, value: b.name }));
-      } catch (error) {
+      } catch {
         showToast({ type: 'error', message: t`Failed to load batches` });
         return [];
       }

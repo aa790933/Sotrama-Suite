@@ -24,7 +24,6 @@ import { Schema } from 'schemas/types';
 import { handleErrorWithDialog } from 'src/errorHandling';
 import { fyo } from 'src/initFyo';
 import router from 'src/router';
-import { assertIsType } from 'utils/index';
 import { SelectFileOptions } from 'utils/types';
 import { RouteLocationRaw } from 'vue-router';
 import { evaluateHidden } from './doc';
@@ -37,6 +36,16 @@ import {
   ToastOptions,
   UIGroupedFields,
 } from './types';
+
+function getReferenceName(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value && typeof value === 'object' && 'name' in value) {
+    return typeof value.name === 'string' ? value.name : undefined;
+  }
+  return undefined;
+}
 
 export const toastDurationMap = {
   short: 2_500,
@@ -132,12 +141,16 @@ export async function deleteDocWithPrompt(doc: Doc) {
 export async function cancelDocWithPrompt(doc: Doc) {
   let detail = t`This action is permanent`;
   if (['SalesInvoice', 'PurchaseInvoice'].includes(doc.schemaName)) {
-    const payments = (
+    const payments = new Set(
+      (
       await fyo.db.getAll('Payment', {
         fields: ['name'],
         filters: { cancelled: false },
       })
-    ).map(({ name }) => name);
+      )
+        .map(({ name }) => getReferenceName(name))
+        .filter((name): name is string => !!name)
+    );
 
     const query = (
       await fyo.db.getAll('PaymentFor', {
@@ -146,13 +159,22 @@ export async function cancelDocWithPrompt(doc: Doc) {
           referenceName: doc.name!,
         },
       })
-    ).filter(({ parent }) => payments.includes(parent));
+    ).filter(({ parent }) => {
+      const parentName = getReferenceName(parent);
+      return parentName !== undefined && payments.has(parentName);
+    });
 
-    const paymentList = [...new Set(query.map(({ parent }) => parent))];
+    const paymentList = [
+      ...new Set(
+        query
+          .map(({ parent }) => getReferenceName(parent))
+          .filter((name): name is string => !!name)
+      ),
+    ];
 
     if (paymentList.length === 1) {
       detail = t`This action is permanent and will cancel the following payment: ${
-        paymentList[0] as string
+        paymentList[0]
       }`;
     } else if (paymentList.length > 1) {
       detail = t`This action is permanent and will cancel the following payments: ${paymentList.join(
@@ -457,21 +479,18 @@ export function focusOrSelectFormControl(
     ref = ref[0];
   }
 
-  if (
-    !ref ||
-    typeof ref !== 'object' ||
-    !assertIsType<Record<string, () => void>>(ref)
-  ) {
+  if (!ref || typeof ref !== 'object') {
+    return;
+  }
+  const inputRef = ref as { select?: () => void; clear?: () => void };
+
+  if (!shouldClear && typeof inputRef.select === 'function') {
+    inputRef.select();
     return;
   }
 
-  if (!shouldClear && typeof ref?.select === 'function') {
-    ref.select();
-    return;
-  }
-
-  if (typeof ref?.clear === 'function') {
-    ref.clear();
+  if (typeof inputRef.clear === 'function') {
+    inputRef.clear();
   }
 
   if (typeof ref?.focus === 'function') {

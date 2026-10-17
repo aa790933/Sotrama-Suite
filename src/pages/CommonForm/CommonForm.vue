@@ -206,7 +206,7 @@ import { getErrorMessage } from 'src/utils';
 import { shortcutsKey } from 'src/utils/injectionKeys';
 import { docsPathMap } from 'src/utils/misc';
 import { docsPathRef } from 'src/utils/refs';
-import { ActionGroup, DocRef, UIGroupedFields } from 'src/utils/types';
+import type { ActionGroup, DocRef, UIGroupedFields } from 'src/utils/types';
 import {
   commonDocSubmit,
   commonDocSync,
@@ -285,7 +285,7 @@ export default defineComponent({
       showLinks: false,
       useFullWidth: false,
       row: null,
-    } as {
+    } satisfies {
       errors: Record<string, string>;
       activeTab: string;
       groupedFields: null | UIGroupedFields;
@@ -395,10 +395,11 @@ export default defineComponent({
         return new Map();
       }
 
-      const group = this.groupedFields.get(this.activeTab);
+      const groupedFields = this.groupedFields as UIGroupedFields;
+      const group = groupedFields.get(this.activeTab);
       if (!group) {
-        const tab = [...this.groupedFields.keys()][0];
-        return this.groupedFields.get(tab) ?? new Map<string, Field[]>();
+        const tab = [...groupedFields.keys()][0];
+        return groupedFields.get(tab) ?? new Map<string, Field[]>();
       }
 
       return group;

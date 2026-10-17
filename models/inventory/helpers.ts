@@ -633,7 +633,7 @@ export async function getSuggestedBatchName(
       .padStart(padZeros, '0')}`;
 
     return batchName;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
@@ -677,7 +677,7 @@ export async function createBatch(
     }
 
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

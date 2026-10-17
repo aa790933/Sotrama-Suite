@@ -897,7 +897,7 @@ export abstract class InvoiceItem extends Doc {
         return {
           name: ['in', finalBatchList],
         };
-      } catch (error) {
+      } catch {
         const batches = await doc.fyo.db.getAll(ModelNameEnum.Batch, {
           fields: ['name'],
           filters: { item: doc.item as string },

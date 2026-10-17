@@ -7,7 +7,7 @@ import { ModelNameEnum } from 'models/types';
 import { codeStateMap } from 'regional/in';
 import { Report } from 'reports/Report';
 import { ColumnField, ReportData, ReportRow } from 'reports/types';
-import { Field, OptionField } from 'schemas/types';
+import type { Field } from 'schemas/types';
 import { isNumeric } from 'src/utils';
 import getGSTRExportActions from './gstExporter';
 import { GSTRRow, GSTRType, TransferType, TransferTypeEnum } from './types';
@@ -89,7 +89,6 @@ export abstract class BaseGSTR extends Report {
       if (this.place) {
         allow &&= codeStateMap[this.place] === row.place;
       }
-      this.place;
       return (allow &&= this.transferFilterFunction(row));
     });
   }
@@ -244,7 +243,7 @@ export abstract class BaseGSTR extends Report {
         placeholder: t`Transfer Type`,
         fieldname: 'transferType',
         options,
-      } as OptionField,
+      },
       {
         fieldtype: 'AutoComplete',
         label: t`Place`,
@@ -256,7 +255,7 @@ export abstract class BaseGSTR extends Report {
             label: codeStateMap[code],
           };
         }),
-      } as OptionField,
+      },
       {
         fieldtype: 'Date',
         label: t`From Date`,

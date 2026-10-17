@@ -12,6 +12,16 @@ import { ValidationError } from 'fyo/utils/errors';
 import { PricingRule } from 'models/baseModels/PricingRule/PricingRule';
 import { PricingRuleItem } from 'models/baseModels/PricingRuleItem/PricingRuleItem';
 
+function getDisplayName(value: unknown): string | undefined {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return String(value);
+  }
+  if (value && typeof value === 'object' && 'name' in value) {
+    return getDisplayName(value.name);
+  }
+  return undefined;
+}
+
 export async function registerInstanceToERPNext(fyo: Fyo) {
   if (!navigator.onLine) {
     const errorMsg = 'No internet connection available';
@@ -339,12 +349,14 @@ async function appendDocValues(newDoc: DocValueMap, doc: DocValueMap) {
           const itemValue = row.item;
           const unitValue = row.unit;
 
-          if (itemValue == null || unitValue == null) {
+          const itemName = getDisplayName(itemValue);
+          const unitName = getDisplayName(unitValue);
+          if (!itemName || !unitName) {
             throw new ValidationError(
               `Price list item missing required fields: item or unit`
             );
           }
-          const key = `${String(itemValue)}::${String(unitValue)}`;
+          const key = `${itemName}::${unitName}`;
           if (uniqueKeys.has(key)) {
             continue;
           }
@@ -630,9 +642,9 @@ export async function performInitialFullSync(fyo: Fyo) {
             error instanceof Error ? error.message : String(error);
           failedDocs.push(`${docName} (${docType}): ${errorMsg}`);
 
-          const fullErrorMsg = `Failed to process document ${String(
-            doc.name ?? doc.fbooksDocName
-          )} of type ${docType}: ${errorMsg}`;
+          const displayDocName =
+            getDisplayName(doc.name ?? doc.fbooksDocName) ?? 'unknown';
+          const fullErrorMsg = `Failed to process document ${displayDocName} of type ${docType}: ${errorMsg}`;
           throw new Error(fullErrorMsg);
         }
       }

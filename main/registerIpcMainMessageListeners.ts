@@ -26,9 +26,11 @@ export default function registerIpcMainMessageListeners(main: Main) {
   });
 
   ipcMain.on(IPC_MESSAGES.MAXIMIZE_MAIN_WINDOW, () => {
-    main.mainWindow!.isMaximized()
-      ? main.mainWindow!.unmaximize()
-      : main.mainWindow!.maximize();
+    if (main.mainWindow!.isMaximized()) {
+      main.mainWindow!.unmaximize();
+    } else {
+      main.mainWindow!.maximize();
+    }
   });
 
   ipcMain.on(IPC_MESSAGES.ISMAXIMIZED_MAIN_WINDOW, (event) => {

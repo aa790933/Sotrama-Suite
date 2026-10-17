@@ -199,21 +199,19 @@ export function getTotalTaxedAmount(sinvDoc: SalesInvoice): Money {
 }
 
 export function validateClosingAmounts(posShiftDoc: POSClosingShift) {
-  try {
-    if (!posShiftDoc) {
+  if (!posShiftDoc) {
+    throw new ValidationError(
+      `POS Shift Document not loaded. Please reload.`
+    );
+  }
+
+  for (const row of posShiftDoc.closingAmounts ?? []) {
+    if (row.closingAmount?.isNegative()) {
       throw new ValidationError(
-        `POS Shift Document not loaded. Please reload.`
+        t`Closing ${row.paymentMethod as string} Amount can not be negative.`
       );
     }
-
-    posShiftDoc.closingAmounts?.map((row) => {
-      if (row.closingAmount?.isNegative()) {
-        throw new ValidationError(
-          t`Closing ${row.paymentMethod as string} Amount can not be negative.`
-        );
-      }
-    });
-  } catch (error) {}
+  }
 }
 
 export async function transferPOSCashAndWriteOff(

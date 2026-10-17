@@ -125,7 +125,7 @@ export default defineComponent({
     return {
       titleField: null,
       imageField: null,
-    } as {
+    } satisfies {
       titleField: null | Field;
       imageField: null | Field;
     };
@@ -136,7 +136,7 @@ export default defineComponent({
         return '';
       }
 
-      const fn = this.titleField?.fieldname ?? 'name';
+      const fn: string = this.titleField?.fieldname ?? 'name';
       const value = this.doc.get(fn);
       if (typeof value === 'string') {
         return value[0];
@@ -208,7 +208,7 @@ export default defineComponent({
     async setDoc() {
       try {
         this.doc = await fyo.doc.getDoc(this.schemaName, this.name);
-      } catch (e) {
+      } catch {
         return this.$router.back();
       }
     },

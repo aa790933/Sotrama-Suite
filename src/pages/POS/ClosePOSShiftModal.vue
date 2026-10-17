@@ -100,7 +100,7 @@ export default defineComponent({
 
       posOpeningShiftDoc: undefined as POSOpeningShift | undefined,
       posClosingShiftDoc: undefined as POSClosingShift | undefined,
-      transactedAmount: {} as Record<string, Money> | undefined,
+      transactedAmount: undefined as Record<string, Money> | undefined,
     };
   },
   computed: {
@@ -163,8 +163,7 @@ export default defineComponent({
 
       this.posClosingShiftDoc.closingAmounts.map((row) => {
         if (row.paymentMethod === 'Cash') {
-          row.closingAmount = this.posClosingShiftDoc
-            ?.closingCashAmount as Money;
+          row.closingAmount = this.posClosingShiftDoc?.closingCashAmount;
           row.differenceAmount = row.closingAmount.sub(
             row.expectedAmount as Money
           );
@@ -190,7 +189,7 @@ export default defineComponent({
 
         if (this.transactedAmount) {
           expectedAmount = expectedAmount.add(
-            this.transactedAmount[row.paymentMethod]
+            this.transactedAmount[row.paymentMethod] ?? fyo.pesa(0)
           );
         }
 

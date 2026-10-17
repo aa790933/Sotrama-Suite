@@ -18,7 +18,9 @@ export async function showDialog<DO extends DialogOptions>(options: DO) {
           try {
             resolve(await config.action());
           } catch (error) {
-            reject(error);
+            reject(
+              error instanceof Error ? error : new Error(String(error))
+            );
           }
         },
       };

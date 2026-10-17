@@ -25,7 +25,11 @@ import type {
   PingOptions,
   PingResult,
 } from 'utils/mariadb-types';
-import { equalsConnection, toSafeDisplay } from 'utils/mariadb-types';
+import {
+  equalsConnection,
+  parseMariaDBConfigString,
+  toSafeDisplay,
+} from 'utils/mariadb-types';
 
 type IPCRendererListener = Parameters<typeof ipcRenderer.on>[1];
 const ipc = {
@@ -355,8 +359,6 @@ const ipc = {
       if (key === 'lastSelectedFilePath' && typeof value === 'string') {
         // If it's a MariaDB JSON, don't expose raw password to renderer via store; return ID if available
         try {
-          const { parseMariaDBConfigString } =
-            require('utils/mariadb-types') as typeof import('utils/mariadb-types');
           const parsed = parseMariaDBConfigString(value);
           // It's a MariaDB JSON — try to map to connection ID
           const conns = config.get('connections' as never) as

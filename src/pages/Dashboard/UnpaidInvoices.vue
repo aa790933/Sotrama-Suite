@@ -86,7 +86,6 @@ import MouseFollower from 'src/components/MouseFollower.vue';
 import { fyo } from 'src/initFyo';
 import { uicolors } from 'src/utils/colors';
 import { getDatesAndPeriodList } from 'src/utils/misc';
-import { PeriodKey } from 'src/utils/types';
 import { routeTo } from 'src/utils/ui';
 import { safeParseFloat } from 'utils/index';
 import { PropType, defineComponent } from 'vue';
@@ -124,7 +123,7 @@ export default defineComponent({
       paidCount: 0,
       barWidth: 40,
       period: 'This Year',
-    } as {
+    } satisfies {
       show: boolean;
       period: PeriodKey;
       total: number;
@@ -142,7 +141,7 @@ export default defineComponent({
       return fyo.schemaMap[this.schemaName]?.label ?? '';
     },
     color(): 'blue' | 'pink' {
-      if (this.schemaName === ModelNameEnum.SalesInvoice) {
+      if (String(this.schemaName) === String(ModelNameEnum.SalesInvoice)) {
         return 'blue';
       }
       return 'pink';

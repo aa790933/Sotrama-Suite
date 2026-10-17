@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import {
   equalsConnection,
   fromMariaDBConfigToPersisted,
@@ -8,6 +9,8 @@ import {
   type PersistedConnection,
 } from '../../utils/mariadb-types';
 import { sanitizeDatabaseName } from './policies';
+
+const loadModule = createRequire(__filename);
 
 /**
  * Small ConnectionStore seam — abstracts PersistedConnection persistence.
@@ -36,40 +39,34 @@ export interface ConnectionStore {
 export class ElectronStoreConnectionStore implements ConnectionStore {
   findById(id: string): PersistedConnection | undefined {
     // Lazy import to avoid pulling electron-store at module load time in tests
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { findConnectionById } =
-      require('../helpers') as typeof import('../helpers');
+      loadModule('../helpers') as typeof import('../helpers');
     return findConnectionById(id);
   }
 
   getAll(): PersistedConnection[] {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getPersistedConnections } =
-      require('../helpers') as typeof import('../helpers');
+      loadModule('../helpers') as typeof import('../helpers');
     return getPersistedConnections();
   }
 
   getMetadata(): ConnectionMetadata[] {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getConnectionsMetadata } =
-      require('../helpers') as typeof import('../helpers');
+      loadModule('../helpers') as typeof import('../helpers');
     return getConnectionsMetadata();
   }
 
   upsert(companyName: string, config: MariaDBConfig): PersistedConnection {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { upsertConnectionFromConfig } =
-      require('../helpers') as typeof import('../helpers');
+      loadModule('../helpers') as typeof import('../helpers');
     return upsertConnectionFromConfig(companyName, config);
   }
 
   deleteById(id: string): void {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getPersistedConnections } =
-      require('../helpers') as typeof import('../helpers');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+      loadModule('../helpers') as typeof import('../helpers');
     const { default: config } =
-      require('utils/config') as typeof import('utils/config');
+      loadModule('utils/config') as typeof import('utils/config');
     const conns = getPersistedConnections();
     const filtered = conns.filter((c) => c.id !== id);
     config.set('connections' as never, filtered as never);
@@ -79,12 +76,10 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     id: string,
     patch: { companyName?: string; openCount?: number }
   ): boolean {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getPersistedConnections } =
-      require('../helpers') as typeof import('../helpers');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+      loadModule('../helpers') as typeof import('../helpers');
     const { default: config } =
-      require('utils/config') as typeof import('utils/config');
+      loadModule('utils/config') as typeof import('utils/config');
     const conns = getPersistedConnections();
     const conn = conns.find((c) => c.id === id);
     if (!conn) {
@@ -118,9 +113,8 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
   }
 
   setLastSelected(id: string): void {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { default: config } =
-      require('utils/config') as typeof import('utils/config');
+      loadModule('utils/config') as typeof import('utils/config');
     config.set('lastSelectedConnectionId' as never, id as never);
   }
 
@@ -138,9 +132,8 @@ export class ElectronStoreConnectionStore implements ConnectionStore {
     }
     const cfg = parseMariaDBConfigString(input);
     sanitizeDatabaseName(cfg.database);
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { upsertConnectionFromConfig } =
-      require('../helpers') as typeof import('../helpers');
+      loadModule('../helpers') as typeof import('../helpers');
     const conn = upsertConnectionFromConfig(cfg.database, cfg);
     this.setLastSelected(conn.id);
     return cfg;

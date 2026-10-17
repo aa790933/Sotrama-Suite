@@ -51,7 +51,12 @@ export function format(
     return '';
   }
 
-  return String(value);
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return value.toString();
+  }
+  if (value === null || value === undefined) return '';
+  return JSON.stringify(value) ?? '';
 }
 
 function toDatetime(value: unknown): DateTime | null {

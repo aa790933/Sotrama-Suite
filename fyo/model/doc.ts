@@ -1116,7 +1116,7 @@ export class Doc extends Observable<DocValue | Doc[]> {
           try {
             return this.fyo.pesa(value as string | number);
           } catch (err) {
-            (err as Error).message += ` value: '${String(
+            (err as Error).message += ` value: '${JSON.stringify(
               value
             )}' of type: ${typeof value}, fieldname: '${tablefield}', childfield: '${childfield}'`;
             throw err;
@@ -1155,7 +1155,7 @@ export class Doc extends Observable<DocValue | Doc[]> {
     if (this.numberSeries) {
       delete updateMap.name;
     } else {
-      updateMap.name = String(updateMap.name) + ' CPY';
+      updateMap.name = `${this.name} CPY`;
     }
 
     const rawUpdateMap = this.fyo.db.converter.toRawValueMap(

@@ -14,16 +14,16 @@ const reportFatal: ErrorSink = (error, phase) => {
   // eslint-disable-next-line no-console
   console.error(`[main] ${phase}:`, error);
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { dialog } = require('electron') as typeof import('electron');
-    dialog.showErrorBox(
-      'Sotrama Suite failed to start',
-      `${error.message}\n\n${error.stack ?? ''}`
-    );
-  } catch {
-    // Electron unavailable; the stderr output above is the record
-  }
+  void import('electron')
+    .then(({ dialog }) => {
+      dialog.showErrorBox(
+        'Sotrama Suite failed to start',
+        `${error.message}\n\n${error.stack ?? ''}`
+      );
+    })
+    .catch(() => {
+      // Electron unavailable; the stderr output above is the record
+    });
 };
 
 process.on('uncaughtException', (error) =>

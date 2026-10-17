@@ -87,7 +87,9 @@ export function downloadFile(
             void fs
               .remove(destPath)
               .catch(() => undefined)
-              .finally(() => reject(err));
+              .finally(() =>
+                reject(err instanceof Error ? err : new Error(String(err)))
+              );
           });
         return;
       }

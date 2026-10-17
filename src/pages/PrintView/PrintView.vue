@@ -51,7 +51,7 @@
 <script lang="ts">
 import { Doc } from 'fyo/model/doc';
 import { Action } from 'fyo/model/types';
-import { PrintTemplate } from 'models/baseModels/PrintTemplate';
+import type { PrintTemplate } from 'models/baseModels/PrintTemplate';
 import { ModelNameEnum } from 'models/types';
 import Button from 'src/components/ui/button/Button.vue';
 import AutoComplete from 'src/components/Controls/AutoComplete.vue';
@@ -87,7 +87,7 @@ export default defineComponent({
       templateDoc: null,
       templateName: null,
       templateList: [],
-    } as {
+    } satisfies {
       doc: null | Doc;
       scale: number;
       values: null | PrintValues;
@@ -148,7 +148,7 @@ export default defineComponent({
       ];
 
       const templateDocName = this.templateDoc?.name;
-      if (templateDocName) {
+      if (typeof templateDocName === 'string' && templateDocName) {
         actions.push({
           label: templateDocName,
           group: this.t`View`,
@@ -258,7 +258,11 @@ export default defineComponent({
         return;
       }
 
-      await printContainer.savePDF(this.doc?.name, shouldPrint);
+      const documentName = this.doc?.name;
+      await printContainer.savePDF(
+        typeof documentName === 'string' ? documentName : undefined,
+        shouldPrint
+      );
     },
     async setTemplateFromDefault() {
       const defaultName =

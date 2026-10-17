@@ -175,11 +175,11 @@ import {
   getItemVisibility,
   isLoyaltyProgramExpiredAndMaxed,
 } from 'models/helpers';
-import { ItemVisibility } from 'src/components/POS/types';
-import {
+import type {
   POSItem,
   ItemQtyMap,
   ItemSerialNumbers,
+  ItemVisibility,
 } from 'src/components/POS/types';
 import { ValidationError } from 'fyo/utils/errors';
 import { getExistingActiveSerialNumbersForItem } from 'models/inventory/helpers';
@@ -247,7 +247,7 @@ export default defineComponent({
 
       loyaltyPoints: 0,
       appliedLoyaltyPoints: 0,
-      loyaltyProgram: '' as string,
+      loyaltyProgram: '',
 
       appliedCouponsCount: 0,
       appliedCoupons: [] as AppliedCouponCodes[],
@@ -266,11 +266,11 @@ export default defineComponent({
       coupons: {} as AppliedCouponCodes,
       itemSerialNumbers: {} as ItemSerialNumbers,
       quickQtyActive: false,
-      quickQtyBuffer: '' as string,
+      quickQtyBuffer: '',
       quickQtyRow: null as SalesInvoiceItem | null,
       quickQtyKeyDownHandler: null as ((e: KeyboardEvent) => void) | null,
       quickQtyKeyUpHandler: null as ((e: KeyboardEvent) => void) | null,
-      selectedItemForBatch: '' as string,
+      selectedItemForBatch: '',
       pendingBatchItem: null as { item: POSItem; quantity: number } | null,
       expandedBatchId: undefined as string | null | undefined,
       itemVisibilityValue: 'Inventory Items' as ItemVisibility,
@@ -483,7 +483,7 @@ export default defineComponent({
         await validateQty(
           this.sinvDoc as SalesInvoice,
           row,
-          existingItems as unknown as InvoiceItem[]
+          existingItems
         );
       } catch (error) {
         await row.set('quantity', prevQty);
@@ -540,7 +540,7 @@ export default defineComponent({
 
       this.posProfile = (await fyo.doc.getDoc(
         ModelNameEnum.POSProfile,
-        posProfileName as string
+        posProfileName
       )) as POSProfile;
     },
 

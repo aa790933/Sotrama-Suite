@@ -396,7 +396,7 @@ import { getSavePath, selectTextFile } from 'src/utils/ui';
 import { defineComponent } from 'vue';
 import Loading from '../components/Loading.vue';
 
-type ImportWizardData = {
+interface ImportWizardData {
   showColumnPicker: boolean;
   complete: boolean;
   success: string[];
@@ -408,7 +408,7 @@ type ImportWizardData = {
   isMakingEntries: boolean;
   percentLoading: number;
   messageLoading: string;
-};
+}
 
 export default defineComponent({
   components: {
@@ -437,7 +437,7 @@ export default defineComponent({
       isMakingEntries: false,
       percentLoading: 0,
       messageLoading: '',
-    } as ImportWizardData;
+    } satisfies ImportWizardData;
   },
   computed: {
     gridTemplateColumn(): string {
@@ -633,7 +633,7 @@ export default defineComponent({
         return '';
       }
 
-      return this.file.name;
+      return typeof this.file.name === 'string' ? this.file.name : '';
     },
     helperMessage(): string {
       if (!this.importType) {
@@ -715,7 +715,10 @@ export default defineComponent({
     }): string {
       const title: string[] = [];
       if (vmi.value != null) {
-        title.push(this.t`Value: ${String(vmi.value)}`);
+        const value = vmi.value;
+        const displayValue =
+          typeof value === 'object' ? JSON.stringify(value) : String(value);
+        title.push(this.t`Value: ${displayValue}`);
       }
 
       if (vmi.rawValue != null) {

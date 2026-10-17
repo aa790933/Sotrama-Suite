@@ -121,7 +121,19 @@ function getFormattedItem(item: unknown): string {
     return JSON.stringify(item);
   }
 
-  return String(item);
+  if (typeof item === 'function') {
+    return formatStringToCSV(item.name || '[Function]');
+  }
+  if (typeof item === 'symbol') {
+    return formatStringToCSV(item.description ?? '');
+  }
+  if (typeof item === 'bigint') {
+    return item.toString();
+  }
+  if (typeof item === 'number' || typeof item === 'boolean') {
+    return String(item);
+  }
+  return '';
 }
 
 function formatStringToCSV(item: string): string {

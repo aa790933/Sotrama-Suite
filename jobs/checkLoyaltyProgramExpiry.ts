@@ -21,7 +21,13 @@ export async function checkLoyaltyProgramExpiry() {
 
     if (loyaltyPrograms) {
       for (const program of loyaltyPrograms) {
-        if (program.toDate && new Date(String(program.toDate)) <= currentDate) {
+        const expiryDate =
+          program.toDate instanceof Date
+            ? program.toDate
+            : program.toDate
+              ? new Date(program.toDate as string)
+              : undefined;
+        if (expiryDate && expiryDate <= currentDate) {
           await db.query(
             `UPDATE \`${ModelNameEnum.LoyaltyProgram}\` SET status = ?, isEnabled = ? WHERE name = ?`,
             ['Expired', 0, program.name]

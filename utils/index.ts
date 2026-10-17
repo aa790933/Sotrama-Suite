@@ -266,7 +266,3 @@ export function removeAtIndex<T>(array: T[], index: number): T[] {
   return [...array.slice(0, index), ...array.slice(index + 1)];
 }
 
-/**
- * Asserts that `value` is of type T. Use with care.
- */
-export const assertIsType = <T>(value: unknown): value is T => true;

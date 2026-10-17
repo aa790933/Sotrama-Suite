@@ -276,8 +276,8 @@ export default defineComponent({
           .filter((entry) => entry[1].toLowerCase() === lowercaseStatus)
           .map((entry) => entry[0]);
 
-        filteredData = tableData.filter((row) =>
-          matchedNames.includes(String(row.name))
+        filteredData = tableData.filter(
+          (row) => typeof row.name === 'string' && matchedNames.includes(row.name)
         );
       }
 

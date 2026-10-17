@@ -10,6 +10,7 @@ import SetupWizardSchema from 'schemas/app/SetupWizard.json';
 import { Schema } from 'schemas/types';
 import { fyo } from 'src/initFyo';
 import { QueryFilter } from 'utils/db/types';
+import { parseMariaDBConfigString } from 'utils/mariadb-types';
 import { schemaTranslateables } from 'utils/translationHelpers';
 import type { LanguageMap } from 'utils/types';
 import { PeriodKey } from './types';
@@ -93,8 +94,6 @@ export async function updateConfigFiles(fyo: Fyo): Promise<ConfigFile> {
   let dbPathForFile: string = rawDbPath;
   let isMariaDB = false;
   try {
-    const { parseMariaDBConfigString } =
-      require('utils/mariadb-types') as typeof import('utils/mariadb-types');
     const cfg = parseMariaDBConfigString(rawDbPath);
     isMariaDB = true;
     const res = await ipc.upsertConnection({

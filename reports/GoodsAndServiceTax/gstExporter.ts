@@ -8,7 +8,6 @@ import { showDialog } from 'src/utils/interactive';
 import { invertMap } from 'utils';
 import { getCsvData, saveExportData } from '../commonExporter';
 import { BaseGSTR } from './BaseGSTR';
-import { TransferTypeEnum } from './types';
 import { getSavePath } from 'src/utils/ui';
 
 const GST = {
@@ -199,11 +198,11 @@ export async function getGstrJsonData(report: BaseGSTR): Promise<string> {
     fp: DateTime.fromISO(toDate).toFormat('MMyyyy'),
   };
 
-  if (transferType === TransferTypeEnum.B2B) {
+  if (transferType === 'B2B') {
     gstData.b2b = await generateB2bData(report);
-  } else if (transferType === TransferTypeEnum.B2CL) {
+  } else if (transferType === 'B2CL') {
     gstData.b2cl = await generateB2clData(report);
-  } else if (transferType === TransferTypeEnum.B2CS) {
+  } else if (transferType === 'B2CS') {
     gstData.b2cs = generateB2csData(report);
   }
 

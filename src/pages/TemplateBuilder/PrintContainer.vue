@@ -90,7 +90,7 @@ export default defineComponent({
     },
   },
   data() {
-    return { error: null } as {
+    return { error: null } satisfies {
       error: null | { name: string; message: string; detail?: string };
     };
   },
@@ -112,8 +112,7 @@ export default defineComponent({
             return '';
           },
         },
-        // eslint-disable-next-line @typescript-eslint/ban-types
-      } as {};
+      };
     },
     hfSettings(): HeaderFooterSettings {
       return {

@@ -327,7 +327,7 @@ export class StockTransferItem extends TransferItem {
               return serialNumbers;
             }
           }
-        } catch (error) {}
+        } catch {}
 
         return undefined;
       },

@@ -394,7 +394,11 @@ export abstract class StockTransfer extends Transfer {
       return;
     }
 
-    const returnDocNames = returnDocs.map((doc) => doc.name).join(', ');
+    const returnDocNames = returnDocs
+      .map(({ name }) =>
+        typeof name === 'string' ? name : JSON.stringify(name) ?? ''
+      )
+      .join(', ');
     const label = this.fyo.schemaMap[this.schemaName]?.label ?? this.schemaName;
 
     throw new ValidationError(

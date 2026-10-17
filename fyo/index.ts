@@ -204,7 +204,7 @@ export class Fyo {
     try {
       doc = await this.doc.getDoc(schemaName, name);
       value = doc.get(fieldname);
-    } catch (err) {
+    } catch {
       value = undefined;
     }
 

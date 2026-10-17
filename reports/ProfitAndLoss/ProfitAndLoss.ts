@@ -184,6 +184,6 @@ export class ProfitAndLoss extends AccountReport {
       totalExpenseRow,
       emptyRow,
       totalProfitRow,
-    ].flat() as ReportData;
+    ].flat<ReportData[number]>();
   }
 }

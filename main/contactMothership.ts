@@ -18,8 +18,10 @@ export function getUrlAndTokenString(): Creds {
   }
 
   if (!fs.existsSync(errLogCredsPath)) {
-    // eslint-disable-next-line no-console
-    !inProduction && console.log(`${errLogCredsPath} doesn't exist, can't log`);
+    if (!inProduction) {
+      // eslint-disable-next-line no-console
+      console.log(`${errLogCredsPath} doesn't exist, can't log`);
+    }
     return empty;
   }
 
@@ -40,9 +42,10 @@ export function getUrlAndTokenString(): Creds {
   }
 
   if (!telemetryUrl || !apiKey || !apiSecret) {
-    !inProduction &&
+    if (!inProduction) {
       // eslint-disable-next-line no-console
       console.log('incomplete telemetry creds, skipping logging');
+    }
     return empty;
   }
 

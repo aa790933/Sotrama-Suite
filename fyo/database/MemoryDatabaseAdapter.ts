@@ -378,7 +378,20 @@ export class MemoryDatabaseAdapter extends DatabaseBase implements Database {
           if (av === bv) return 0;
           if (av === undefined) return 1;
           if (bv === undefined) return -1;
-          return String(av) < String(bv) ? -1 * dir : 1 * dir;
+          const sortKey = (value: unknown): string => {
+            if (value instanceof Date) return value.toISOString();
+            if (
+              value === null ||
+              value === undefined ||
+              typeof value === 'string' ||
+              typeof value === 'number' ||
+              typeof value === 'boolean'
+            ) {
+              return String(value ?? '');
+            }
+            return JSON.stringify(value) ?? '';
+          };
+          return sortKey(av) < sortKey(bv) ? -1 * dir : 1 * dir;
         });
       }
     }

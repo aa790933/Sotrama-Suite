@@ -9,7 +9,7 @@ import { Doc } from './doc';
 export function validateEmail(value: DocValue) {
   if (typeof value !== 'string') {
     throw new TypeError(
-      `Invalid email ${String(value)} of type ${typeof value}`
+      `Invalid email ${JSON.stringify(value)} of type ${typeof value}`
     );
   }
 
@@ -22,7 +22,7 @@ export function validateEmail(value: DocValue) {
 export function validatePhoneNumber(value: DocValue) {
   if (typeof value !== 'string') {
     throw new TypeError(
-      `Invalid phone ${String(value)} of type ${typeof value}`
+      `Invalid phone ${JSON.stringify(value)} of type ${typeof value}`
     );
   }
 

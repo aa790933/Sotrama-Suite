@@ -1,7 +1,4 @@
-import {
-  AccountRootType,
-  AccountRootTypeEnum,
-} from './baseModels/Account/types';
+import { AccountRootType } from './baseModels/Account/types';
 import {
   Action,
   ColumnConfig,
@@ -692,7 +689,7 @@ export async function getExchangeRate({
       rates: Record<string, number>;
     };
     exchangeRate = data.rates[toCurrency];
-  } catch (error) {
+  } catch {
     exchangeRate ??= 1;
   }
 
@@ -705,15 +702,15 @@ export async function getExchangeRate({
 
 export function isCredit(rootType: AccountRootType) {
   switch (rootType) {
-    case AccountRootTypeEnum.Asset:
+    case 'Asset':
       return false;
-    case AccountRootTypeEnum.Liability:
+    case 'Liability':
       return true;
-    case AccountRootTypeEnum.Equity:
+    case 'Equity':
       return true;
-    case AccountRootTypeEnum.Expense:
+    case 'Expense':
       return false;
-    case AccountRootTypeEnum.Income:
+    case 'Income':
       return true;
     default:
       return true;

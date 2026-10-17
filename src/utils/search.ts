@@ -412,7 +412,7 @@ export class Search {
     try {
       const raw = localStorage.getItem(this.recentKey);
       return raw ? (JSON.parse(raw) as StoredRecentItem[]) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -469,7 +469,7 @@ export class Search {
       }));
 
       return result;
-    } catch (error) {
+    } catch {
       return [];
     }
   }
