@@ -21,7 +21,7 @@ mac:
   publish:
     - github
 win:
-  publisherName: Frappe Technologies Pvt. Ltd.
+  publisherName: Sotrama Suite contributors
   signDlls: true
   icon: build/icon.ico
   publish:
