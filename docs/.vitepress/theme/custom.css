@@ -1,9 +1,9 @@
 :root {
-  --vp-c-brand-1: #b72f26;
-  --vp-c-brand-2: #98271f;
-  --vp-c-brand-3: #7b211b;
-  --vp-c-brand-soft: rgb(201 54 43 / 10%);
-  --vp-c-accent: #c9362b;
+  --vp-c-brand-1: #BE123C;
+  --vp-c-brand-2: #BE123C;
+  --vp-c-brand-3: #881337;
+  --vp-c-brand-soft: rgb(225 29 72 / 10%);
+  --vp-c-accent: #E11D48;
 
   --vp-home-hero-name-color: var(--vp-c-brand-1);
   --vp-home-hero-name-background: none;
@@ -13,10 +13,10 @@
 }
 
 .dark {
-  --vp-c-brand-1: #ff9b88;
-  --vp-c-brand-2: #ffb3a3;
-  --vp-c-brand-3: #ffc9bd;
-  --vp-c-brand-soft: rgb(255 155 136 / 14%);
+  --vp-c-brand-1: #FDA4AF;
+  --vp-c-brand-2: #FECDD3;
+  --vp-c-brand-3: #FFE4E6;
+  --vp-c-brand-soft: rgb(253 164 175 / 14%);
   --vp-button-brand-text: var(--vp-c-bg);
   --vp-button-brand-hover-text: var(--vp-c-bg);
   --vp-button-brand-active-text: var(--vp-c-bg);
@@ -90,15 +90,15 @@
 }
 
 .VPButton.brand {
-  --vp-button-brand-bg: #b72f26;
-  --vp-button-brand-hover-bg: #98271f;
-  --vp-button-brand-active-bg: #7b211b;
+  --vp-button-brand-bg: #BE123C;
+  --vp-button-brand-hover-bg: #BE123C;
+  --vp-button-brand-active-bg: #881337;
 }
 
 .dark .VPButton.brand {
-  --vp-button-brand-bg: #c9362b;
-  --vp-button-brand-hover-bg: #e04a3d;
-  --vp-button-brand-active-bg: #b72f26;
+  --vp-button-brand-bg: #E11D48;
+  --vp-button-brand-hover-bg: #BE123C;
+  --vp-button-brand-active-bg: #BE123C;
 }
 
 @media (prefers-reduced-motion: reduce) {

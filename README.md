@@ -1,3 +1,5 @@
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/public/readme-banner-dark.png"><img src="docs/public/readme-banner-light.png" alt="Sotrama Suite — connected business tools" width="100%"></picture></p>
+
 <div align="center" markdown="1">
 <br/>
 

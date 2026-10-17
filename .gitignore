@@ -33,3 +33,6 @@ docs/architecture-backlog.md
 docs/.vitepress/cache
 docs/.vitepress/dist
 /anti-slop
+
+# Temporary local brand source kit; production assets are copied into their target paths
+/sotrama-suite-brand-kit/
