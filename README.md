@@ -1,7 +1,7 @@
 <div align="center" markdown="1">
 <br/>
 
-<img src="build/icon.png" alt="Sotrama Suite logo" width="80"/>
+<img src="docs/.vitepress/public/sotrama-suite-logo.svg" alt="Sotrama Suite — connected business tools" width="360"/>
 
 <br/>
 
@@ -12,6 +12,7 @@
 > Sotrama Suite is an open-source, cross-platform business management suite by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/aa790933/Sotrama-Suite)](https://github.com/aa790933/Sotrama-Suite/releases)
+![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)
 ![Platforms](https://img.shields.io/badge/platform-mac%2C%20windows%2C%20linux-yellowgreen)
 [![Publish](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml/badge.svg)](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml)
 

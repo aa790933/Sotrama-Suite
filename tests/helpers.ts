@@ -8,6 +8,7 @@ import setupInstance from 'src/setup/setupInstance';
 import { SetupWizardOptions } from 'src/setup/types';
 import test from 'tape';
 import { getFiscalYear } from 'utils/misc';
+import { getTestDbConfig } from 'backend/database/tests/dbTestConfig';
 
 export function getTestSetupWizardOptions(): SetupWizardOptions {
   return {
@@ -36,13 +37,13 @@ export function getTestDbPath(dbPath?: string) {
 }
 
 /**
- * In-process MainDatabase for integration tests. Accepts (and ignores) the
- * isElectron flag Fyo passes to Demux constructors, so it slots into the
- * existing DatabaseDemux injection point without its own config.
+ * In-process MariaDB for integration tests. Use a dedicated database so the
+ * schema-migration tests can reset `test_books_core` without interrupting
+ * application/setup tests that run in the same Tape process.
  */
 export class MariaDBTestDemux extends DatabaseCore {
   constructor() {
-    super(undefined, undefined);
+    super(undefined, getTestDbConfig('test_sotrama_app'));
   }
 }
 

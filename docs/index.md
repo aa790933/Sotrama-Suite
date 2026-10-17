@@ -5,7 +5,7 @@ hero:
   text: Connected tools for business operations
   tagline: An open-source, ERP-oriented desktop suite for small and medium-sized businesses
   image:
-    src: /icon.png
+    src: /sotrama-suite-logo.svg
     alt: Sotrama Suite Logo
   actions:
     - theme: brand
@@ -79,4 +79,4 @@ Sotrama Suite is licensed under **AGPL-3.0-only**. See [LICENSE](https://github.
 
 ---
 
-© 2026 Sotrama Suite contributors
+Copyright © 2026 Sotrama Suite contributors

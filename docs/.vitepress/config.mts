@@ -44,22 +44,25 @@ const sidebar = [
 
 export default defineConfig({
   title: 'Sotrama Suite',
-  description: 'Open-source, ERP-oriented desktop tools for business operations, built with Vue, Electron, and MariaDB.',
+  description: 'Sotrama Suite brings sales, billing, payments, and business reporting together in one open-source desktop application.',
   lang: 'en',
   base: '/Sotrama-Suite/',
 
   head: [
-    ['meta', { name: 'theme-color', content: '#221166' }],
+    ['meta', { name: 'theme-color', content: '#d94736' }],
     ['meta', { property: 'og:title', content: 'Sotrama Suite' }],
-    ['meta', { property: 'og:description', content: 'Connected business tools for sales, billing, payments, company data, and financial reporting.' }],
+    ['meta', { property: 'og:description', content: 'Connected tools for sales, billing, payments, company data, and financial reporting.' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://aa790933.github.io/Sotrama-Suite/' }],
     ['meta', { name: 'twitter:card', content: 'summary' }],
-    ['link', { rel: 'icon', type: 'image/png', href: '/Sotrama-Suite/icon.png' }],
+    ['meta', { name: 'twitter:title', content: 'Sotrama Suite' }],
+    ['meta', { name: 'twitter:description', content: 'Connected tools for everyday business operations.' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Sotrama-Suite/sotrama-mark.svg' }],
   ],
 
   themeConfig: {
-    logo: '/icon.png',
+    logo: '/sotrama-suite-logo.svg',
+    outline: { label: 'On this page' },
     siteTitle: 'Sotrama Suite',
     nav: [
       { text: 'Docs', link: '/getting-started/installation', activeMatch: '/getting-started/' },
@@ -79,7 +82,7 @@ export default defineConfig({
     ],
     footer: {
       message: 'Licensed under AGPL-3.0-only.',
-      copyright: '© 2026 Sotrama Suite contributors',
+      copyright: 'Copyright © 2026 Sotrama Suite contributors',
     },
     search: {
       provider: 'local',
