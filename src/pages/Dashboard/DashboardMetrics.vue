@@ -123,7 +123,6 @@
 import { t } from 'fyo';
 import { DocValue } from 'fyo/core/types';
 import { ModelNameEnum } from 'models/types';
-import { PeriodKey } from 'src/utils/types';
 import { getTotalOutstanding } from 'reports/finance/outstanding';
 import Badge from 'src/components/ui/badge/Badge.vue';
 import Button from 'src/components/ui/button/Button.vue';
@@ -189,9 +188,7 @@ export default defineComponent({
     async setData(): Promise<void> {
       // Never let a metrics failure take down the dashboard shell.
       try {
-        const { fromDate, toDate } = getDatesAndPeriodList(
-          this.period as PeriodKey
-        );
+        const { fromDate, toDate } = getDatesAndPeriodList(this.period);
         const [sales, purchase] = await Promise.all([
           getTotalOutstanding(
             fyo,

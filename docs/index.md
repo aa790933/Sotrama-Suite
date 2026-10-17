@@ -3,7 +3,10 @@ layout: home
 hero:
   name: Sotrama Suite
   text: Connected tools for business operations
-  tagline: Sales, billing, payments, and financial records in one desktop workspace
+  tagline: Sales, billing, payments, and financial records in one desktop workspace, built around your company data.
+  image:
+    src: /sotrama-suite-logo.svg
+    alt: Sotrama Suite — connected business tools
   actions:
     - theme: brand
       text: Install the desktop app
@@ -36,27 +39,27 @@ features:
 
 ## Find your way around
 
-<div class="vp-doc" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+<div class="home-resource-grid">
 
-<div class="custom-block" style="padding: 1.5rem;">
+<div class="home-resource-card">
 <h3>Installation</h3>
 <p>Check which installer is available for your operating system</p>
 <a href="getting-started/installation" class="vp-button-brand">Installation instructions</a>
 </div>
 
-<div class="custom-block" style="padding: 1.5rem;">
+<div class="home-resource-card">
 <h3>User guides</h3>
 <p>Database connection and backup guidance</p>
 <a href="guides/" class="vp-button-brand">Database and recovery guides</a>
 </div>
 
-<div class="custom-block" style="padding: 1.5rem;">
+<div class="home-resource-card">
 <h3>Architecture</h3>
 <p>Understand application layers, data access, and safe change boundaries</p>
 <a href="architecture/" class="vp-button-brand">Architecture overview</a>
 </div>
 
-<div class="custom-block" style="padding: 1.5rem;">
+<div class="home-resource-card">
 <h3>Development</h3>
 <p>Contribute to the project</p>
 <a href="development/setup" class="vp-button-brand">Development setup</a>

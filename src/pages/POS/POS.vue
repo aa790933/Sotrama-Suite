@@ -220,6 +220,9 @@ export default defineComponent({
     };
   },
   data() {
+    const itemQtyMap: ItemQtyMap = {};
+    const itemSerialNumbers: ItemSerialNumbers = {};
+    const itemVisibilityValue: ItemVisibility = 'Inventory Items';
     return {
       tableView: true,
 
@@ -262,9 +265,9 @@ export default defineComponent({
       paymentDoc: {} as Payment,
       sinvDoc: {} as SalesInvoice,
       posProfile: {} as POSProfile,
-      itemQtyMap: {} as ItemQtyMap,
+      itemQtyMap,
       coupons: {} as AppliedCouponCodes,
-      itemSerialNumbers: {} as ItemSerialNumbers,
+      itemSerialNumbers,
       quickQtyActive: false,
       quickQtyBuffer: '',
       quickQtyRow: null as SalesInvoiceItem | null,
@@ -273,7 +276,7 @@ export default defineComponent({
       selectedItemForBatch: '',
       pendingBatchItem: null as { item: POSItem; quantity: number } | null,
       expandedBatchId: undefined as string | null | undefined,
-      itemVisibilityValue: 'Inventory Items' as ItemVisibility,
+      itemVisibilityValue,
     };
   },
   computed: {
@@ -538,10 +541,10 @@ export default defineComponent({
         return;
       }
 
-      this.posProfile = (await fyo.doc.getDoc(
+      this.posProfile = await fyo.doc.getDoc(
         ModelNameEnum.POSProfile,
         posProfileName
-      )) as POSProfile;
+      );
     },
 
     async handleItemSearch(searchTerm: string, addItem?: boolean) {

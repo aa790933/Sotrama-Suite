@@ -177,13 +177,13 @@ export class ProfitAndLoss extends AccountReport {
     const emptyRow = this.getEmptyRow();
 
     return [
-      incomeRows,
+      ...incomeRows,
       totalIncomeRow,
       emptyRow,
-      expenseRows,
+      ...expenseRows,
       totalExpenseRow,
       emptyRow,
       totalProfitRow,
-    ].flat<ReportData[number]>();
+    ];
   }
 }

@@ -60,8 +60,10 @@ jobs:
             "CREATE USER IF NOT EXISTS 'sotra'@'%' IDENTIFIED BY 'password'; \
              CREATE DATABASE IF NOT EXISTS test_books_core; \
              CREATE DATABASE IF NOT EXISTS test_sotrama_app; \
+             CREATE DATABASE IF NOT EXISTS test_leavbal; \
              GRANT ALL PRIVILEGES ON test_books_core.* TO 'sotra'@'%'; \
              GRANT ALL PRIVILEGES ON test_sotrama_app.* TO 'sotra'@'%'; \
+             GRANT ALL PRIVILEGES ON test_leavbal.* TO 'sotra'@'%'; \
              FLUSH PRIVILEGES;"
 
       - name: Verify database connectivity

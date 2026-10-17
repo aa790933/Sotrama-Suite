@@ -62,7 +62,6 @@ import DashboardChartBase from './BaseDashboardChart.vue';
 import PeriodSelector from './PeriodSelector.vue';
 import { defineComponent } from 'vue';
 import { getMapFromList } from 'utils/index';
-import { PeriodKey } from 'src/utils/types';
 
 // `extends:` defeats type inference; unsafe rules are off file-wide.
 /* 

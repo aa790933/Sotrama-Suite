@@ -1,4 +1,3 @@
-import os from 'os';
 import test from 'tape';
 import { MariaDBConfig } from '../core';
 import DatabaseCore from '../core';
@@ -40,6 +39,12 @@ test('detect LAN IP from os.networkInterfaces', (t) => {
 });
 
 test('connect to MariaDB via LAN IP (not localhost)', async (t) => {
+  if (process.env.CI || process.env.GITHUB_ACTIONS) {
+    t.skip('The hosted CI runner has no LAN-hosted MariaDB to connect to');
+    t.end();
+    return;
+  }
+
   const lanIp = detectLanIp();
   const subnet = detectSubnet();
 

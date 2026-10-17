@@ -158,11 +158,12 @@ export default defineComponent({
   },
   emits: ['openDoc', 'makeNewDoc', 'updatedData', 'selected-items-changed'],
   data() {
+    const statusMap: Record<string, string> = {};
     return {
       data: [] as RenderData[],
       pageStart: 0,
       pageEnd: 0,
-      statusMap: {} as Record<string, string>,
+      statusMap,
       selectedItems: [] as string[],
     };
   },

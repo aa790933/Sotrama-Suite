@@ -46,16 +46,23 @@ class TestDemux extends DatabaseCore {
 }
 
 async function boot(): Promise<Fyo> {
-  // Pre-create a clean database (DatabaseCore.createNewDatabase for MariaDB
-  // is effectively a connect; it does not create the db itself).
-  // MariaDB service images do not guarantee a user-created `test` database.
-  // Connect to the built-in schema only as an administrative connection; DDL
-  // below targets the dedicated test database, not the system schema.
-  const admin = new DatabaseCore(undefined, { ...cfg, database: 'mysql' });
+  // Reset only this test's dedicated database. The test user intentionally has
+  // no privileges on MariaDB's system schemas or global CREATE/DROP DATABASE.
+  const admin = new DatabaseCore(undefined, cfg);
   await admin.connect();
-  await admin.query(`DROP DATABASE IF EXISTS \`${cfg.database}\``);
-  await admin.query(`CREATE DATABASE \`${cfg.database}\``);
-  await admin.close();
+  try {
+    await admin.query('SET FOREIGN_KEY_CHECKS = 0');
+    const tables = (await admin.query(
+      `SELECT TABLE_NAME AS tableName FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'`
+    )) as { tableName: string }[];
+    for (const { tableName } of tables) {
+      const safeName = tableName.replace(/`/g, '``');
+      await admin.query(`DROP TABLE IF EXISTS \`${safeName}\``);
+    }
+    await admin.query('SET FOREIGN_KEY_CHECKS = 1');
+  } finally {
+    await admin.close();
+  }
 
   const fyo = new Fyo({
     DatabaseDemux: TestDemux,

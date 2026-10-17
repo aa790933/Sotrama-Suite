@@ -563,7 +563,7 @@ export default defineComponent({
         throw new ValidationError(this.t`Importer not set, reload tool`, false);
       }
 
-      return this.nullOrImporter as Importer;
+      return this.nullOrImporter;
     },
     importableSchemaNames(): ModelNameEnum[] {
       const importables = [
@@ -633,7 +633,8 @@ export default defineComponent({
         return '';
       }
 
-      return typeof this.file.name === 'string' ? this.file.name : '';
+      const name: unknown = this.file.name;
+      return typeof name === 'string' ? name : '';
     },
     helperMessage(): string {
       if (!this.importType) {

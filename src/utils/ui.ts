@@ -482,7 +482,11 @@ export function focusOrSelectFormControl(
   if (!ref || typeof ref !== 'object') {
     return;
   }
-  const inputRef = ref as { select?: () => void; clear?: () => void };
+  const inputRef = ref as {
+    select?: () => void;
+    clear?: () => void;
+    focus?: () => void;
+  };
 
   if (!shouldClear && typeof inputRef.select === 'function') {
     inputRef.select();
@@ -493,8 +497,8 @@ export function focusOrSelectFormControl(
     inputRef.clear();
   }
 
-  if (typeof ref?.focus === 'function') {
-    ref.focus();
+  if (typeof inputRef.focus === 'function') {
+    inputRef.focus();
   }
 
   doc.name = '';

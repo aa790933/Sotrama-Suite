@@ -34,10 +34,30 @@ export async function getPOSTransactedAmount(
   );
   const paymentFors = (await fyo.db.getAll('PaymentFor', {
     filters: { referenceName: ['in', sinvNames] },
-    fields: ['parent', 'referenceName'],
-  })) as { parent: string; referenceName: string }[];
+    fields: ['parent', 'referenceName', 'amount'],
+  })) as {
+    parent: string;
+    referenceName: string;
+    amount?: string | number;
+  }[];
   const paymentNames = [...new Set(paymentFors.map((p) => p.parent))];
   if (!paymentNames.length) return undefined;
+  const referenceAmounts = new Map<string, Money>();
+  for (const reference of paymentFors) {
+    if (
+      (typeof reference.amount !== 'string' &&
+        typeof reference.amount !== 'number') ||
+      (typeof reference.amount === 'string' && !reference.amount.trim())
+    ) {
+      continue;
+    }
+
+    const amount = fyo.pesa(reference.amount);
+    referenceAmounts.set(
+      reference.parent,
+      (referenceAmounts.get(reference.parent) ?? fyo.pesa(0)).add(amount)
+    );
+  }
   const payments = (await fyo.db.getAll('Payment', {
     filters: { name: ['in', paymentNames] },
     fields: ['name', 'paymentMethod', 'amount'],
@@ -51,7 +71,16 @@ export async function getPOSTransactedAmount(
   const out: Record<string, Money> = {};
   for (const pay of payments) {
     const sign = paymentToSign.get(pay.name) ?? 1;
-    const amt = fyo.pesa(pay.amount) as unknown as Money;
+    const paymentAmount =
+      (typeof pay.amount === 'string' && pay.amount.trim() !== '') ||
+      typeof pay.amount === 'number'
+        ? pay.amount
+        : referenceAmounts.get(pay.name);
+    if (paymentAmount === undefined || paymentAmount === '') {
+      continue;
+    }
+
+    const amt = fyo.pesa(paymentAmount) as unknown as Money;
     const signed =
       sign === -1
         ? ((amt as unknown as { neg: () => Money }).neg?.() ?? amt)

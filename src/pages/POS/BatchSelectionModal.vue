@@ -75,7 +75,7 @@ export default defineComponent({
   emits: ['toggleModal', 'batchSelected'],
   data() {
     return {
-      selectedBatch: '' as string,
+      selectedBatch: '',
     };
   },
   methods: {

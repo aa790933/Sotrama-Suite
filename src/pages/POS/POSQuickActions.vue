@@ -252,6 +252,7 @@ export default defineComponent({
   },
   emits: ['toggleView', 'toggleModal', 'emitRouteToSinvList'],
   data() {
+    const itemSerialNumbers: ItemSerialNumbers = {};
     return {
       tableView: true,
 
@@ -260,7 +261,7 @@ export default defineComponent({
       additionalDiscounts: fyo.pesa(0),
 
       paymentDoc: {} as Payment,
-      itemSerialNumbers: {} as ItemSerialNumbers,
+      itemSerialNumbers,
 
       transferRefNo: undefined as string | undefined,
       transferClearanceDate: undefined as Date | undefined,

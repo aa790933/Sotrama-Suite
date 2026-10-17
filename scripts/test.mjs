@@ -78,6 +78,7 @@ if (testFiles.length === 0) {
 
 const env = {
   ...process.env,
+  IS_TEST: 'true',
   TS_NODE_COMPILER_OPTIONS: JSON.stringify({ module: 'commonjs' }),
   TS_NODE_TRANSPILE_ONLY: 'true',
   ELECTRON_RUN_AS_NODE: 'true',

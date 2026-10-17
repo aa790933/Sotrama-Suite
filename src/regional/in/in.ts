@@ -1,4 +1,5 @@
 import { Fyo } from 'fyo';
+import { DuplicateEntryError } from 'fyo/utils/errors';
 
 export type TaxType = 'GST' | 'IGST' | 'Exempt-GST' | 'Exempt-IGST';
 
@@ -19,8 +20,21 @@ async function createTaxes(fyo: Fyo) {
       const name = `${type}-${percent}`;
       const details = getTaxDetails(type as TaxType, percent);
 
+      if (await fyo.db.exists('Tax', name)) {
+        continue;
+      }
+
       const newTax = fyo.doc.getNewDoc('Tax', { name, details });
-      await newTax.sync();
+      try {
+        await newTax.sync();
+      } catch (error) {
+        if (
+          !(error instanceof DuplicateEntryError) ||
+          !(await fyo.db.exists('Tax', name))
+        ) {
+          throw error;
+        }
+      }
     }
   }
 }

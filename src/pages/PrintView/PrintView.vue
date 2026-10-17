@@ -205,7 +205,7 @@ export default defineComponent({
       }
 
       if (this.doc) {
-        this.values = await getPrintTemplatePropValues(this.doc as Doc);
+        this.values = await getPrintTemplatePropValues(this.doc);
       }
     },
     setScale() {

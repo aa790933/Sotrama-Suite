@@ -36,22 +36,49 @@
 }
 
 .VPHero {
-  text-align: center;
+  text-align: left;
+  padding: 4rem 0 3rem;
 }
 
 .VPHero .main {
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 680px;
+  margin: 0;
 }
 
 .VPHero .image-container {
-  max-width: 100%;
+  max-width: min(38%, 360px);
+  margin-inline-start: 2rem;
+  background-image: url('/Sotrama-Suite/sotrama-suite-logo.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
 .VPHero .image-src {
-  max-width: min(100%, 420px);
-  max-height: 180px;
+  max-width: 100%;
+  max-height: 150px;
   object-fit: contain;
+  opacity: 0;
+}
+
+.dark .VPHero .image-container {
+  background-image: url('/Sotrama-Suite/sotrama-suite-logo-dark.svg');
+}
+
+.VPHero .name {
+  letter-spacing: -0.045em;
+  font-weight: 750;
+}
+
+.VPHero .text {
+  max-width: 34rem;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+.VPHero .tagline {
+  max-width: 38rem;
+  line-height: 1.7;
 }
 
 .VPFeatures {
@@ -78,6 +105,52 @@
 
 .custom-block {
   border-radius: 8px;
+}
+
+.home-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.home-resource-card {
+  min-width: 0;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: var(--vp-c-bg-soft);
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.home-resource-card:hover {
+  border-color: var(--vp-c-brand-1);
+}
+
+.home-resource-card h3 {
+  margin-top: 0;
+}
+
+.home-resource-card p {
+  min-height: 3rem;
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc .home-resource-card a.vp-button-brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 6px;
+  background: #BE123C;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.vp-doc .home-resource-card a.vp-button-brand:hover {
+  background: #9F1239;
 }
 
 .VPNav {
@@ -115,11 +188,32 @@
 }
 
 @media (max-width: 768px) {
+  .VPHero {
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .VPHero .main {
+    max-width: 100%;
+  }
+
+  .VPHero .image-container {
+    max-width: 220px;
+    margin: 1.5rem 0 0;
+  }
+
   .VPHero h1 {
     font-size: 2rem;
   }
 
   .VPFeatures .item {
     max-width: 100%;
+  }
+
+  .home-resource-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-resource-card p {
+    min-height: 0;
   }
 }

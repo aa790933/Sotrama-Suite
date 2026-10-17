@@ -51,7 +51,7 @@ export default defineConfig({
   base: '/Sotrama-Suite/',
 
   head: [
-    ['meta', { name: 'theme-color', content: '#d94736' }],
+    ['meta', { name: 'theme-color', content: '#E11D48' }],
     ['meta', { property: 'og:title', content: 'Sotrama Suite' }],
     ['meta', { property: 'og:description', content: 'Connected tools for sales, billing, payments, company data, and financial reporting.' }],
     ['meta', { property: 'og:type', content: 'website' }],
