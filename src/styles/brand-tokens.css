@@ -2,6 +2,10 @@
   /* Sotrama Suite brand tokens copied from the maintained brand kit. */
   --sotrama-primary: #E11D48;
   --sotrama-primary-deep: #BE123C;
+  --sotrama-primary-hover: #9F1239;
+  --sotrama-primary-hsl: 346.1 77.2% 50.4%;
+  --sotrama-primary-dark-hsl: 346 77% 62%;
+  --sotrama-ring-hsl: 343.4 83.1% 41.2%;
   --sotrama-ink: #0F172A;
   --sotrama-slate: #334155;
   --sotrama-muted: #64748B;

@@ -26,7 +26,7 @@ function keepStyling() {
     const classes = buttonVariants({ variant: 'ghost', size: 'xs' }).split(' ');
 
     elements?.forEach((el) =>
-      el.classList.add(...classes, '!inline-flex', '!mr-2')
+      el.classList.add(...classes, '!inline-flex', '!me-2')
     );
   });
 }

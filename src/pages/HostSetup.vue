@@ -4,8 +4,13 @@
   >
     <Card class="w-full max-w-lg shadow-lg">
       <CardHeader>
-        <CardTitle class="text-2xl">
-          {{ t`Host Setup` }}
+        <CardTitle class="flex items-center gap-3 text-2xl">
+          <img
+            src="../assets/img/sotrama-mark.svg"
+            alt=""
+            class="h-9 w-9 flex-shrink-0 rounded-lg"
+          />
+          <span>{{ t`Host Setup` }}</span>
         </CardTitle>
         <CardDescription>
           {{

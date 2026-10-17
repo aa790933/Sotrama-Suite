@@ -24,9 +24,9 @@
   --color-red-200: #FECDD3;
   --color-red-300: #FDA4AF;
   --color-red-400: #FB7185;
-  --color-red-500: #E11D48;
-  --color-red-600: #BE123C;
-  --color-red-700: #9F1239;
+  --color-red-500: var(--sotrama-primary);
+  --color-red-600: var(--sotrama-primary-deep);
+  --color-red-700: var(--sotrama-primary-hover);
   --color-red-800: #881337;
   --color-red-900: #4C0519;
   --color-orange-50: #fff9f5;
@@ -479,7 +479,7 @@ input[type='number']::-webkit-inner-spin-button {
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 346.1 77.2% 50.4%;
+    --primary: var(--sotrama-primary-hsl);
     --primary-foreground: 0 0% 100%;
     --secondary: 30 12% 95%;
     --secondary-foreground: 240 6% 12%;
@@ -491,8 +491,8 @@ input[type='number']::-webkit-inner-spin-button {
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 343.4 83.1% 41.2%;
-    --chart-1: 346.1 77.2% 50.4%;
+    --ring: var(--sotrama-ring-hsl);
+    --chart-1: var(--sotrama-primary-hsl);
     --chart-2: 164 34% 38%;
     --chart-3: 24 48% 42%;
     --chart-4: 44 70% 48%;
@@ -500,12 +500,12 @@ input[type='number']::-webkit-inner-spin-button {
     --radius: 0.313rem;
     --sidebar-background: 30 10% 97%;
     --sidebar-foreground: 240 5% 25%;
-    --sidebar-primary: 346.1 77.2% 50.4%;
+    --sidebar-primary: var(--sotrama-primary-hsl);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 346 100% 94%;
     --sidebar-accent-foreground: 343 83% 30%;
     --sidebar-border: 30 8% 88%;
-    --sidebar-ring: 6 66% 43%;
+    --sidebar-ring: var(--sotrama-ring-hsl);
   }
   .dark {
     color-scheme: dark;
@@ -515,7 +515,7 @@ input[type='number']::-webkit-inner-spin-button {
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 346 77% 62%;
+    --primary: var(--sotrama-primary-dark-hsl);
     --primary-foreground: 0 0% 0%;
     --secondary: 240 4% 15%;
     --secondary-foreground: 0 0% 96%;
@@ -527,20 +527,20 @@ input[type='number']::-webkit-inner-spin-button {
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 346 77% 62%;
-    --chart-1: 6 72% 62%;
+    --ring: var(--sotrama-primary-dark-hsl);
+    --chart-1: var(--sotrama-primary-dark-hsl);
     --chart-2: 160 38% 58%;
     --chart-3: 28 66% 65%;
     --chart-4: 45 75% 66%;
     --chart-5: 240 5% 72%;
     --sidebar-background: 240 5% 9%;
     --sidebar-foreground: 240 5% 88%;
-    --sidebar-primary: 6 72% 62%;
+    --sidebar-primary: var(--sotrama-primary-dark-hsl);
     --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 343 45% 22%;
     --sidebar-accent-foreground: 346 100% 88%;
     --sidebar-border: 240 4% 20%;
-    --sidebar-ring: 6 72% 62%;
+    --sidebar-ring: var(--sotrama-primary-dark-hsl);
   }
 }
 

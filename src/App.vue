@@ -1,47 +1,49 @@
 <template>
-  <div
-    id="app"
-    class="bg-background h-screen flex flex-col font-sans overflow-hidden antialiased text-foreground"
-    :dir="languageDirection"
-    :language="language"
-  >
-    <WindowsTitleBar
-      v-if="platform === 'Windows'"
-      :db-path="dbPath"
-      :company-name="companyName"
-    />
-    <!-- Main Contents -->
-    <Desk
-      v-if="activeScreen === 'Desk'"
-      class="flex-1"
-      :dark-mode="darkMode"
-      @change-db-file="showDbSelector"
-    />
-    <DatabaseSelector
-      v-if="activeScreen === 'DatabaseSelector'"
-      ref="databaseSelector"
-      @new-database="newDatabase"
-      @file-selected="fileSelected"
-    />
-    <HostSetup v-if="activeScreen === 'HostSetup'" @host-ready="hostReady" />
-    <SetupWizard
-      v-if="activeScreen === 'SetupWizard'"
-      ref="setupWizard"
-      @setup-complete="setupComplete"
-      @setup-canceled="showDbSelector"
-    />
-
-    <!-- Render target for toasts -->
+  <ConfigProvider :dir="languageDirection">
     <div
-      id="toast-container"
-      class="absolute bottom-0 flex flex-col items-end mb-3 pe-6"
-      style="width: 100%; pointer-events: none"
-    ></div>
-  </div>
+      id="app"
+      class="bg-background h-screen flex flex-col font-sans overflow-hidden antialiased text-foreground"
+      :dir="languageDirection"
+    >
+      <WindowsTitleBar
+        v-if="platform === 'Windows'"
+        :db-path="dbPath"
+        :company-name="companyName"
+      />
+      <!-- Main Contents -->
+      <Desk
+        v-if="activeScreen === 'Desk'"
+        class="flex-1"
+        :dark-mode="darkMode"
+        @change-db-file="showDbSelector"
+      />
+      <DatabaseSelector
+        v-if="activeScreen === 'DatabaseSelector'"
+        ref="databaseSelector"
+        @new-database="newDatabase"
+        @file-selected="fileSelected"
+      />
+      <HostSetup v-if="activeScreen === 'HostSetup'" @host-ready="hostReady" />
+      <SetupWizard
+        v-if="activeScreen === 'SetupWizard'"
+        ref="setupWizard"
+        @setup-complete="setupComplete"
+        @setup-canceled="showDbSelector"
+      />
+
+      <!-- Render target for toasts -->
+      <div
+        id="toast-container"
+        class="absolute bottom-0 flex flex-col items-end mb-3 pe-6"
+        style="width: 100%; pointer-events: none"
+      ></div>
+    </div>
+  </ConfigProvider>
 </template>
 <script lang="ts">
 import { RTL_LANGUAGES } from 'fyo/utils/consts';
 import { ModelNameEnum } from 'models/types';
+import { ConfigProvider } from 'reka-ui';
 import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
 import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
 import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
@@ -64,7 +66,7 @@ import { connectToDatabase } from './utils/db';
 import { initializeInstance } from './utils/initialization';
 import * as injectionKeys from './utils/injectionKeys';
 import { showDialog, showToast } from './utils/interactive';
-import { setLanguageMap } from './utils/language';
+import { languageCodeMap, setLanguageMap } from './utils/language';
 import { updateConfigFiles } from './utils/misc';
 import { updatePrintTemplates } from './utils/printTemplates';
 import {
@@ -95,6 +97,7 @@ enum Screen {
 export default defineComponent({
   name: 'App',
   components: {
+    ConfigProvider,
     Desk,
     HostSetup,
     SetupWizard,
@@ -150,9 +153,13 @@ export default defineComponent({
   watch: {
     language(value: string) {
       this.languageDirection = getLanguageDirection(value);
+      document.documentElement.lang = languageCodeMap[value] ?? 'en';
+      document.documentElement.dir = this.languageDirection;
     },
   },
   async mounted() {
+    document.documentElement.lang = languageCodeMap[this.language] ?? 'en';
+    document.documentElement.dir = this.languageDirection;
     setAppFontSize(fyo.config.get('appFontSize' as never));
     await this.setInitialScreen();
     const darkMode = !!fyo.singles.SystemSettings?.darkMode;

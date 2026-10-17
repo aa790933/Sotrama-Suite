@@ -27,7 +27,9 @@
           (hasNonZeroValues && active === thetasAndStarts[0][0] ? 4 : 0)
         "
         :stroke="
-          hasNonZeroValues ? sectors[thetasAndStarts[0][0]].color : '#f4f4f6'
+          hasNonZeroValues
+            ? sectors[thetasAndStarts[0][0]].color
+            : 'hsl(var(--muted))'
         "
         :class="hasNonZeroValues ? 'sector' : ''"
         :style="{ transformOrigin: `${cx}px ${cy}px` }"
@@ -60,7 +62,7 @@
         :style="{
           fontSize: '6px',
           fontWeight: 'bold',
-          fill: darkMode ? '#FFFFFF' : '#415668',
+          fill: 'hsl(var(--foreground))',
         }"
       >
         {{
@@ -76,7 +78,7 @@
         :x="cx"
         :y="cy + 8"
         text-anchor="middle"
-        style="font-size: 5px; fill: #a1abb4"
+        style="font-size: 5px; fill: hsl(var(--muted-foreground))"
       >
         {{
           active !== null && sectors.length !== 0

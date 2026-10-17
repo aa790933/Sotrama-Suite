@@ -121,21 +121,21 @@ export default defineComponent({
         toDate.toISO()
       );
       const shades = [
-        { class: 'bg-pink-500', hex: uicolors.pink['500'] },
-        { class: 'bg-pink-400', hex: uicolors.pink['400'] },
-        { class: 'bg-pink-300', hex: uicolors.pink['300'] },
-        { class: 'bg-pink-200', hex: uicolors.pink['200'] },
-        { class: 'bg-pink-100', hex: uicolors.pink['100'] },
+        { class: 'bg-red-500', hex: uicolors.red['500'] },
+        { class: 'bg-red-400', hex: uicolors.red['400'] },
+        { class: 'bg-red-300', hex: uicolors.red['300'] },
+        { class: 'bg-red-200', hex: uicolors.red['200'] },
+        { class: 'bg-red-100', hex: uicolors.red['100'] },
       ];
 
       const darkshades = [
-        { class: 'bg-pink-600', hex: uicolors.pink['600'] },
-        { class: 'bg-pink-500', hex: uicolors.pink['500'] },
-        { class: 'bg-pink-400', hex: uicolors.pink['400'] },
-        { class: 'bg-pink-300', hex: uicolors.pink['300'] },
+        { class: 'bg-red-600', hex: uicolors.red['600'] },
+        { class: 'bg-red-500', hex: uicolors.red['500'] },
+        { class: 'bg-red-400', hex: uicolors.red['400'] },
+        { class: 'bg-red-300', hex: uicolors.red['300'] },
         {
-          class: 'bg-pink-200 dark:bg-opacity-80',
-          hex: uicolors.pink['200'] + 'CC',
+          class: 'bg-red-200 dark:bg-opacity-80',
+          hex: uicolors.red['200'] + 'CC',
         },
       ];
 

@@ -32,24 +32,23 @@
 
     <div class="mt-4 grid grid-cols-2 gap-4 items-end">
       <Button
-        variant="secondary"
-        class="w-full py-5 bg-red-500 dark:bg-red-700"
+        variant="outline"
+        class="h-11 w-full"
         @click="$emit('toggleModal', 'ShiftClose', false)"
       >
         <slot>
-          <p class="uppercase text-lg text-white font-semibold">
+          <p class="text-sm font-semibold">
             {{ t`Cancel` }}
           </p>
         </slot>
       </Button>
 
       <Button
-        variant="secondary"
-        class="w-full py-5 bg-green-500 dark:bg-green-700"
+        class="h-11 w-full"
         @click="handleSubmit"
       >
         <slot>
-          <p class="uppercase text-lg text-white font-semibold">
+          <p class="text-sm font-semibold">
             {{ t`Submit` }}
           </p>
         </slot>

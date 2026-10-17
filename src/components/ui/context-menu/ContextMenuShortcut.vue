@@ -10,7 +10,7 @@ const props = defineProps<{
 <template>
   <span
     :class="
-      cn('ml-auto text-xs tracking-widest text-muted-foreground', props.class)
+      cn('ms-auto text-xs tracking-widest text-muted-foreground', props.class)
     "
   >
     <slot />

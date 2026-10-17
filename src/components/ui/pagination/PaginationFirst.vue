@@ -30,14 +30,14 @@ const forwarded = useForwardProps(delegatedProps);
     :class="
       cn(
         buttonVariants({ variant: 'ghost', size }),
-        'gap-1 px-2.5 sm:pr-2.5',
+        'gap-1 px-2.5 sm:pe-2.5',
         props.class
       )
     "
     v-bind="forwarded"
   >
     <slot>
-      <ChevronLeftIcon />
+      <ChevronLeftIcon class="rtl:rotate-180" />
       <span class="hidden sm:block">First</span>
     </slot>
   </PaginationFirst>

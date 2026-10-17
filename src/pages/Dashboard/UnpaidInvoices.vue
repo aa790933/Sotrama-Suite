@@ -51,11 +51,10 @@
         @mouseenter="show = true"
         @mouseleave="show = false"
       >
-        <div class="w-full h-4" :class="unpaidColor"></div>
+        <div class="w-full h-4" :style="{ backgroundColor: unpaidColor }"></div>
         <div
           class="absolute inset-0 h-4"
-          :class="paidColor"
-          :style="`width: ${barWidth}%`"
+          :style="{ width: `${barWidth}%`, backgroundColor: paidColor }"
         ></div>
       </div>
     </div>
@@ -140,28 +139,28 @@ export default defineComponent({
     title(): string {
       return fyo.schemaMap[this.schemaName]?.label ?? '';
     },
-    color(): 'blue' | 'pink' {
+    color(): 'green' | 'red' {
       if (String(this.schemaName) === String(ModelNameEnum.SalesInvoice)) {
-        return 'blue';
+        return 'green';
       }
-      return 'pink';
+      return 'red';
     },
     colors(): string {
       return uicolors[this.color][this.darkMode ? '600' : '500'];
     },
     paidColor(): string {
       if (!this.hasData) {
-        return this.darkMode ? 'bg-gray-700' : 'bg-gray-400';
+        return this.darkMode ? uicolors.gray['700'] : uicolors.gray['400'];
       }
 
-      return `bg-${this.color}-${this.darkMode ? '600' : '500'}`;
+      return this.colors;
     },
     unpaidColor(): string {
       if (!this.hasData) {
-        return `bg-gray-${this.darkMode ? '800' : '200'}`;
+        return this.darkMode ? uicolors.gray['800'] : uicolors.gray['200'];
       }
 
-      return `bg-${this.color}-${this.darkMode ? '700 bg-opacity-20' : '200'}`;
+      return uicolors[this.color][this.darkMode ? '800' : '100'];
     },
   },
   async activated() {

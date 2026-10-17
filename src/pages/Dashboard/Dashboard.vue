@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen" style="width: var(--w-desk)">
+  <div class="flex h-full min-h-0 w-full min-w-0 flex-col">
     <PageHeader :title="t`Dashboard`">
       <div class="border border-border rounded bg-muted flex items-center">
         <PeriodSelector
@@ -11,11 +11,8 @@
       </div>
     </PageHeader>
 
-    <div
-      class="no-scrollbar overflow-auto"
-      style="height: calc(100vh - var(--h-row-largest) - 1px)"
-    >
-      <div style="min-width: var(--w-desk-fixed)" class="overflow-auto">
+    <div class="no-scrollbar min-h-0 min-w-0 flex-1 overflow-auto">
+      <div class="w-full min-w-0 overflow-hidden">
         <DashboardMetrics
           :common-period="period"
           @period-change="handlePeriodChange"
@@ -28,12 +25,12 @@
           @period-change="handlePeriodChange"
         />
         <hr class="border-border" />
-        <div class="flex w-full">
+        <div class="grid min-w-0 grid-cols-1 lg:grid-cols-2">
           <UnpaidInvoices
             :schema-name="'SalesInvoice'"
             :common-period="period"
             :dark-mode="darkMode"
-            class="border-e border-border"
+            class="min-w-0 border-b border-border lg:border-b-0 lg:border-e"
             @period-change="handlePeriodChange"
           />
           <UnpaidInvoices
@@ -44,15 +41,15 @@
           />
         </div>
         <hr class="border-border" />
-        <div class="flex">
+        <div class="grid min-w-0 grid-cols-1 lg:grid-cols-2">
           <ProfitAndLoss
-            class="w-full p-4 border-e border-border"
+            class="min-w-0 border-b border-border p-4 lg:border-b-0 lg:border-e"
             :common-period="period"
             :dark-mode="darkMode"
             @period-change="handlePeriodChange"
           />
           <Expenses
-            class="w-full p-4"
+            class="min-w-0 p-4"
             :common-period="period"
             :dark-mode="darkMode"
             @period-change="handlePeriodChange"

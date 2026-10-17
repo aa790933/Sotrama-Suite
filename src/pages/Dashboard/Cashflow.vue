@@ -10,13 +10,15 @@
       <div v-if="hasData" class="flex text-base gap-8">
         <div class="flex items-center gap-2">
           <span
-            class="w-3 h-3 rounded-sm inline-block bg-blue-500 dark:bg-blue-600"
+            class="inline-block h-3 w-3 rounded-sm"
+            :style="{ backgroundColor: chartData.colors[0] }"
           />
           <span class="text-foreground">{{ t`Inflow` }}</span>
         </div>
         <div class="flex items-center gap-2">
           <span
-            class="w-3 h-3 rounded-sm inline-block bg-pink-500 dark:bg-pink-600"
+            class="inline-block h-3 w-3 rounded-sm"
+            :style="{ backgroundColor: chartData.colors[1] }"
           />
           <span class="text-foreground">{{ t`Outflow` }}</span>
         </div>
@@ -89,8 +91,8 @@ export default defineComponent({
     chartData() {
       let data = this.data;
       let colors = [
-        uicolors.blue[this.darkMode ? '600' : '500'],
-        uicolors.pink[this.darkMode ? '600' : '500'],
+        uicolors.green[this.darkMode ? '600' : '500'],
+        uicolors.red[this.darkMode ? '600' : '500'],
       ];
       if (!this.hasData) {
         data = dummyData;

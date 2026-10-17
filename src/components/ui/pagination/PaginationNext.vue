@@ -30,7 +30,7 @@ const forwarded = useForwardProps(delegatedProps);
     :class="
       cn(
         buttonVariants({ variant: 'ghost', size }),
-        'gap-1 px-2.5 sm:pr-2.5',
+        'gap-1 px-2.5 sm:pe-2.5',
         props.class
       )
     "
@@ -38,7 +38,7 @@ const forwarded = useForwardProps(delegatedProps);
   >
     <slot>
       <span class="hidden sm:block">Next</span>
-      <ChevronRightIcon />
+      <ChevronRightIcon class="rtl:rotate-180" />
     </slot>
   </PaginationNext>
 </template>

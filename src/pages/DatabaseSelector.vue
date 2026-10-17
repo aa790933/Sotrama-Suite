@@ -11,8 +11,13 @@
     >
       <!-- Header Section -->
       <CardHeader class="border-b border-border">
-        <CardTitle class="text-2xl select-none">
-          {{ t`Welcome to Sotrama Suite` }}
+        <CardTitle class="flex items-center gap-3 text-2xl select-none">
+          <img
+            src="../assets/img/sotrama-mark.svg"
+            alt=""
+            class="h-9 w-9 flex-shrink-0 rounded-lg"
+          />
+          <span>{{ t`Welcome to Sotrama Suite` }}</span>
         </CardTitle>
         <CardDescription class="select-none">
           {{ t`Create a new company or select an existing one` }}
@@ -21,7 +26,7 @@
 
       <!-- Action Buttons -->
       <div class="p-2 space-y-1">
-        <!-- New Company (Blue Icon) -->
+        <!-- Create a company -->
         <div
           data-testid="create-new-file"
           class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"
@@ -48,7 +53,7 @@
           </div>
         </div>
 
-        <!-- Create Demo (Pink Icon - Top Action if no files) -->
+        <!-- Offer a demo when no company exists yet -->
         <div
           v-if="!files?.length"
           class="px-4 py-3 rounded-lg flex flex-row items-center gap-4 transition-colors"

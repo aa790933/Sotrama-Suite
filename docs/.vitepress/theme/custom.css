@@ -171,8 +171,8 @@
 
 .dark .VPButton.brand {
   --vp-button-brand-text: #ffffff;
-  --vp-button-brand-bg: #E11D48;
-  --vp-button-brand-hover-bg: #BE123C;
+  --vp-button-brand-bg: #BE123C;
+  --vp-button-brand-hover-bg: #9F1239;
   --vp-button-brand-active-bg: #881337;
 }
 

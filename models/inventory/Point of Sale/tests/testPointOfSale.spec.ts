@@ -87,13 +87,13 @@ test('check pos transacted amount', async (t) => {
   t.true(transactedAmountAfterTxn);
 
   t.equals(
-    transactedAmountAfterTxn?.Cash,
+    transactedAmountAfterTxn?.Cash?.float,
     sinvDocOne.grandTotal?.float,
     'transacted cash amount matches'
   );
 
   t.equals(
-    transactedAmountAfterTxn?.Transfer,
+    transactedAmountAfterTxn?.Transfer?.float,
     sinvDocTwo.grandTotal?.float,
     'transacted transfer amount matches'
   );
