@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
   <title id="title">Sotrama Suite mark</title>
-  <rect width="144" height="144" rx="30" fill="#202126"/>
-  <path d="M111 26H56C37 26 25 39 25 56s12 30 31 30h32c7 0 11 4 11 10s-4 10-11 10H27v18h60c21 0 33-12 33-28S108 68 87 68H56c-7 0-11-4-11-10s4-10 11-10h55z" fill="#e04436"/>
-  <path d="M45 43h30v19H45z" fill="#fff7f3"/>
+  <rect width="512" height="512" rx="112" fill="#202126"/>
+  <path d="M394 92H202C136 92 94 135 94 198s42 106 108 106h114c25 0 38 13 38 32s-13 32-38 32H102v60h218c76 0 120-44 120-116s-44-116-120-116H202c-25 0-38-12-38-30s13-14 38-14h192z" fill="#e04436"/>
+  <path d="M164 144h108v64H164z" fill="#fff7f3"/>
 </svg>

@@ -35,7 +35,7 @@
       <div v-for="group in groups" :key="group.label">
         <button
           type="button"
-          class="flex items-center gap-2.5 cursor-pointer rounded-md px-2.5 h-9 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+          class="flex w-full items-center gap-2.5 cursor-pointer rounded-md px-2.5 h-9 text-start text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
           :aria-current="isGroupActive(group) && !group.items ? 'page' : undefined"
           :aria-expanded="group.items ? isGroupActive(group) : undefined"
           :class="
@@ -60,7 +60,7 @@
             type="button"
             v-for="item in group.items"
             :key="item.label"
-            class="text-sm h-9 ps-9 pe-2 cursor-pointer flex items-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+            class="flex w-full items-center text-start text-sm h-9 ps-9 pe-2 cursor-pointer rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
             :aria-current="isItemActive(item) ? 'page' : undefined"
             :class="
               isItemActive(item)

@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 152" role="img" aria-labelledby="title desc">
   <title id="title">Sotrama Suite</title>
   <desc id="desc">Sotrama Suite, connected business tools</desc>
-  <g transform="translate(8 8)">
-    <rect width="136" height="136" rx="28" fill="#202126"/>
-    <path d="M104 28H53C36 28 25 39 25 54s11 26 28 26h31c8 0 12 4 12 10s-4 10-12 10H27v17h57c20 0 31-11 31-27S104 63 84 63H53c-6 0-10-3-10-9s4-9 10-9h51z" fill="#e04436"/>
-    <path d="M43 44h28v18H43z" fill="#fff7f3"/>
+  <g transform="translate(8 8) scale(.265625)">
+    <rect width="512" height="512" rx="112" fill="#202126"/>
+    <path d="M394 92H202C136 92 94 135 94 198s42 106 108 106h114c25 0 38 13 38 32s-13 32-38 32H102v60h218c76 0 120-44 120-116s-44-116-120-116H202c-25 0-38-12-38-30s13-14 38-14h192z" fill="#e04436"/>
+    <path d="M164 144h108v64H164z" fill="#fff7f3"/>
   </g>
   <text x="174" y="78" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="55" font-weight="760" letter-spacing="-2.4" fill="#202126">Sotrama</text>
   <text x="414" y="78" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="55" font-weight="550" letter-spacing="-2.2" fill="#c9362b">Suite</text>

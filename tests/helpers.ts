@@ -82,6 +82,7 @@ export function setupTestFyo(fyo: Fyo, filename: string) {
   return test(`setup: ${testName}`, async () => {
     const options = getTestSetupWizardOptions();
     const dbPath = getTestDbPath();
+    await fyo.purgeCache();
     await resetTestDatabase();
     await setupInstance(dbPath, options, fyo);
   });
@@ -95,9 +96,19 @@ async function resetTestDatabase() {
 
   try {
     await connection.query('SET FOREIGN_KEY_CHECKS = 0');
-    const tables = (await connection.query(
+    const result: unknown = await connection.query(
       `SELECT TABLE_NAME AS tableName FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'`
-    )) as { tableName: string }[];
+    );
+    const rows: unknown[] = Array.isArray(result)
+      ? (result as unknown[])
+      : [];
+    const tables = rows.filter(
+      (row): row is { tableName: string } =>
+        typeof row === 'object' &&
+        row !== null &&
+        'tableName' in row &&
+        typeof row.tableName === 'string'
+    );
 
     for (const { tableName } of tables) {
       if (tableName.toLowerCase() === 'patchrun') {

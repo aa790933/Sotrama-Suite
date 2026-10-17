@@ -19,7 +19,9 @@ const schemaMap = getBuiltTestSchemaMap();
 async function ensureTestDb() {
   const adminDb = new DatabaseCore(undefined, {
     ...testDbConfig,
-    database: 'test',
+    // The MariaDB service does not guarantee a user-created `test` database.
+    // Use the always-present system schema for administrative DDL instead.
+    database: 'mysql',
   });
   await adminDb.connect();
   await adminDb.query(`DROP DATABASE IF EXISTS ${testDbConfig.database}`);
@@ -124,6 +126,7 @@ test('Post Migrate TableInfo', async function (t) {
       const mariaDbTypeMap: Record<string, string> = {
         'varchar(255)': 'text',
         text: 'text',
+        longtext: 'text',
         'tinyint(1)': 'boolean',
         'int(11)': 'integer',
         integer: 'integer',
@@ -318,6 +321,23 @@ test('CRUD single values', async function (t) {
     t.equal(svlMap.dateFormat, dateFormat, 'get dateFormat');
   }
 
+  await db.close();
+});
+
+test('SingleValue supports serialized values larger than 64 KiB', async (t) => {
+  const db = await getDb();
+  const largeValue = 'print-template-content-'.repeat(4000);
+
+  await db.insert('SystemSettings', { locale: largeValue });
+  const rows = (await db.query(
+    "SELECT value FROM singlevalue WHERE parent = 'systemsettings' AND fieldname = 'locale'"
+  )) as { value: string }[];
+
+  t.equal(
+    rows[0]?.value,
+    largeValue,
+    'large single value is stored without truncation'
+  );
   await db.close();
 });
 
