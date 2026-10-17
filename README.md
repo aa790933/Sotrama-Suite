@@ -3,8 +3,6 @@
 <img src="docs/public/sotrama-suite-logo.svg" alt="Sotrama Suite connected business tools" width="280"/>
 
 
-<h1>Sotrama Suite</h1>
-
 **Open-Source Tools for Business Operations**
 
 > Sotrama Suite is an open-source, cross-platform business management suite by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
