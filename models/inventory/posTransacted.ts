@@ -13,12 +13,13 @@ export async function getPOSTransactedAmount(
   // Use getAll for SalesInvoice isPOS + date range; lastShift filter applied in JS for simplicity
   const invoices = (await fyo.db.getAll('SalesInvoice', {
     filters: { isPOS: true },
-    fields: ['name', 'returnAgainst', 'date', 'created'],
+    fields: ['name', 'returnAgainst', 'date', 'created', 'grandTotal'],
   })) as {
     name: string;
     returnAgainst?: string;
     date: string;
     created: string;
+    grandTotal?: string | number;
   }[];
   const filtered = invoices.filter((inv) => {
     const d = new Date(inv.date).toISOString();
@@ -42,17 +43,30 @@ export async function getPOSTransactedAmount(
   }[];
   const paymentNames = [...new Set(paymentFors.map((p) => p.parent))];
   if (!paymentNames.length) return undefined;
+  const invoiceAmounts = new Map(
+    filtered.flatMap((invoice) =>
+      (typeof invoice.grandTotal === 'string' && invoice.grandTotal.trim()) ||
+      typeof invoice.grandTotal === 'number'
+        ? [[invoice.name, invoice.grandTotal] as const]
+        : []
+    )
+  );
   const referenceAmounts = new Map<string, Money>();
   for (const reference of paymentFors) {
+    const referenceAmount =
+      (typeof reference.amount === 'string' && reference.amount.trim()) ||
+      typeof reference.amount === 'number'
+        ? reference.amount
+        : invoiceAmounts.get(reference.referenceName);
     if (
-      (typeof reference.amount !== 'string' &&
-        typeof reference.amount !== 'number') ||
-      (typeof reference.amount === 'string' && !reference.amount.trim())
+      (typeof referenceAmount !== 'string' &&
+        typeof referenceAmount !== 'number') ||
+      (typeof referenceAmount === 'string' && !referenceAmount.trim())
     ) {
       continue;
     }
 
-    const amount = fyo.pesa(reference.amount);
+    const amount = fyo.pesa(referenceAmount);
     referenceAmounts.set(
       reference.parent,
       (referenceAmounts.get(reference.parent) ?? fyo.pesa(0)).add(amount)

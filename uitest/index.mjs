@@ -80,7 +80,23 @@ if (!fs.existsSync(appSourcePath)) {
 
   test('create new instance', async (t) => {
     await window.getByTestId('submit-button').click();
-    await window.getByTestId('company-name').waitFor({ timeout: 60_000 });
+    const setupResult = await Promise.race([
+      window
+        .getByTestId('company-name')
+        .waitFor({ timeout: 60_000 })
+        .then(() => 'success'),
+      window
+        .getByRole('dialog')
+        .filter({ hasText: 'Setup failed' })
+        .waitFor({ timeout: 60_000 })
+        .then(() => 'failure'),
+    ]);
+
+    if (setupResult === 'failure') {
+      t.fail(`Setup failed: ${await window.getByRole('dialog').innerText()}`);
+      return;
+    }
+
     t.equal(
       await window.getByTestId('company-name').innerText(),
       'Test Company',
