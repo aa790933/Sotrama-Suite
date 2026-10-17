@@ -14,6 +14,7 @@ const sidebar = [
     items: [
       { text: 'Database connections', link: '/guides/database-connections' },
       { text: 'Backup and restore', link: '/guides/backup-restore' },
+      { text: 'Business workflows', link: '/guides/business-workflows' },
     ]
   },
   {
@@ -21,6 +22,7 @@ const sidebar = [
     items: [
       { text: 'Overview', link: '/architecture/' },
       { text: 'Database layer', link: '/architecture/database' },
+      { text: 'Data model and UML', link: '/architecture/data-model' },
       { text: 'IPC protocol', link: '/architecture/ipc' },
       { text: 'Application boundaries', link: '/architecture/application-boundaries' },
     ]

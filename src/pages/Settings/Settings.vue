@@ -16,6 +16,32 @@
 
       <!-- Section Container -->
       <div v-if="doc" class="overflow-auto custom-scroll custom-scroll-thumb1">
+        <section
+          class="mx-4 mt-4 mb-2 rounded-lg border border-border bg-card p-4"
+          aria-labelledby="appearance-preferences-title"
+        >
+          <h3 id="appearance-preferences-title" class="text-sm font-semibold text-foreground">
+            {{ t`Appearance` }}
+          </h3>
+          <p class="mt-1 text-sm text-foreground">
+            {{ t`Adjust interface text size. This preference is saved on this device.` }}
+          </p>
+          <label for="app-font-size" class="mt-3 block text-sm font-medium text-foreground">
+            {{ t`Interface text size` }}
+          </label>
+          <select
+            id="app-font-size"
+            v-model.number="appFontSize"
+            class="mt-1 h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            @change="saveFontSize"
+          >
+            <option :value="14">{{ t`Default (14 px)` }}</option>
+            <option :value="15">15 px</option>
+            <option :value="16">16 px</option>
+            <option :value="18">18 px</option>
+            <option :value="20">20 px</option>
+          </select>
+        </section>
         <CommonFormSection
           v-for="([name, fields], idx) in activeGroup.entries()"
           :key="name + idx"
@@ -38,14 +64,16 @@
         v-if="groupedFields && groupedFields.size > 1"
         class="mt-auto px-4 pb-4 flex gap-8 border-t border-border flex-shrink-0 sticky bottom-0 bg-card"
       >
-        <div
+        <button
           v-for="key of groupedFields.keys()"
           :key="key"
-          class="text-sm cursor-pointer"
+          type="button"
+          class="text-sm cursor-pointer text-start rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          :aria-pressed="key === activeTab"
           :class="
             key === activeTab
               ? 'text-foreground font-semibold border-t-2 border-primary'
-              : 'text-muted-foreground'
+              : 'text-foreground hover:text-primary border-t-2 border-transparent'
           "
           :style="{
             paddingTop: key === activeTab ? 'calc(1rem - 2px)' : '1rem',
@@ -53,7 +81,7 @@
           @click="activeTab = key"
         >
           {{ tabLabels[key] }}
-        </div>
+        </button>
       </div>
 
       <!-- Credits -->
@@ -100,6 +128,7 @@ import { shortcutsKey } from 'src/utils/injectionKeys';
 import { showDialog } from 'src/utils/interactive';
 import { docsPathMap } from 'src/utils/misc';
 import { docsPathRef } from 'src/utils/refs';
+import { setAppFontSize } from 'src/utils/theme';
 import { UIGroupedFields } from 'src/utils/types';
 import { computed, defineComponent, inject } from 'vue';
 import CommonFormSection from '../CommonForm/CommonFormSection.vue';
@@ -127,10 +156,12 @@ export default defineComponent({
       errors: {},
       activeTab: ModelNameEnum.AccountingSettings,
       groupedFields: null,
+      appFontSize: 14,
     } as {
       errors: Record<string, string>;
       activeTab: string;
       groupedFields: null | UIGroupedFields;
+      appFontSize: number;
     };
   },
   computed: {
@@ -226,6 +257,9 @@ export default defineComponent({
       window.settings = this;
     }
 
+    this.appFontSize = setAppFontSize(
+      this.fyo.config.get('appFontSize' as never)
+    );
     this.update();
   },
   activated(): void {
@@ -252,6 +286,11 @@ export default defineComponent({
     await this.reset();
   },
   methods: {
+    saveFontSize(): void {
+      const safeFontSize = setAppFontSize(this.appFontSize);
+      this.appFontSize = safeFontSize;
+      this.fyo.config.set('appFontSize' as never, safeFontSize as never);
+    },
     async reset() {
       const resetableDocs = this.schemas
         .map(({ name }) => this.fyo.singles[name])

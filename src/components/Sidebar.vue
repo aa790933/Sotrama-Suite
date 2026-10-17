@@ -41,7 +41,7 @@
           :class="
             isGroupActive(group) && !group.items
               ? 'bg-accent text-accent-foreground font-medium'
-              : 'text-muted-foreground'
+              : 'text-foreground'
           "
           @click="routeToSidebarItem(group)"
         >
@@ -65,7 +65,7 @@
             :class="
               isItemActive(item)
                 ? 'bg-accent text-accent-foreground font-medium'
-                : 'text-muted-foreground'
+                : 'text-foreground'
             "
             @click="routeToSidebarItem(item)"
           >
@@ -103,6 +103,8 @@
       <!-- Report Issue and DB Switcher -->
       <div class="window-no-drag flex flex-col gap-0.5 py-1">
         <button
+          type="button"
+          aria-label="Open help documentation"
           class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
           @click="openDocumentation"
         >
@@ -113,6 +115,8 @@
         </button>
 
         <button
+          type="button"
+          aria-label="Open keyboard shortcuts"
           class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
           @click="viewShortcuts = true"
         >
@@ -121,6 +125,7 @@
         </button>
 
         <button
+          type="button"
           data-testid="change-db"
           class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
           @click="$emit('change-db-file')"
@@ -130,6 +135,8 @@
         </button>
 
         <button
+          type="button"
+          aria-label="Report an issue"
           class="flex text-sm text-muted-foreground hover:text-foreground hover:bg-accent gap-2 items-center rounded-md px-2.5 h-8 transition-colors"
           @click="() => reportIssue()"
         >
@@ -152,6 +159,9 @@
 
     <!-- Hide Sidebar Button -->
     <button
+      type="button"
+      :aria-label="t`Hide sidebar`"
+      :title="t`Hide sidebar`"
       class="absolute bottom-0 end-0 text-muted-foreground hover:bg-accent rounded p-1 m-4 rtl-rotate-180"
       @click="() => toggleSidebar()"
     >
@@ -177,7 +187,6 @@ import {
 import { reportIssue } from 'src/errorHandling';
 import { fyo } from 'src/initFyo';
 import { languageDirectionKey, shortcutsKey } from 'src/utils/injectionKeys';
-import { docsPathRef } from 'src/utils/refs';
 import { getSidebarConfig } from 'src/utils/sidebarConfig';
 import { SidebarConfig, SidebarItem, SidebarRoot } from 'src/utils/types';
 import { routeTo, toggleSidebar } from 'src/utils/ui';
@@ -327,7 +336,7 @@ export default defineComponent({
       this.connection = connections?.find((c) => c.id === id) ?? null;
     },
     openDocumentation() {
-      ipc.openLink('https://docs.frappe.io/' + docsPathRef.value);
+      ipc.openLink('https://aa790933.github.io/Sotrama-Suite/');
     },
     setActiveGroup() {
       const { fullPath } = this.$router.currentRoute.value;

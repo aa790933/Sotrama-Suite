@@ -69,7 +69,7 @@ import { Search } from './utils/search';
 import { Shortcuts } from './utils/shortcuts';
 import { routeTo } from './utils/ui';
 import { useKeys } from './utils/vueUtils';
-import { setDarkMode } from 'src/utils/theme';
+import { setAppFontSize, setDarkMode } from 'src/utils/theme';
 import {
   registerInstanceToERPNext,
   updateERPNSyncSettings,
@@ -145,6 +145,7 @@ export default defineComponent({
     },
   },
   async mounted() {
+    setAppFontSize(fyo.config.get('appFontSize' as never));
     await this.setInitialScreen();
     const darkMode = !!fyo.singles.SystemSettings?.darkMode;
     setDarkMode(darkMode);

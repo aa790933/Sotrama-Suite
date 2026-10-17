@@ -22,3 +22,5 @@ Electron main process and IPC router
 ```
 
 The Electron main process is the trust boundary for privileged operations and owns database connectivity. The renderer must not open database connections or receive database credentials. See [application boundaries](/architecture/application-boundaries), [database layer](/architecture/database), and [IPC protocol](/architecture/ipc).
+
+For the schema-backed entity relationships and sequence/component diagrams, see [Data model and UML](/architecture/data-model).

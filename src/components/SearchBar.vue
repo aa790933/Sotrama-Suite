@@ -199,7 +199,6 @@
 import { fyo } from 'src/initFyo';
 import { getBgTextColorClass } from 'src/utils/colors';
 import { searcherKey, shortcutsKey } from 'src/utils/injectionKeys';
-import { docsPathMap } from 'src/utils/misc';
 import {
   SearchGroup,
   SearchItems,
@@ -311,7 +310,7 @@ export default defineComponent({
   },
   methods: {
     openDocs() {
-      ipc.openLink('https://docs.frappe.io/' + docsPathMap.Search);
+      ipc.openLink('https://aa790933.github.io/Sotrama-Suite/');
     },
     getShortcuts() {
       const ifOpen = (cb: Function) => () => this.openModal && cb();

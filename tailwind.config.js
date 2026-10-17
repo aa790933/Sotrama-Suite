@@ -27,15 +27,15 @@ module.exports = {
   		lg: '1024px',
   		xl: '1280px'
   	},
-  	fontSize: {
-  		xs: '12px',
-  		sm: '13px',
-  		base: '14px',
-  		lg: '15px',
-  		xl: '18px',
-  		'2xl': '20px',
-  		'3xl': '24px',
-  		'4xl': '28px'
+    fontSize: {
+      xs: '0.857rem',
+      sm: '0.929rem',
+      base: '1rem',
+      lg: '1.071rem',
+      xl: '1.286rem',
+      '2xl': '1.429rem',
+      '3xl': '1.714rem',
+      '4xl': '2rem'
   	},
   	extend: {
   		maxHeight: {
