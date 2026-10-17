@@ -38,7 +38,8 @@ test('parse helper still works for valid config', (t) => {
 test('WindowsTitleBar does not render dbPath', (t) => {
   const vue = fs.readFileSync('src/components/WindowsTitleBar.vue', 'utf-8');
   t.notOk(vue.includes('{{ dbPath }}'), 'template must not interpolate dbPath');
-  t.notOk(vue.includes('dbPath') && vue.includes('{{'), 'no dbPath binding in template');
+  const template = vue.match(/<template\b[^>]*>([\s\S]*?)<\/template>/i)?.[1] ?? '';
+  t.notOk(/\bdbPath\b/.test(template), 'no dbPath reference in template');
   // Ensure it still shows companyName
   t.ok(vue.includes('companyName'), 'companyName still displayed');
   // Ensure safe display not accidentally showing password via title

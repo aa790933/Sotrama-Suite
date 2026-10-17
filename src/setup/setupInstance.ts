@@ -96,6 +96,8 @@ async function updateAccountingSettings(
     'AccountingSettings'
   )) as AccountingSettings;
   await accountingSettings.setAndSync({
+    // Root accounts have no parent; only mark setup complete after the full wizard succeeds.
+    setupComplete: false,
     companyName,
     country,
     fullname,

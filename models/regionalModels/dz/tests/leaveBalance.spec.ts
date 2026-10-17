@@ -48,7 +48,10 @@ class TestDemux extends DatabaseCore {
 async function boot(): Promise<Fyo> {
   // Pre-create a clean database (DatabaseCore.createNewDatabase for MariaDB
   // is effectively a connect; it does not create the db itself).
-  const admin = new DatabaseCore(undefined, { ...cfg, database: 'test' });
+  // MariaDB service images do not guarantee a user-created `test` database.
+  // Connect to the built-in schema only as an administrative connection; DDL
+  // below targets the dedicated test database, not the system schema.
+  const admin = new DatabaseCore(undefined, { ...cfg, database: 'mysql' });
   await admin.connect();
   await admin.query(`DROP DATABASE IF EXISTS \`${cfg.database}\``);
   await admin.query(`CREATE DATABASE \`${cfg.database}\``);

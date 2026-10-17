@@ -29,12 +29,12 @@ export function resolveAppFilePath(requestUrl: string): string {
   let decodedHost = '';
   let decodedPath = '';
   try {
-    decodedHost = decodeURI(hostPart);
+    decodedHost = decodeURI(hostPart).replace(/\\/g, '/');
   } catch {
     decodedHost = hostPart;
   }
   try {
-    decodedPath = decodeURI(pathnamePart);
+    decodedPath = decodeURI(pathnamePart).replace(/\\/g, '/');
   } catch {
     decodedPath = pathnamePart;
   }

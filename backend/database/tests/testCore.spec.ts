@@ -328,9 +328,9 @@ test('SingleValue supports serialized values larger than 64 KiB', async (t) => {
   const db = await getDb();
   const largeValue = 'print-template-content-'.repeat(4000);
 
-  await db.insert('SystemSettings', { locale: largeValue });
+  await db.insert('PrintSettings', { headerContent: largeValue });
   const rows = (await db.query(
-    "SELECT value FROM singlevalue WHERE parent = 'systemsettings' AND fieldname = 'locale'"
+    "SELECT value FROM singlevalue WHERE parent = 'printsettings' AND fieldname = 'headerContent'"
   )) as { value: string }[];
 
   t.equal(
