@@ -1,34 +1,76 @@
-<script>
-import feather from 'feather-icons';
-import { h } from 'vue';
+<template>
+  <component
+    :is="iconComponent"
+    v-bind="$attrs"
+    :size="$attrs.size ?? '1em'"
+    :stroke-width="$attrs.strokeWidth ?? 1.5"
+  />
+</template>
 
-const validIcons = Object.keys(feather.icons);
+<script>
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
+  ChevronUp,
+  Command,
+  Download,
+  Edit,
+  Flag,
+  HelpCircle,
+  Maximize,
+  MoreHorizontal,
+  Plus,
+  Printer,
+  RefreshCw,
+  Search,
+  Trash,
+  Trash2,
+  X,
+} from 'lucide-vue-next';
+
+const iconComponents = {
+  'alert-circle': AlertCircle,
+  'alert-triangle': AlertTriangle,
+  'check-circle': CheckCircle,
+  'chevron-down': ChevronDown,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  'chevrons-right': ChevronsRight,
+  'chevron-up': ChevronUp,
+  command: Command,
+  download: Download,
+  edit: Edit,
+  flag: Flag,
+  'help-circle': HelpCircle,
+  maximize: Maximize,
+  'more-horizontal': MoreHorizontal,
+  plus: Plus,
+  printer: Printer,
+  'refresh-cw': RefreshCw,
+  search: Search,
+  trash: Trash,
+  'trash-2': Trash2,
+  x: X,
+};
 
 export default {
+  inheritAttrs: false,
   props: {
     name: {
       type: String,
       required: true,
-      validator: (value) => validIcons.includes(value),
+      validator: (value) => Object.prototype.hasOwnProperty.call(iconComponents, value),
     },
   },
-  render() {
-    const icon = feather.icons[this.name];
-    const svg = h('svg', {
-      ...Object.assign({}, icon.attrs, {
-        fill: 'none',
-        stroke: 'currentColor',
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        'stroke-width': 1.5,
-        width: null,
-        height: null,
-      }),
-      class: [icon.attrs.class],
-      innerHTML: icon.contents,
-    });
-
-    return svg;
+  computed: {
+    iconComponent() {
+      return iconComponents[this.name] ?? HelpCircle;
+    },
   },
 };
 </script>

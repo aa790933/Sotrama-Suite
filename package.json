@@ -51,7 +51,6 @@
     "electron-log": "^5.2.0",
     "electron-store": "^8.0.1",
     "esbuild": "^0.28.2",
-    "feather-icons": "^4.28.0",
     "lodash": "^4.17.23",
     "lucide-vue-next": "^1.0.0",
     "luxon": "^2.5.2",
