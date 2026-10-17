@@ -8,7 +8,7 @@ const publicRoot = path.join(docsRoot, 'public');
 const markdownFiles: string[] = [];
 const errors: string[] = [];
 
-function capture(match: RegExpExecArray, group = 1): string {
+function capture(match: readonly unknown[], group = 1): string {
   const value: unknown = match[group];
   return typeof value === 'string' ? value : '';
 }
