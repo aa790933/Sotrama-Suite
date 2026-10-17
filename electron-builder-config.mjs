@@ -63,6 +63,9 @@ const sotramaSuiteConfig = {
   win: {
     artifactName: '${productName}-v${version}-windows-${arch}.${ext}',
     icon: 'build/icon.ico',
+    // The CI builds are unsigned. Skip code signing while retaining resource
+    // editing (including the branded executable icon and version metadata).
+    signExecutable: false,
     publish: ['github'],
     target: [
       {
@@ -76,12 +79,16 @@ const sotramaSuiteConfig = {
     ],
   },
   nsis: {
+    artifactName: '${productName}-v${version}-windows-${arch}-setup.${ext}',
     oneClick: false,
     perMachine: false,
     allowToChangeInstallationDirectory: true,
     installerIcon: 'build/installerIcon.ico',
     uninstallerIcon: 'build/uninstallerIcon.ico',
     publish: ['github'],
+  },
+  portable: {
+    artifactName: '${productName}-v${version}-windows-${arch}-portable.${ext}',
   },
   linux: {
     icon: 'build/icons',

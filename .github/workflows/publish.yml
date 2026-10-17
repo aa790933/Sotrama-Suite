@@ -30,31 +30,12 @@ jobs:
           ERR_LOG_SECRET: ${{ secrets.ERR_LOG_SECRET }}
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
         run: |
-          echo $ERR_LOG_KEY > log_creds.txt
-          echo $ERR_LOG_SECRET >> log_creds.txt
-          echo $ERR_LOG_URL >> log_creds.txt
-          echo $TELEMETRY_URL >> log_creds.txt
-
-      - name: Clean existing macOS (x64) assets from GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v${VERSION}"
-          echo "Checking release $TAG for existing macOS-x64 assets..."
-          ASSETS=$(gh release view "$TAG" --json assets --jq '.assets[] | select(.name | test("mac-x64";"i")) | .name' 2>/dev/null || true)
-          if [ -n "$ASSETS" ]; then
-            echo "$ASSETS" | while IFS= read -r asset; do
-              echo "Deleting existing asset: $asset"
-              gh release delete-asset "$TAG" "$asset" --confirm 2>/dev/null || true
-            done
-          fi
+          printf '%s\n' "$ERR_LOG_KEY" "$ERR_LOG_SECRET" "$ERR_LOG_URL" "$TELEMETRY_URL" > log_creds.txt
 
       - name: Run build
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: yarn build --mac --publish always
+        run: yarn build --mac --publish never
 
       - name: Tar files
         run: tar -cvf dist-macOS.tar dist_electron
@@ -92,31 +73,12 @@ jobs:
           ERR_LOG_SECRET: ${{ secrets.ERR_LOG_SECRET }}
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
         run: |
-          echo $ERR_LOG_KEY > log_creds.txt
-          echo $ERR_LOG_SECRET >> log_creds.txt
-          echo $ERR_LOG_URL >> log_creds.txt
-          echo $TELEMETRY_URL >> log_creds.txt
-
-      - name: Clean existing macOS (arm64) assets from GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v${VERSION}"
-          echo "Checking release $TAG for existing macOS-arm64 assets..."
-          ASSETS=$(gh release view "$TAG" --json assets --jq '.assets[] | select(.name | test("mac-arm64";"i")) | .name' 2>/dev/null || true)
-          if [ -n "$ASSETS" ]; then
-            echo "$ASSETS" | while IFS= read -r asset; do
-              echo "Deleting existing asset: $asset"
-              gh release delete-asset "$TAG" "$asset" --confirm 2>/dev/null || true
-            done
-          fi
+          printf '%s\n' "$ERR_LOG_KEY" "$ERR_LOG_SECRET" "$ERR_LOG_URL" "$TELEMETRY_URL" > log_creds.txt
 
       - name: Run build
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: yarn build --mac --publish always
+        run: yarn build --mac --publish never
 
       - name: Tar files
         run: tar -cvf dist-macOS-arm.tar dist_electron
@@ -155,15 +117,10 @@ jobs:
           ERR_LOG_SECRET: ${{ secrets.ERR_LOG_SECRET }}
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
         run: |
-          echo $ERR_LOG_KEY > log_creds.txt
-          echo $ERR_LOG_SECRET >> log_creds.txt
-          echo $ERR_LOG_URL >> log_creds.txt
-          echo $TELEMETRY_URL >> log_creds.txt
+          printf '%s\n' "$ERR_LOG_KEY" "$ERR_LOG_SECRET" "$ERR_LOG_URL" "$TELEMETRY_URL" > log_creds.txt
 
       - name: Run build
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: yarn build --linux --publish always
+        run: yarn build --linux --publish never
 
       - name: Tar files
         run: tar -cvf dist-linux.tar dist_electron
@@ -204,25 +161,7 @@ jobs:
           ERR_LOG_SECRET: ${{ secrets.ERR_LOG_SECRET }}
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
         run: |
-          echo $ERR_LOG_KEY > log_creds.txt
-          echo $ERR_LOG_SECRET >> log_creds.txt
-          echo $ERR_LOG_URL >> log_creds.txt
-          echo $TELEMETRY_URL >> log_creds.txt
-
-      - name: Clean existing Windows assets from GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v${VERSION}"
-          echo "Checking release $TAG for existing Windows assets..."
-          ASSETS=$(gh release view "$TAG" --json assets --jq '.assets[] | select(.name | test("windows-(x64|ia32)";"i")) | .name' 2>/dev/null || true)
-          if [ -n "$ASSETS" ]; then
-            echo "$ASSETS" | while IFS= read -r asset; do
-              echo "Deleting existing asset: $asset"
-              gh release delete-asset "$TAG" "$asset" --confirm 2>/dev/null || true
-            done
-          fi
+          printf '%s\n' "$ERR_LOG_KEY" "$ERR_LOG_SECRET" "$ERR_LOG_URL" "$TELEMETRY_URL" > log_creds.txt
 
       - name: Run build (no publish; upload handled separately)
         uses: nick-fields/retry@v4
@@ -237,23 +176,6 @@ jobs:
           command: |
             yarn build --win --publish never
 
-      - name: Upload installers to GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v${VERSION}"
-          # electron-builder's in-process GitHub publisher flakes on Windows
-          # ("Request timed out" during cleanup) even when every asset was
-          # uploaded successfully. Uploading via gh CLI is resumable and
-          # idempotent (--clobber).
-          gh release view "$TAG" > /dev/null 2>&1 || \
-            gh release create "$TAG" --title "$TAG" --generate-notes
-          gh release upload "$TAG" \
-            dist_electron/bundled/*windows*.exe \
-            dist_electron/bundled/*windows*.exe.blockmap \
-            --clobber
-
       - name: Tar files
         run: tar -cvf dist-windows.tar dist_electron
 
@@ -262,3 +184,94 @@ jobs:
         with:
           name: dist-windows
           path: dist-windows.tar
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [build-macos, build-macos-arm, build-linux, build-windows]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js LTS (24.x)
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Download macOS x64 artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: dist-macOS
+          path: artifacts/mac-x64
+
+      - name: Download macOS arm64 artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: dist-macOS-arm
+          path: artifacts/mac-arm64
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: dist-linux
+          path: artifacts/linux
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: dist-windows
+          path: artifacts/windows
+
+      - name: Extract build artifacts
+        run: |
+          tar -xf artifacts/mac-x64/dist-macOS.tar -C artifacts/mac-x64
+          tar -xf artifacts/mac-arm64/dist-macOS-arm.tar -C artifacts/mac-arm64
+          tar -xf artifacts/linux/dist-linux.tar -C artifacts/linux
+          tar -xf artifacts/windows/dist-windows.tar -C artifacts/windows
+
+      - name: Merge macOS update metadata
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const YAML = require('yaml');
+          const x64Path = 'artifacts/mac-x64/dist_electron/bundled/latest-mac.yml';
+          const armPath = 'artifacts/mac-arm64/dist_electron/bundled/latest-mac.yml';
+          const x64 = YAML.parse(fs.readFileSync(x64Path, 'utf8'));
+          const arm = YAML.parse(fs.readFileSync(armPath, 'utf8'));
+          const files = [...(x64.files ?? []), ...(arm.files ?? [])];
+          x64.files = [...new Map(files.map((file) => [file.url, file])).values()];
+          fs.mkdirSync('release-assets', { recursive: true });
+          fs.writeFileSync('release-assets/latest-mac.yml', YAML.stringify(x64));
+          fs.copyFileSync(
+            'artifacts/linux/dist_electron/bundled/latest-linux.yml',
+            'release-assets/latest-linux.yml'
+          );
+          fs.copyFileSync(
+            'artifacts/windows/dist_electron/bundled/latest.yml',
+            'release-assets/latest.yml'
+          );
+          NODE
+
+      - name: Upload all installers and update metadata
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          gh release view "$TAG" > /dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release upload "$TAG" \
+            artifacts/mac-x64/dist_electron/bundled/*mac-x64* \
+            artifacts/mac-arm64/dist_electron/bundled/*mac-arm64* \
+            artifacts/linux/dist_electron/bundled/*linux* \
+            artifacts/windows/dist_electron/bundled/*windows*.exe \
+            artifacts/windows/dist_electron/bundled/*windows*.exe.blockmap \
+            release-assets/latest-mac.yml \
+            release-assets/latest-linux.yml \
+            release-assets/latest.yml \
+            --clobber
