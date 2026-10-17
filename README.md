@@ -1,11 +1,7 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/public/readme-banner-dark.png"><img src="docs/public/readme-banner-light.png" alt="Sotrama Suite — connected business tools" width="100%"></picture></p>
-
 <div align="center" markdown="1">
-<br/>
 
-<img src="docs/public/sotrama-suite-logo.svg" alt="Sotrama Suite, connected business tools" width="360"/>
+<img src="docs/public/sotrama-suite-logo.svg" alt="Sotrama Suite connected business tools" width="280"/>
 
-<br/>
 
 <h1>Sotrama Suite</h1>
 
@@ -38,7 +34,6 @@ The current application focuses on the operational and financial workflows alrea
 
 <details>
 <summary>Screenshots</summary>
-<br/>
 <img  alt="Pos" src="https://github.com/user-attachments/assets/f75116b4-cf5f-45ee-9927-ba380fa56a46" />
     <br/><br/>
     <img  alt="General Ledger" src="https://github.com/user-attachments/assets/58d8bcdf-1576-4008-b010-7054fb64a12d" />
@@ -93,7 +88,7 @@ brew install --cask sotrama-suite
 
 ### Pre-requisites
 
-To get the dev environment up and running you need to first set up Node.js `v22.12.0` and npm. For this, we suggest using
+To get the dev environment up and running you need to first set up Node.js `24.x` and npm. For this, we suggest using
 [nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 Next, enable Corepack to use the repository-pinned Yarn release.

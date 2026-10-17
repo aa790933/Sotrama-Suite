@@ -45,7 +45,7 @@ jobs:
           corepack prepare yarn@4.7.0 --activate
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -77,7 +77,7 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     needs: build
     runs-on: ubuntu-latest
     permissions:
