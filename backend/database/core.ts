@@ -443,6 +443,8 @@ export default class DatabaseCore extends DatabaseBase {
       singlesConfig.updateNonExtant.length
     );
 
+    await this.#ensureSingleValueCapacity();
+
     if (!shouldMigrate) {
       return;
     }
@@ -476,6 +478,8 @@ export default class DatabaseCore extends DatabaseBase {
       this.#txConn = null;
       void conn.release();
     }
+
+    await this.#ensureSingleValueCapacity();
 
     if (!hasSingleValueTable) {
       singlesConfig = await this.#getSinglesUpdateList();
@@ -1105,6 +1109,13 @@ export default class DatabaseCore extends DatabaseBase {
   }
 
   #sqlTypeForField(field: Field): string | null {
+    if (
+      field.fieldname === 'value' &&
+      this.schemaMap.SingleValue?.fields.includes(field)
+    ) {
+      return 'LONGTEXT';
+    }
+
     const columnType = this.typeMap[field.fieldtype];
     if (!columnType) {
       return null;
@@ -1133,6 +1144,24 @@ export default class DatabaseCore extends DatabaseBase {
     }
 
     return 'TEXT';
+  }
+
+  async #ensureSingleValueCapacity() {
+    if (!(await this.#tableExists('SingleValue'))) {
+      return;
+    }
+
+    const columns = (await this.query(
+      `SELECT DATA_TYPE as dataType FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'singlevalue' AND COLUMN_NAME = 'value'`
+    )) as { dataType: string }[];
+
+    if (columns[0]?.dataType?.toLowerCase() === 'longtext') {
+      return;
+    }
+
+    await this.query(
+      'ALTER TABLE `singlevalue` MODIFY COLUMN `value` LONGTEXT NOT NULL'
+    );
   }
 
   #buildCreateTableSql(schemaName: string, tableName?: string): string {

@@ -49,15 +49,18 @@ export default defineConfig({
   base: '/Sotrama-Suite/',
 
   head: [
-    ['meta', { name: 'theme-color', content: '#d94736' }],
+    ['meta', { name: 'theme-color', content: '#c9362b' }],
     ['meta', { property: 'og:title', content: 'Sotrama Suite' }],
     ['meta', { property: 'og:description', content: 'Connected tools for sales, billing, payments, company data, and financial reporting.' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://aa790933.github.io/Sotrama-Suite/' }],
-    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['meta', { property: 'og:image', content: 'https://aa790933.github.io/Sotrama-Suite/sotrama-suite-logo.svg' }],
+    ['meta', { property: 'og:image:alt', content: 'Sotrama Suite business management tools' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:title', content: 'Sotrama Suite' }],
     ['meta', { name: 'twitter:description', content: 'Connected tools for everyday business operations.' }],
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Sotrama-Suite/sotrama-mark.svg' }],
+    ['meta', { name: 'twitter:image', content: 'https://aa790933.github.io/Sotrama-Suite/sotrama-suite-logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Sotrama-Suite/favicon.svg' }],
   ],
 
   themeConfig: {

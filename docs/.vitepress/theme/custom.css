@@ -1,14 +1,14 @@
 :root {
-  --vp-c-brand-1: #c9362b;
-  --vp-c-brand-2: #a92c24;
-  --vp-c-brand-3: #8e251f;
-  --vp-c-brand-soft: rgb(217 71 54 / 12%);
-  --vp-c-accent: #d94736;
+  --vp-c-brand-1: #b72f26;
+  --vp-c-brand-2: #98271f;
+  --vp-c-brand-3: #7b211b;
+  --vp-c-brand-soft: rgb(201 54 43 / 10%);
+  --vp-c-accent: #c9362b;
 
   --vp-home-hero-name-color: var(--vp-c-brand-1);
   --vp-home-hero-name-background: none;
 
-  --vp-home-hero-image-background-image: radial-gradient(ellipse at center, rgb(217 71 54 / 17%) 0%, rgb(241 138 88 / 7%) 48%, transparent 74%);
+  --vp-home-hero-image-background-image: none;
   --vp-home-hero-image-filter: none;
 }
 
@@ -48,10 +48,6 @@
   max-width: 100%;
 }
 
-.VPHero .image-bg {
-  border-radius: 32px;
-}
-
 .VPHero .image-src {
   max-width: min(100%, 420px);
   max-height: 180px;
@@ -63,13 +59,12 @@
 }
 
 .VPFeature {
-  border-radius: 14px;
-  transition: border-color 160ms ease, transform 160ms ease;
+  border-radius: 10px;
+  transition: border-color 160ms ease;
 }
 
 .VPFeature:hover {
   border-color: var(--vp-c-brand-1);
-  transform: translateY(-2px);
 }
 
 .vp-doc table {
@@ -92,6 +87,29 @@
 :where(a, button, input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 3px;
+}
+
+.VPButton.brand {
+  --vp-button-brand-bg: #b72f26;
+  --vp-button-brand-hover-bg: #98271f;
+  --vp-button-brand-active-bg: #7b211b;
+}
+
+.dark .VPButton.brand {
+  --vp-button-brand-bg: #c9362b;
+  --vp-button-brand-hover-bg: #e04a3d;
+  --vp-button-brand-active-bg: #b72f26;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 @media (max-width: 768px) {

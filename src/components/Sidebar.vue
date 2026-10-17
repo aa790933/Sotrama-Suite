@@ -13,11 +13,11 @@
           platform === 'Mac' && languageDirection === 'ltr' ? 'mt-10' : 'mt-1'
         "
       >
-        <div
-          class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"
-        >
-          <Building2 class="h-4 w-4" />
-        </div>
+        <img
+          src="../assets/img/sotrama-mark.svg"
+          alt=""
+          class="h-8 w-8 flex-shrink-0 rounded-lg"
+        />
         <div class="min-w-0">
           <h6
             data-testid="company-name"
@@ -33,8 +33,11 @@
 
       <!-- Sidebar Items -->
       <div v-for="group in groups" :key="group.label">
-        <div
+        <button
+          type="button"
           class="flex items-center gap-2.5 cursor-pointer rounded-md px-2.5 h-9 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+          :aria-current="isGroupActive(group) && !group.items ? 'page' : undefined"
+          :aria-expanded="group.items ? isGroupActive(group) : undefined"
           :class="
             isGroupActive(group) && !group.items
               ? 'bg-accent text-accent-foreground font-medium'
@@ -46,17 +49,19 @@
           <div class="whitespace-nowrap overflow-hidden text-ellipsis">
             {{ group.label }}
           </div>
-        </div>
+        </button>
 
         <!-- Expanded Group -->
         <div
           v-if="group.items && isGroupActive(group)"
           class="mt-0.5 flex flex-col gap-0.5"
         >
-          <div
+          <button
+            type="button"
             v-for="item in group.items"
             :key="item.label"
             class="text-sm h-9 ps-9 pe-2 cursor-pointer flex items-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+            :aria-current="isItemActive(item) ? 'page' : undefined"
             :class="
               isItemActive(item)
                 ? 'bg-accent text-accent-foreground font-medium'
@@ -64,10 +69,10 @@
             "
             @click="routeToSidebarItem(item)"
           >
-            <p class="whitespace-nowrap overflow-hidden text-ellipsis">
+            <span class="whitespace-nowrap overflow-hidden text-ellipsis text-start">
               {{ item.label }}
-            </p>
-          </div>
+            </span>
+          </button>
         </div>
       </div>
     </div>

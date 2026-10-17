@@ -1,7 +1,7 @@
 <div align="center" markdown="1">
 <br/>
 
-<img src="docs/.vitepress/public/sotrama-suite-logo.svg" alt="Sotrama Suite — connected business tools" width="360"/>
+<img src="docs/public/sotrama-suite-logo.svg" alt="Sotrama Suite, connected business tools" width="360"/>
 
 <br/>
 
@@ -12,8 +12,8 @@
 > Sotrama Suite is an open-source, cross-platform business management suite by [aa790933](https://github.com/aa790933), licensed under AGPL-3.0-only.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/aa790933/Sotrama-Suite)](https://github.com/aa790933/Sotrama-Suite/releases)
-![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)
-![Platforms](https://img.shields.io/badge/platform-mac%2C%20windows%2C%20linux-yellowgreen)
+![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-c9362b)
+![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-26272b)
 [![Publish](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml/badge.svg)](https://github.com/aa790933/Sotrama-Suite/actions/workflows/publish.yml)
 
 </div>
@@ -94,7 +94,7 @@ brew install --cask sotrama-suite
 To get the dev environment up and running you need to first set up Node.js `v22.12.0` and npm. For this, we suggest using
 [nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
-Next, you will need to install [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable).
+Next, enable Corepack to use the repository-pinned Yarn release.
 
 ### Clone and Run
 
@@ -108,8 +108,9 @@ git clone https://github.com/aa790933/Sotrama-Suite.git
 # change directory
 cd Sotrama-Suite
 
-# install dependencies
-yarn
+# install the exact dependency graph from the committed lockfile
+corepack enable
+yarn install --immutable
 ```
 
 To run Sotrama Suite in development mode (with hot reload, etc):

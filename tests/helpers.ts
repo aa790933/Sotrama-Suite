@@ -1,5 +1,6 @@
 import DatabaseCore from 'backend/database/core';
 import { config } from 'dotenv';
+import { createConnection } from 'mariadb';
 import { Fyo } from 'fyo';
 import { DummyAuthDemux } from 'fyo/tests/helpers';
 import { DateTime } from 'luxon';
@@ -81,8 +82,38 @@ export function setupTestFyo(fyo: Fyo, filename: string) {
   return test(`setup: ${testName}`, async () => {
     const options = getTestSetupWizardOptions();
     const dbPath = getTestDbPath();
+    await resetTestDatabase();
     await setupInstance(dbPath, options, fyo);
   });
+}
+
+async function resetTestDatabase() {
+  const connection = await createConnection({
+    ...getTestDbConfig('test_sotrama_app'),
+    multipleStatements: true,
+  });
+
+  try {
+    await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+    const tables = (await connection.query(
+      `SELECT TABLE_NAME AS tableName FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'`
+    )) as { tableName: string }[];
+
+    for (const { tableName } of tables) {
+      if (tableName.toLowerCase() === 'patchrun') {
+        continue;
+      }
+
+      const safeTableName = tableName.replace(/`/g, '``');
+      await connection.query(`DELETE FROM \`${safeTableName}\``);
+    }
+  } finally {
+    try {
+      await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+    } finally {
+      await connection.end();
+    }
+  }
 }
 
 export function closeTestFyo(fyo: Fyo, filename: string) {

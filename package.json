@@ -2,9 +2,10 @@
   "name": "sotrama-suite",
   "version": "0.37.0",
   "packageManager": "yarn@4.7.0",
-  "description": "Open-source desktop business management for sales, billing, payments, and financial reporting — Sotrama Suite",
+  "description": "Open-source desktop business tools for sales, billing, payments, and financial reporting. Sotrama Suite.",
   "author": {
-    "name": "Sotrama Suite contributors"
+    "name": "Sotrama Suite contributors",
+    "email": "noreply@github.com"
   },
   "scripts": {
     "dev": "node build/scripts/dev.mjs",
