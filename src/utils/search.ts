@@ -99,11 +99,11 @@ function getCreateList(fyo: Fyo): SearchItem[] {
       : []),
   ].map(
     (schemaName): SearchItem => ({
-        label: fyo.schemaMap[schemaName]?.label,
-        group: 'Create',
-        action: getCreateAction(fyo, schemaName),
-        schemaName,
-      })
+      label: fyo.schemaMap[schemaName]?.label ?? schemaName,
+      group: 'Create',
+      action: getCreateAction(fyo, schemaName),
+      schemaName,
+    })
   );
 
   const filteredCreateList: SearchItem[] = [
@@ -234,10 +234,10 @@ function getListViewList(fyo: Fyo): SearchItem[] {
     .filter((s) => s && !s.isChild && !s.isSingle)
     .map(
       (s): SearchItem => ({
-          label: s!.label,
-          route: `/list/${s!.name}`,
-          group: 'List',
-        })
+        label: s!.label,
+        route: `/list/${s!.name}`,
+        group: 'List',
+      })
     );
 
   const filteredLists: SearchItem[] = [

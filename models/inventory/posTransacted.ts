@@ -13,13 +13,12 @@ export async function getPOSTransactedAmount(
   // Use getAll for SalesInvoice isPOS + date range; lastShift filter applied in JS for simplicity
   const invoices = (await fyo.db.getAll('SalesInvoice', {
     filters: { isPOS: true },
-    fields: ['name', 'returnAgainst', 'date', 'created', 'grandTotal'],
+    fields: ['name', 'returnAgainst', 'date', 'created'],
   })) as {
     name: string;
     returnAgainst?: string;
     date: string;
     created: string;
-    grandTotal?: string | number;
   }[];
   const filtered = invoices.filter((inv) => {
     const d = new Date(inv.date).toISOString();
@@ -43,14 +42,12 @@ export async function getPOSTransactedAmount(
   }[];
   const paymentNames = [...new Set(paymentFors.map((p) => p.parent))];
   if (!paymentNames.length) return undefined;
-  const invoiceAmounts = new Map(
-    filtered.flatMap((invoice) =>
-      (typeof invoice.grandTotal === 'string' && invoice.grandTotal.trim()) ||
-      typeof invoice.grandTotal === 'number'
-        ? [[invoice.name, invoice.grandTotal] as const]
-        : []
-    )
-  );
+  const invoiceAmounts = new Map<string, Money>();
+  for (const invoice of filtered) {
+    const invoiceDoc = await fyo.doc.getDoc('SalesInvoice', invoice.name);
+    const amount = invoiceDoc.grandTotal as Money | undefined;
+    if (amount) invoiceAmounts.set(invoice.name, amount);
+  }
   const referenceAmounts = new Map<string, Money>();
   for (const reference of paymentFors) {
     const referenceAmount =
@@ -58,15 +55,14 @@ export async function getPOSTransactedAmount(
       typeof reference.amount === 'number'
         ? reference.amount
         : invoiceAmounts.get(reference.referenceName);
-    if (
-      (typeof referenceAmount !== 'string' &&
-        typeof referenceAmount !== 'number') ||
-      (typeof referenceAmount === 'string' && !referenceAmount.trim())
-    ) {
+    if (referenceAmount === undefined || referenceAmount === '') {
       continue;
     }
 
-    const amount = fyo.pesa(referenceAmount);
+    const amount =
+      typeof referenceAmount === 'object'
+        ? referenceAmount
+        : fyo.pesa(referenceAmount);
     referenceAmounts.set(
       reference.parent,
       (referenceAmounts.get(reference.parent) ?? fyo.pesa(0)).add(amount)
