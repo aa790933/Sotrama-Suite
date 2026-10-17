@@ -40,7 +40,6 @@ jobs:
       - name: Build (electron-builder --publish never)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: yarn build --publish never
 
       - name: Upload build artifacts
@@ -51,4 +50,37 @@ jobs:
             dist_electron/bundled
             dist_electron/build
           if-no-files-found: warn
+          retention-days: 7
+
+  build-windows:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enforce HTTPS for Git
+        run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+      - name: Setup Node.js LTS (24.x)
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build Windows installers (unsigned)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: yarn build --win --publish never
+
+      - name: Upload Windows build artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: dist-electron-Windows-${{ github.sha }}
+          path: dist_electron/bundled/*windows*
+          if-no-files-found: error
           retention-days: 7

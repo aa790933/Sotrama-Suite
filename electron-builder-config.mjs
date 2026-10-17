@@ -67,14 +67,15 @@ const sotramaSuiteConfig = {
     // editing (including the branded executable icon and version metadata).
     signExecutable: false,
     publish: ['github'],
+    // Electron 44 no longer ships Windows ia32 binaries; x64 is the supported target.
     target: [
       {
         target: 'nsis',
-        arch: ['x64', 'ia32'],
+        arch: ['x64'],
       },
       {
         target: 'portable',
-        arch: ['x64', 'ia32'],
+        arch: ['x64'],
       },
     ],
   },
