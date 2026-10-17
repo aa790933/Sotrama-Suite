@@ -2,9 +2,13 @@
   <div class="flex">
     <SearchBar />
     <!-- Back Button -->
-    <a
+    <button
       ref="backlink"
-      class="nav-link border-l border-r border-white dark:border-border"
+      type="button"
+      :aria-label="t`Go back`"
+      :title="t`Go back`"
+      :disabled="!historyState.back"
+      class="nav-link border-s border-e border-border disabled:cursor-not-allowed disabled:opacity-60"
       :class="
         historyState.back
           ? 'text-foreground cursor-pointer'
@@ -13,10 +17,14 @@
       @click="$router.back()"
     >
       <feather-icon name="chevron-left" class="w-4 h-4" />
-    </a>
+    </button>
     <!-- Forward Button -->
-    <a
-      class="nav-link rounded-md rounded-l-none"
+    <button
+      type="button"
+      :aria-label="t`Go forward`"
+      :title="t`Go forward`"
+      :disabled="!historyState.forward"
+      class="nav-link rounded-md rounded-s-none"
       :class="
         historyState.forward
           ? 'text-foreground cursor-pointer'
@@ -25,7 +33,7 @@
       @click="$router.forward()"
     >
       <feather-icon name="chevron-right" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
 </template>
 <script lang="ts">
@@ -42,7 +50,7 @@ export default defineComponent({
   setup() {
     return {
       historyState,
-      backlink: ref<HTMLAnchorElement | null>(null),
+      backlink: ref<HTMLButtonElement | null>(null),
       shortcuts: inject(shortcutsKey),
     };
   },
@@ -69,6 +77,6 @@ export default defineComponent({
 
 <style scoped>
 .nav-link {
-  @apply flex items-center bg-muted px-3;
+  @apply flex items-center justify-center bg-muted px-3 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }
 </style>

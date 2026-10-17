@@ -61,9 +61,12 @@
         <TableFooter>
           <UiTableRow
             class="cursor-pointer text-muted-foreground"
+            role="button"
             tabindex="0"
+            :aria-label="t`Add Row`"
             @click="addRow"
             @keydown.enter="addRow"
+            @keydown.space.prevent="addRow"
           >
             <TableCell :colspan="columnCount">
               <div class="flex items-center gap-2">
